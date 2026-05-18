@@ -3,8 +3,37 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import { FACULTIES } from '@/lib/utils'
 import type { Program } from '@/types'
-import { BookOpen } from 'lucide-react'
+import {
+  BookOpen,
+  Monitor,
+  BarChart3,
+  Wrench,
+  HeartPulse,
+  FlaskConical,
+  GraduationCap,
+  Scale,
+  Stethoscope,
+  Sprout,
+  TreePine,
+  Building2,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
+
+const FACULTY_ICONS: Record<string, LucideIcon> = {
+  'it':           Monitor,
+  'management':   BarChart3,
+  'engineering':  Wrench,
+  'medical':      HeartPulse,
+  'humanities':   BookOpen,
+  'science':      FlaskConical,
+  'education':    GraduationCap,
+  'law':          Scale,
+  'nursing':      Stethoscope,
+  'agriculture':  Sprout,
+  'forestry':     TreePine,
+  'architecture': Building2,
+}
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -42,9 +71,11 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <BookOpen className="w-6 h-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">University Programs</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <span className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+            <BookOpen className="w-5 h-5 text-primary" />
+          </span>
+          <h1 className="font-display font-bold text-2xl text-ink" style={{ letterSpacing: '-0.02em' }}>University Programs</h1>
         </div>
         <p className="text-gray-500">Explore all programs offered by universities in Nepal</p>
       </div>
@@ -54,11 +85,24 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
         <Link href="/programs" className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${!searchParams.faculty ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}>
           All Faculties
         </Link>
-        {FACULTIES.map((f) => (
-          <Link key={f.slug} href={`/programs?faculty=${f.slug}`} className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${searchParams.faculty === f.slug ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}>
-            {f.icon} {f.name}
-          </Link>
-        ))}
+        {FACULTIES.map((f) => {
+          const Icon = FACULTY_ICONS[f.slug] ?? BookOpen
+          const active = searchParams.faculty === f.slug
+          return (
+            <Link
+              key={f.slug}
+              href={`/programs?faculty=${f.slug}`}
+              className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                active
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {f.name}
+            </Link>
+          )
+        })}
       </div>
 
       {/* Degree Filter */}
@@ -75,11 +119,19 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
         <div className="space-y-8">
           {Object.entries(grouped).map(([faculty, progs]) => (
             <div key={faculty}>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <span>{FACULTIES.find((f) => f.name.includes(faculty))?.icon || '📚'}</span>
-                {faculty}
-                <Badge variant="gray">{progs.length}</Badge>
-              </h2>
+              {(() => {
+                const matched = FACULTIES.find((f) => f.name.toLowerCase().includes(faculty.toLowerCase().split(' ')[0]))
+                const Icon = matched ? (FACULTY_ICONS[matched.slug] ?? BookOpen) : BookOpen
+                return (
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </span>
+                    {faculty}
+                    <Badge variant="gray">{progs.length}</Badge>
+                  </h2>
+                )
+              })()}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {progs.map((prog) => (
                   <div key={prog.id} className="group bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-blue-200 transition-all">

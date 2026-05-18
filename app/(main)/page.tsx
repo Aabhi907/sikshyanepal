@@ -138,7 +138,7 @@ export default async function HomePage() {
               {/* Pill badge */}
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium
                               bg-blue-50 text-[#1847c4] border border-blue-200 mb-6">
-                🇳🇵 Nepal&apos;s #1 Education Platform
+                🇳🇵 Trusted by students across Nepal
               </div>
 
               {/* Headline */}
@@ -146,15 +146,14 @@ export default async function HomePage() {
                 className="font-display font-bold text-ink leading-[1.1] tracking-tight mb-5 text-balance"
                 style={{ fontSize: 'clamp(2.6rem, 5.5vw, 3.75rem)' }}
               >
-                Everything you need<br />
-                after{' '}
-                <span className="text-[#1847c4]">SEE.</span>
+                Everything about<br />
+                <span className="text-[#1847c4]">Education in Nepal.</span>
               </h1>
 
               {/* Sub */}
               <p className="text-gray-500 text-xl leading-relaxed mb-8 max-w-lg">
-                Colleges, results, notices, reviews — all in one place.
-                Updated daily.
+                Colleges, results, notices, reviews, scholarships —
+                Nepal&apos;s most complete education platform. Updated daily.
               </p>
 
               {/* Search */}

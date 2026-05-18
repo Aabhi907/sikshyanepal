@@ -3,16 +3,16 @@ import { FileText, ExternalLink, Sparkles, FileDown, ImageIcon } from 'lucide-re
 import type { Result } from '@/types'
 import { formatDateShort, timeAgo } from '@/lib/utils'
 
-// Per-university left-bar accent colors
-const UNI_ACCENT: Record<string, { bar: string; label: string; labelBg: string }> = {
-  TU:    { bar: 'bg-blue-500',    label: 'text-blue-700',    labelBg: 'bg-blue-50 border-blue-200' },
-  KU:    { bar: 'bg-emerald-500', label: 'text-emerald-700', labelBg: 'bg-emerald-50 border-emerald-200' },
-  PU:    { bar: 'bg-amber-500',   label: 'text-amber-700',   labelBg: 'bg-amber-50 border-amber-200' },
-  PurU:  { bar: 'bg-purple-500',  label: 'text-purple-700',  labelBg: 'bg-purple-50 border-purple-200' },
-  NEB:   { bar: 'bg-red-500',     label: 'text-red-700',     labelBg: 'bg-red-50 border-red-200' },
-  CTEVT: { bar: 'bg-orange-500',  label: 'text-orange-700',  labelBg: 'bg-orange-50 border-orange-200' },
+// Per-university left bar + badge colors
+const UNI_ACCENT: Record<string, { bar: string; badge: string }> = {
+  TU:    { bar: 'bg-blue-500',    badge: 'bg-blue-50   text-blue-700   border-blue-200' },
+  KU:    { bar: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  PU:    { bar: 'bg-amber-500',   badge: 'bg-amber-50  text-amber-700  border-amber-200' },
+  PurU:  { bar: 'bg-purple-500',  badge: 'bg-purple-50 text-purple-700 border-purple-200' },
+  NEB:   { bar: 'bg-red-500',     badge: 'bg-red-50    text-red-700    border-red-200' },
+  CTEVT: { bar: 'bg-orange-500',  badge: 'bg-orange-50 text-orange-700 border-orange-200' },
 }
-const DEFAULT_ACCENT = { bar: 'bg-brand', label: 'text-brand', labelBg: 'bg-brand-50 border-brand-100' }
+const DEFAULT_ACCENT = { bar: 'bg-[#1847c4]', badge: 'bg-blue-50 text-[#1847c4] border-blue-200' }
 
 function isNew(dateString: string | null | undefined): boolean {
   if (!dateString) return false
@@ -24,37 +24,27 @@ function isNew(dateString: string | null | undefined): boolean {
 interface ResultCardProps {
   result:   Result
   compact?: boolean
-  dark?:    boolean
+  dark?:    boolean   // unused now but kept for API compat
 }
 
-export default function ResultCard({ result, compact = false, dark = false }: ResultCardProps) {
+export default function ResultCard({ result, compact = false }: ResultCardProps) {
   const shortName = result.university?.short_name || 'TU'
   const accent    = UNI_ACCENT[shortName] ?? DEFAULT_ACCENT
   const fresh     = isNew(result.published_date)
   const hasPdf    = result.content_type === 'pdf'
   const hasImage  = result.content_type === 'image'
 
-  // ── Compact (homepage dark panels + feeds) ────────────────────
+  // ── Compact (homepage panels + feeds) ────────────────────────
   if (compact) {
     return (
       <Link href={`/results/${result.slug}`} className="block group">
-        <div
-          className={`relative flex items-start gap-3 py-3 pl-4 pr-3 rounded-lg border-b last:border-0 transition-colors ${
-            dark
-              ? 'border-white/8 hover:bg-white/5'
-              : 'border-border hover:bg-slate-50'
-          }`}
-        >
-          {/* Colored left bar */}
+        <div className="relative flex items-start gap-3 py-3 pl-4 pr-3 rounded-lg border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+          {/* Left bar */}
           <div className={`absolute left-0 top-2 bottom-2 w-0.5 rounded-full ${accent.bar}`} />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-1.5 flex-wrap">
-              <p className={`text-sm font-medium line-clamp-1 flex-1 min-w-0 transition-colors ${
-                dark
-                  ? 'text-slate-200 group-hover:text-white'
-                  : 'text-ink group-hover:text-brand'
-              }`}>
+              <p className="text-sm font-medium text-ink line-clamp-1 flex-1 min-w-0 group-hover:text-[#1847c4] transition-colors">
                 {result.title}
               </p>
               <div className="flex items-center gap-1 flex-shrink-0">
@@ -76,42 +66,42 @@ export default function ResultCard({ result, compact = false, dark = false }: Re
               </div>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${accent.labelBg} ${accent.label}`}>
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${accent.badge}`}>
                 {shortName}
               </span>
-              <span className={`text-xs font-mono ${dark ? 'text-slate-500' : 'text-ink-muted'}`}>
+              <span className="text-xs font-mono text-gray-400">
                 {timeAgo(result.published_date)}
               </span>
             </div>
           </div>
 
-          <ExternalLink className={`w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity mt-0.5 ${dark ? 'text-slate-400' : 'text-ink-muted'}`} />
+          <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-50 text-gray-400 transition-opacity mt-0.5" />
         </div>
       </Link>
     )
   }
 
-  // ── Full list card (results page) ─────────────────────────────
+  // ── Full list card ────────────────────────────────────────────
   return (
     <Link href={`/results/${result.slug}`} className="block group">
-      <div className="relative bg-card rounded-xl border border-border overflow-hidden
-                      p-4 pl-5 transition-all duration-200 hover:shadow-card-lg hover:border-border-strong
-                      hover:-translate-y-0.5">
-        {/* Left w-1 colored indicator bar */}
+      <div className="relative bg-white rounded-xl border border-gray-200 overflow-hidden
+                      p-4 pl-5 transition-all duration-200
+                      hover:border-[#1847c4] hover:shadow-card-lg hover:-translate-y-0.5">
+        {/* Left w-1 indicator */}
         <div className={`absolute left-0 top-0 bottom-0 w-1 ${accent.bar}`} />
 
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-lg bg-slate-50 border border-border flex items-center justify-center flex-shrink-0">
-            <FileText className="w-4.5 h-4.5 text-ink-muted" />
+          <div className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <FileText className="w-4 h-4 text-gray-400" />
           </div>
 
           <div className="min-w-0 flex-1">
-            {/* Title + content-type badges */}
+            {/* Title + type badges */}
             <div className="flex items-start gap-2 mb-2">
-              <h3 className="font-semibold text-ink text-sm leading-snug line-clamp-2 group-hover:text-brand transition-colors flex-1">
+              <h3 className="font-semibold text-ink text-sm leading-snug line-clamp-2 group-hover:text-[#1847c4] transition-colors flex-1">
                 {result.title}
               </h3>
-              <div className="flex flex-col gap-1 items-end flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {hasPdf && (
                   <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 whitespace-nowrap">
                     <FileDown className="w-2.5 h-2.5" />PDF
@@ -132,20 +122,20 @@ export default function ResultCard({ result, compact = false, dark = false }: Re
 
             {/* Meta row — font-mono */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${accent.labelBg} ${accent.label}`}>
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${accent.badge}`}>
                 {result.university?.short_name}
               </span>
               {result.program && (
-                <span className="text-[10px] font-mono text-ink-muted px-1.5 py-0.5 rounded border border-border bg-surface">
+                <span className="text-[10px] font-mono text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50">
                   {result.program}
                 </span>
               )}
               {result.semester && (
-                <span className="text-[10px] font-mono text-ink-muted px-1.5 py-0.5 rounded border border-border bg-surface">
+                <span className="text-[10px] font-mono text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50">
                   {result.semester}
                 </span>
               )}
-              <span className="text-[10px] font-mono text-ink-muted ml-auto">
+              <span className="text-[10px] font-mono text-gray-400 ml-auto">
                 {formatDateShort(result.published_date)}
               </span>
             </div>

@@ -35,18 +35,17 @@ function FacebookIcon({ className }: { className?: string }) {
 
 export default function Footer() {
   return (
-    <footer className="bg-navy text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <footer style={{ backgroundColor: '#0d1b3e' }} className="text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
 
           {/* ── Col 1: Brand ─────────────────────────────── */}
           <div>
-            <Link href="/" className="inline-flex items-center gap-2.5 mb-5">
-              <div className="w-8 h-8 bg-brand rounded-md flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-display font-bold text-sm leading-none">S</span>
-              </div>
-              <span className="text-[17px] font-display font-bold text-white leading-none tracking-tight">
-                Sikshya<span className="text-brand-light">Nepal</span>
+            <Link href="/" className="inline-flex items-center gap-2 mb-5">
+              <span className="text-xl">🎓</span>
+              <span className="font-display font-bold text-[17px] leading-none tracking-tight">
+                <span className="text-white">Sikshya</span>
+                <span className="text-blue-400">Nepal</span>
               </span>
             </Link>
 
@@ -60,11 +59,11 @@ export default function Footer() {
                 href="mailto:info@sikshyanepal.com"
                 className="flex items-center gap-2.5 text-sm text-slate-400 hover:text-white transition-colors"
               >
-                <Mail className="w-4 h-4 text-brand-light flex-shrink-0" />
+                <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
                 info@sikshyanepal.com
               </a>
               <div className="flex items-center gap-2.5 text-sm text-slate-400">
-                <MapPin className="w-4 h-4 text-brand-light flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-blue-400 flex-shrink-0" />
                 Kathmandu, Nepal
               </div>
             </div>
@@ -72,18 +71,16 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               <a
                 href="https://twitter.com/sikshyanepal"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-md bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
+                target="_blank" rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center hover:bg-white/15 transition-all"
                 aria-label="Twitter/X"
               >
                 <TwitterIcon className="w-3.5 h-3.5 text-slate-400" />
               </a>
               <a
                 href="https://facebook.com/sikshyanepal"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-md bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
+                target="_blank" rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center hover:bg-white/15 transition-all"
                 aria-label="Facebook"
               >
                 <FacebookIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -93,8 +90,8 @@ export default function Footer() {
 
           {/* ── Col 2: Explore ───────────────────────────── */}
           <div>
-            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-5">
-              ── Explore
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-5">
+              Explore
             </h3>
             <ul className="space-y-3">
               {exploreLinks.map((link) => (
@@ -113,8 +110,8 @@ export default function Footer() {
 
           {/* ── Col 3: Universities ──────────────────────── */}
           <div>
-            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-5">
-              ── Universities
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-5">
+              Universities
             </h3>
             <ul className="space-y-3">
               {universityLinks.map((link) => (
@@ -133,8 +130,8 @@ export default function Footer() {
 
           {/* ── Col 4: Connect ───────────────────────────── */}
           <div>
-            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-5">
-              ── Connect
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-5">
+              Connect
             </h3>
             <p className="text-sm text-slate-400 leading-relaxed mb-6">
               Get daily alerts for results and notices from Nepal&apos;s top universities
@@ -142,9 +139,9 @@ export default function Footer() {
             </p>
             <Link
               href="/colleges"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md
-                         bg-white/8 border border-white/20 text-white text-sm font-semibold
-                         hover:bg-white/15 hover:border-white/35 transition-all"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
+                         bg-[#1847c4] text-white text-sm font-semibold
+                         hover:bg-[#1340b0] transition-colors"
             >
               Find My College
             </Link>
@@ -153,7 +150,7 @@ export default function Footer() {
 
         {/* ── Bottom bar ───────────────────────────────── */}
         <div className="border-t border-white/10 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-500 font-mono">
+          <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} SikshyaNepal. All rights reserved.
           </p>
           <div className="flex items-center gap-5 text-xs text-slate-500">

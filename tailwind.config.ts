@@ -9,47 +9,64 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['var(--font-playfair)', 'Georgia', 'serif'],
-        sans:    ['var(--font-jakarta)',  'system-ui', 'sans-serif'],
-        mono:    ['var(--font-jetbrains)','Menlo', 'monospace'],
+        display: ['var(--font-sora)',    'system-ui', 'sans-serif'],
+        sans:    ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
+        mono:    ['var(--font-dm-mono)', 'Menlo', 'monospace'],
       },
       colors: {
-        navy: {
-          DEFAULT: '#0a0f1e',
-          800:     '#111827',
-          700:     '#1f2937',
-          600:     '#374151',
+        // ── Primary — deep confident blue ─────────────
+        primary: {
+          DEFAULT: '#1847c4',
+          50:  '#eff3fe',
+          100: '#dde6fd',
+          200: '#bccafb',
+          300: '#91a8f8',
+          600: '#1340b0',
+          700: '#0f2f8a',
         },
-        brand: {
-          DEFAULT: '#2563eb',
-          light:   '#3b82f6',
-          glow:    '#1d4ed8',
-          50:      '#eff6ff',
-          100:     '#dbeafe',
+        // ── Accent — warm orange (Nepal flag energy) ──
+        accent: {
+          DEFAULT: '#f97316',
+          50:  '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          600: '#ea6c0b',
         },
-        gold:    '#f59e0b',
-        surface: '#f8fafc',
+        // ── Dark sections ─────────────────────────────
+        navy: '#0d1b3e',
+        // ── Surfaces & cards ─────────────────────────
         card:    '#ffffff',
-        border:  {
-          DEFAULT: '#e2e8f0',
-          strong:  '#cbd5e1',
-          subtle:  '#f1f5f9',
-        },
+        surface: '#ffffff',
+        // ── Text ─────────────────────────────────────
         ink: {
-          DEFAULT:   '#0f172a',
-          secondary: '#475569',
-          muted:     '#94a3b8',
+          DEFAULT:   '#0f1629',
+          secondary: '#374151',
+          muted:     '#6b7280',
+        },
+        // ── Borders ──────────────────────────────────
+        border: {
+          DEFAULT: '#e5e7eb',
+          strong:  '#d1d5db',
+          subtle:  '#f3f4f6',
+        },
+        // ── Brand alias (backward compat) ────────────
+        brand: {
+          DEFAULT: '#1847c4',
+          light:   '#3b82f6',
+          glow:    '#1340b0',
+          50:      '#eff3fe',
+          100:     '#dde6fd',
         },
       },
       boxShadow: {
         'card':    '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
         'card-md': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
         'card-lg': '0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04)',
-        'card-xl': '0 20px 25px -5px rgb(0 0 0 / 0.1),  0 8px 10px -6px rgb(0 0 0 / 0.04)',
+        'card-xl': '0 20px 25px -5px rgb(0 0 0 / 0.10), 0 8px 10px -6px rgb(0 0 0 / 0.04)',
       },
       animation: {
-        'fade-in':   'fadeIn 0.2s ease-out',
-        'slide-down':'slideDown 0.2s ease-out',
+        'fade-in':    'fadeIn 0.2s ease-out',
+        'slide-down': 'slideDown 0.2s ease-out',
       },
       keyframes: {
         fadeIn:    { '0%': { opacity: '0' },        '100%': { opacity: '1' } },

@@ -4,18 +4,15 @@
 
 /* ── CSS custom properties ────────────────────────────────────── */
 :root {
-  --navy:          #0a0f1e;
-  --navy-800:      #111827;
-  --navy-700:      #1f2937;
-  --blue:          #2563eb;
-  --blue-light:    #3b82f6;
-  --surface:       #f8fafc;
-  --card:          #ffffff;
-  --border:        #e2e8f0;
-  --text-primary:  #0f172a;
-  --text-secondary:#475569;
-  --text-muted:    #94a3b8;
-  --gold:          #f59e0b;
+  --primary:     #1847c4;
+  --primary-600: #1340b0;
+  --accent:      #f97316;
+  --navy:        #0d1b3e;
+  --surface:     #ffffff;
+  --page-bg:     #f0f4ff;
+  --text:        #0f1629;
+  --text-muted:  #6b7280;
+  --border:      #e5e7eb;
 }
 
 @layer base {
@@ -27,38 +24,56 @@
   }
 
   body {
-    @apply bg-surface text-ink font-sans;
+    @apply bg-[#f0f4ff] text-ink font-sans;
     font-feature-settings: "cv02", "cv03", "cv04";
   }
 
-  /* Text selection — on-brand blue */
   ::selection {
-    background: #2563eb;
+    background: #1847c4;
     color: #ffffff;
   }
 
-  /* Focus rings */
   :focus-visible {
-    @apply outline-none ring-2 ring-brand ring-offset-2;
+    @apply outline-none ring-2 ring-primary ring-offset-2;
   }
 
-  /* Custom scrollbar */
   ::-webkit-scrollbar       { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #f1f5f9; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-  * { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9; }
+  ::-webkit-scrollbar-track { background: #f3f4f6; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+  * { scrollbar-width: thin; scrollbar-color: #d1d5db #f3f4f6; }
 }
 
 @layer components {
-  /* ── Section header atoms ─────────────────────────────────── */
-  .section-eyebrow {
-    @apply text-brand text-xs font-mono font-bold tracking-widest uppercase mb-3
-           flex items-center gap-2;
+
+  /* ── Buttons ─────────────────────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-lg
+           transition-all duration-150 select-none cursor-pointer active:scale-[0.97];
   }
-  .section-eyebrow::before {
-    content: '';
-    @apply inline-block w-6 h-px bg-brand flex-shrink-0;
+  .btn-primary {
+    @apply btn px-5 py-2.5 bg-primary text-white text-sm
+           hover:bg-primary-600 shadow-card hover:shadow-card-md;
+  }
+  .btn-outline {
+    @apply btn px-5 py-2.5 bg-white text-primary border-2 border-primary text-sm
+           hover:bg-primary-50 shadow-card;
+  }
+  .btn-ghost {
+    @apply btn px-4 py-2 text-ink-secondary text-sm hover:bg-gray-100 hover:text-ink;
+  }
+  /* Legacy aliases — keep admin pages working */
+  .btn-navy  { @apply btn-primary; }
+  .btn-blue  { @apply btn-primary; }
+
+  /* ── Section labels ──────────────────────────────────────────── */
+  .section-tag {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+           bg-accent-50 text-accent-600 border border-accent-200 mb-3;
+  }
+  .section-tag-blue {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+           bg-primary-50 text-primary border border-primary-100 mb-3;
   }
   .section-heading {
     @apply font-display font-bold text-3xl md:text-4xl text-ink leading-tight;
@@ -67,45 +82,39 @@
   .section-sub {
     @apply text-ink-secondary text-base mt-2 leading-relaxed;
   }
+  /* Legacy alias */
+  .section-eyebrow { @apply section-tag; }
+  .section-label   { @apply section-tag; }
 
-  /* ── Buttons ─────────────────────────────────────────────── */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-md
-           transition-all duration-150 select-none cursor-pointer active:scale-[0.97];
-  }
-  .btn-navy {
-    @apply btn px-5 py-2.5 bg-navy text-white text-sm
-           hover:bg-navy-800 shadow-card hover:shadow-card-md;
-  }
-  .btn-blue {
-    @apply btn px-5 py-2.5 bg-brand text-white text-sm
-           hover:bg-brand-glow shadow-card hover:shadow-card-md;
-  }
-  .btn-outline {
-    @apply btn px-5 py-2.5 bg-card text-ink border border-border text-sm
-           hover:border-border-strong hover:shadow-card;
-  }
-  .btn-ghost {
-    @apply btn px-4 py-2 text-ink-secondary text-sm hover:bg-slate-100 hover:text-ink;
-  }
-
-  /* ── Cards ───────────────────────────────────────────────── */
-  .card-base {
+  /* ── Cards ───────────────────────────────────────────────────── */
+  .card {
     @apply bg-card rounded-2xl border border-border shadow-card;
   }
   .card-hover {
-    @apply card-base transition-all duration-200
-           hover:shadow-card-xl hover:-translate-y-1 hover:border-brand-100;
+    @apply card transition-all duration-200
+           hover:border-primary-200 hover:shadow-lg hover:-translate-y-0.5;
+  }
+  /* Legacy aliases */
+  .card-base { @apply card; }
+
+  /* ── Filter chips ────────────────────────────────────────────── */
+  .chip {
+    @apply px-4 py-1.5 rounded-full text-sm font-medium border
+           transition-all duration-150 cursor-pointer whitespace-nowrap;
+  }
+  .chip-active   { @apply chip bg-primary text-white border-primary; }
+  .chip-inactive {
+    @apply chip bg-white text-ink-secondary border-border
+           hover:border-primary hover:text-primary;
   }
 
-  /* ── Filter pills ────────────────────────────────────────── */
-  .chip {
-    @apply px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-150
-           cursor-pointer whitespace-nowrap;
-  }
-  .chip-active   { @apply chip bg-navy text-white border-navy; }
-  .chip-inactive { @apply chip bg-card text-ink-secondary border-border
-                          hover:border-navy hover:text-navy; }
+  /* ── University colored left bars ───────────────────────────── */
+  .bar-tu    { @apply bg-blue-500; }
+  .bar-ku    { @apply bg-emerald-500; }
+  .bar-pu    { @apply bg-amber-500; }
+  .bar-puru  { @apply bg-purple-500; }
+  .bar-neb   { @apply bg-red-500; }
+  .bar-ctevt { @apply bg-orange-500; }
 }
 
 @layer utilities {
@@ -114,7 +123,4 @@
   .line-clamp-3 { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
   .text-balance { text-wrap: balance; }
   .text-pretty  { text-wrap: pretty; }
-
-  /* Frosted glass */
-  .glass { @apply bg-white/90 backdrop-blur-md border-b border-slate-100; }
 }

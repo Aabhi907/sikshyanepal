@@ -6,7 +6,7 @@ import SearchBar from '@/components/ui/SearchBar'
 import type { Notice } from '@/types'
 import { Bell, RefreshCcw } from 'lucide-react'
 
-export const dynamic  = 'force-dynamic'
+export const dynamic   = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
@@ -54,25 +54,27 @@ export default async function NoticesPage({
   }
 
   return (
-    <div>
-      {/* ── Dark mini hero ───────────────────────────────────────── */}
-      <div className="bg-navy border-b border-white/8">
+    <div className="bg-[#f0f4ff] min-h-screen">
+
+      {/* ── Page header ─────────────────────────────────────── */}
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
-          <p className="section-eyebrow text-brand-light">University Notices</p>
-          <h1 className="font-display font-bold text-white text-4xl mb-2" style={{ letterSpacing: '-0.02em' }}>
+          <span className="section-tag">University Notices</span>
+          <h1 className="font-display font-bold text-ink text-3xl sm:text-4xl mb-2"
+              style={{ letterSpacing: '-0.02em' }}>
             Official Notices
           </h1>
-          <p className="text-slate-400 text-sm mb-6">
+          <p className="text-gray-500 text-sm mb-6">
             Admission deadlines, exam schedules and official announcements from Nepal&apos;s universities
           </p>
           <SearchBar placeholder="Search notices..." redirectTo="/notices" />
         </div>
 
-        {/* University chip filters */}
+        {/* University chips */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-5">
           <div className="flex flex-wrap gap-2">
             <Link href="/notices" className={!searchParams.university ? 'chip-active' : 'chip-inactive'}>
-              All Universities
+              All
             </Link>
             {UNIVERSITIES.map((u) => (
               <Link key={u} href={filterUrl(u)} className={searchParams.university === u ? 'chip-active' : 'chip-inactive'}>
@@ -83,11 +85,11 @@ export default async function NoticesPage({
         </div>
       </div>
 
-      {/* ── Notices list ─────────────────────────────────────────── */}
+      {/* ── Notices list ─────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* Count */}
-        <p className="text-sm text-ink-secondary mb-4 font-mono">
+        <p className="text-sm text-gray-500 mb-4 font-mono">
           <span className="font-bold text-ink">{notices.length}</span>{' '}
           notice{notices.length !== 1 ? 's' : ''} found
           {searchParams.q && <> for &ldquo;{searchParams.q}&rdquo;</>}
@@ -100,18 +102,18 @@ export default async function NoticesPage({
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-card rounded-2xl border border-border">
-            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Bell className="w-7 h-7 text-ink-muted" />
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+            <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-7 h-7 text-gray-300" />
             </div>
             <h3 className="text-base font-semibold text-ink mb-2">No notices found</h3>
-            <p className="text-sm text-ink-secondary mb-6 max-w-xs mx-auto">
+            <p className="text-sm text-gray-400 mb-6 max-w-xs mx-auto">
               {hasFilter
                 ? 'Try removing some filters or searching with different keywords.'
                 : 'New notices will appear here as soon as they are published.'}
             </p>
             {hasFilter && (
-              <Link href="/notices" className="btn-navy text-sm">
+              <Link href="/notices" className="btn-primary text-sm inline-flex">
                 <RefreshCcw className="w-4 h-4" />
                 Clear all filters
               </Link>

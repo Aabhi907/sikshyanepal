@@ -1,23 +1,24 @@
 import type { Metadata } from 'next'
-import { Playfair_Display, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
+import { Sora, DM_Sans, DM_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 
-const playfair = Playfair_Display({
+const sora = Sora({
   subsets: ['latin'],
-  variable: '--font-playfair',
+  variable: '--font-sora',
   display: 'swap',
 })
 
-const jakarta = Plus_Jakarta_Sans({
+const dmSans = DM_Sans({
   subsets: ['latin'],
-  variable: '--font-jakarta',
+  variable: '--font-dm-sans',
   display: 'swap',
 })
 
-const jetbrains = JetBrains_Mono({
+const dmMono = DM_Mono({
   subsets: ['latin'],
-  variable: '--font-jetbrains',
+  variable: '--font-dm-mono',
+  weight: ['400', '500'],
   display: 'swap',
 })
 
@@ -93,10 +94,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className={`${playfair.variable} ${jakarta.variable} ${jetbrains.variable} font-sans antialiased`}>
+      <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} font-sans antialiased`}>
         {children}
 
-        {/* OneSignal Web Push SDK — only injected when App ID is configured */}
         {appId && (
           <>
             <Script

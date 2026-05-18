@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { Search, Bell, Menu, X, ArrowRight } from 'lucide-react'
+import { Search, Menu, X, ArrowRight } from 'lucide-react'
 import SubscribeButton from '@/components/notifications/SubscribeButton'
 
 const navLinks = [

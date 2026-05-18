@@ -16,7 +16,34 @@ import {
   Award,
   ArrowRight,
   Users,
+  Monitor,
+  BarChart3,
+  Wrench,
+  HeartPulse,
+  BookOpen,
+  FlaskConical,
+  GraduationCap,
+  Scale,
+  Stethoscope,
+  Sprout,
+  TreePine,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+const FACULTY_ICONS: Record<string, LucideIcon> = {
+  'it':          Monitor,
+  'management':  BarChart3,
+  'engineering': Wrench,
+  'medical':     HeartPulse,
+  'humanities':  BookOpen,
+  'science':     FlaskConical,
+  'education':   GraduationCap,
+  'law':         Scale,
+  'nursing':     Stethoscope,
+  'agriculture': Sprout,
+  'forestry':    TreePine,
+  'architecture':Building2,
+}
 
 export const dynamic   = 'force-dynamic'
 export const revalidate = 0
@@ -419,20 +446,27 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-            {FACULTIES.map((faculty) => (
-              <Link
-                key={faculty.slug}
-                href={`/programs?faculty=${faculty.slug}`}
-                className="flex flex-col items-center gap-2.5 p-4 bg-white rounded-xl border border-gray-200
-                           hover:border-[#1847c4] hover:shadow-card-md transition-all duration-200
-                           hover:-translate-y-0.5 group"
-              >
-                <span className="text-2xl">{faculty.icon}</span>
-                <span className="text-[11px] font-semibold text-center leading-tight text-gray-600 group-hover:text-[#1847c4] transition-colors">
-                  {faculty.name}
-                </span>
-              </Link>
-            ))}
+            {FACULTIES.map((faculty) => {
+              const Icon = FACULTY_ICONS[faculty.slug] ?? Monitor
+              return (
+                <Link
+                  key={faculty.slug}
+                  href={`/programs?faculty=${faculty.slug}`}
+                  className="group flex flex-col items-center gap-3 text-center p-6 bg-white rounded-2xl
+                             border border-gray-200 hover:bg-[#1847c4] hover:border-[#1847c4]
+                             hover:shadow-lg transition-all duration-200 cursor-pointer"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center
+                                  group-hover:bg-white/20 transition-colors">
+                    <Icon className="w-8 h-8 text-[#1847c4] group-hover:text-white transition-colors" />
+                  </div>
+                  <span className="font-semibold text-gray-900 text-sm leading-tight
+                                   group-hover:text-white transition-colors">
+                    {faculty.name}
+                  </span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>

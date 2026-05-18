@@ -1,9 +1,25 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Playfair_Display, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+})
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
+  display: 'swap',
+})
+
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+})
 
 const BASE_URL = 'https://sikshyanepal.vercel.app'
 
@@ -77,7 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${playfair.variable} ${jakarta.variable} ${jetbrains.variable} font-sans antialiased`}>
         {children}
 
         {/* OneSignal Web Push SDK — only injected when App ID is configured */}

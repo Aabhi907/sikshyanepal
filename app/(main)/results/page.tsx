@@ -6,7 +6,7 @@ import SearchBar from '@/components/ui/SearchBar'
 import type { Result } from '@/types'
 import { FileText, RefreshCcw } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export const dynamic  = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
@@ -64,83 +64,82 @@ export default async function ResultsPage({
     return `/results${s ? `?${s}` : ''}`
   }
 
-  const pill = (active: boolean) =>
-    active ? 'filter-pill-active' : 'filter-pill-inactive'
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div>
+      {/* ── Dark mini hero ───────────────────────────────────────── */}
+      <div className="bg-navy border-b border-white/8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
+          <p className="section-eyebrow text-brand-light">Exam Results</p>
+          <h1 className="font-display font-bold text-white text-4xl mb-2" style={{ letterSpacing: '-0.02em' }}>
+            University Results
+          </h1>
+          <p className="text-slate-400 text-sm mb-6">
+            Latest exam results from universities and boards in Nepal
+          </p>
+          <SearchBar placeholder="Search results by title or program..." redirectTo="/results" />
+        </div>
 
-      {/* ── Page header ─────────────────────────────────────── */}
-      <div className="mb-8">
-        <p className="section-label">RESULTS</p>
-        <h1 className="section-heading">Exam Results</h1>
-        <p className="text-ink-secondary text-sm mt-1">
-          Latest exam results from universities and boards in Nepal
-        </p>
+        {/* University chip filters */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-5">
+          <div className="flex flex-wrap gap-2">
+            <Link href={filterUrl('university', '')} className={!searchParams.university ? 'chip-active' : 'chip-inactive'}>
+              All Universities
+            </Link>
+            {UNIVERSITIES.map((u) => (
+              <Link key={u} href={filterUrl('university', u)} className={searchParams.university === u ? 'chip-active' : 'chip-inactive'}>
+                {u}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* ── Search ──────────────────────────────────────────── */}
-      <div className="mb-5">
-        <SearchBar placeholder="Search results by title or program..." redirectTo="/results" />
-      </div>
+      {/* ── Program chips + results list ─────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-      {/* ── University filter chips ──────────────────────────── */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        <Link href={filterUrl('university', '')} className={pill(!searchParams.university)}>
-          All Universities
-        </Link>
-        {UNIVERSITIES.map((u) => (
-          <Link key={u} href={filterUrl('university', u)} className={pill(searchParams.university === u)}>
-            {u}
-          </Link>
-        ))}
-      </div>
-
-      {/* ── Program filter chips ─────────────────────────────── */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {PROGRAMS.map((prog) => (
-          <Link key={prog} href={filterUrl('program', prog)} className={pill(searchParams.program === prog)}>
-            {prog}
-          </Link>
-        ))}
-      </div>
-
-      {/* ── Result count ─────────────────────────────────────── */}
-      <p className="text-sm text-ink-secondary mb-4">
-        <span className="font-semibold text-ink">{results.length}</span>{' '}
-        result{results.length !== 1 ? 's' : ''} found
-        {searchParams.q && <> for &ldquo;{searchParams.q}&rdquo;</>}
-      </p>
-
-      {/* ── Results list ─────────────────────────────────────── */}
-      {results.length > 0 ? (
-        <div className="space-y-3">
-          {results.map((result) => (
-            <ResultCard key={result.id} result={result} />
+        {/* Program filter chips */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {PROGRAMS.map((prog) => (
+            <Link key={prog} href={filterUrl('program', prog)} className={searchParams.program === prog ? 'chip-active' : 'chip-inactive'}>
+              {prog}
+            </Link>
           ))}
         </div>
-      ) : (
-        <div className="text-center py-20 bg-card rounded-2xl border border-border">
-          <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-7 h-7 text-ink-muted" />
+
+        {/* Count */}
+        <p className="text-sm text-ink-secondary mb-4 font-mono">
+          <span className="font-bold text-ink">{results.length}</span>{' '}
+          result{results.length !== 1 ? 's' : ''} found
+          {searchParams.q && <> for &ldquo;{searchParams.q}&rdquo;</>}
+        </p>
+
+        {/* List */}
+        {results.length > 0 ? (
+          <div className="space-y-2.5">
+            {results.map((result) => (
+              <ResultCard key={result.id} result={result} />
+            ))}
           </div>
-          <h3 className="text-base font-semibold text-ink mb-2">No results found</h3>
-          <p className="text-sm text-ink-secondary mb-6 max-w-xs mx-auto">
-            {hasFilter
-              ? 'Try removing some filters or searching with different keywords.'
-              : 'New exam results will appear here as soon as they are published.'}
-          </p>
-          {hasFilter && (
-            <Link
-              href="/results"
-              className="btn-primary text-sm"
-            >
-              <RefreshCcw className="w-4 h-4" />
-              Clear all filters
-            </Link>
-          )}
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-20 bg-card rounded-2xl border border-border">
+            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-7 h-7 text-ink-muted" />
+            </div>
+            <h3 className="text-base font-semibold text-ink mb-2">No results found</h3>
+            <p className="text-sm text-ink-secondary mb-6 max-w-xs mx-auto">
+              {hasFilter
+                ? 'Try removing some filters or searching with different keywords.'
+                : 'New exam results will appear here as soon as they are published.'}
+            </p>
+            {hasFilter && (
+              <Link href="/results" className="btn-navy text-sm">
+                <RefreshCcw className="w-4 h-4" />
+                Clear all filters
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Star, ArrowRight, BookOpen, Banknote } from 'lucide-react'
+import { MapPin, Star, ArrowRight, Banknote } from 'lucide-react'
 import type { College } from '@/types'
 import Badge from '@/components/ui/Badge'
 
@@ -14,10 +14,10 @@ const AFFIL_COLORS: Record<string, 'blue' | 'green' | 'orange' | 'purple' | 'gra
 
 // Cover gradient fallbacks per affiliation
 const AFFIL_GRADIENT: Record<string, string> = {
-  'Tribhuvan University':  'from-blue-600 to-blue-800',
-  'Kathmandu University':  'from-emerald-600 to-emerald-800',
-  'Pokhara University':    'from-amber-500 to-orange-700',
-  'Purbanchal University': 'from-purple-600 to-purple-800',
+  'Tribhuvan University':  'from-blue-700 to-blue-900',
+  'Kathmandu University':  'from-emerald-700 to-emerald-900',
+  'Pokhara University':    'from-amber-600 to-orange-800',
+  'Purbanchal University': 'from-purple-700 to-purple-900',
 }
 
 function affiliationShort(full: string | null): string | null {
@@ -46,9 +46,9 @@ interface CollegeCardProps {
 }
 
 export default function CollegeCard({ college }: CollegeCardProps) {
-  const affiliColor    = AFFIL_COLORS[college.affiliation ?? ''] ?? 'gray'
-  const affiliShort    = affiliationShort(college.affiliation)
-  const coverGradient  = AFFIL_GRADIENT[college.affiliation ?? ''] ?? 'from-slate-600 to-slate-800'
+  const affiliColor   = AFFIL_COLORS[college.affiliation ?? ''] ?? 'gray'
+  const affiliShort   = affiliationShort(college.affiliation)
+  const coverGradient = AFFIL_GRADIENT[college.affiliation ?? ''] ?? 'from-navy-700 to-navy'
 
   const topPrograms = (college.programs ?? [])
     .slice(0, 3)
@@ -72,7 +72,7 @@ export default function CollegeCard({ college }: CollegeCardProps) {
                       : 'border-border shadow-card hover:border-border-strong'
                     }`}
       >
-        {/* ── Cover image ───────────────────────────────── */}
+        {/* ── Cover ─────────────────────────────────────── */}
         <div className={`relative h-40 bg-gradient-to-br ${coverGradient} flex-shrink-0 overflow-hidden`}>
           {college.cover_url ? (
             <Image
@@ -82,14 +82,23 @@ export default function CollegeCard({ college }: CollegeCardProps) {
               className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-5xl font-black text-white/20 select-none">
+            <>
+              {/* Dot texture */}
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+                  backgroundSize: '20px 20px',
+                }}
+              />
+              {/* Large faded initial watermark */}
+              <span className="absolute -right-3 -bottom-4 font-display font-black text-[7rem] leading-none text-white/15 select-none">
                 {college.name.charAt(0)}
               </span>
-            </div>
+            </>
           )}
 
-          {/* Overlay gradient for readability */}
+          {/* Bottom fade */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
           {/* Featured badge */}
@@ -109,7 +118,7 @@ export default function CollegeCard({ college }: CollegeCardProps) {
           )}
         </div>
 
-        {/* ── Card body ─────────────────────────────────── */}
+        {/* ── Body ──────────────────────────────────────── */}
         <div className="p-4 flex flex-col flex-1">
           {/* Logo + Name */}
           <div className="flex items-start gap-3 mb-3">
@@ -123,11 +132,11 @@ export default function CollegeCard({ college }: CollegeCardProps) {
                   className="rounded-xl object-contain"
                 />
               ) : (
-                <span className="text-lg font-extrabold text-brand-600">{college.name.charAt(0)}</span>
+                <span className="text-base font-display font-bold text-brand">{college.name.charAt(0)}</span>
               )}
             </div>
             <div className="pt-1 min-w-0">
-              <h3 className="font-semibold text-ink text-sm leading-snug line-clamp-2 group-hover:text-brand-600 transition-colors">
+              <h3 className="font-display font-bold text-ink text-[15px] leading-snug line-clamp-2 group-hover:text-brand transition-colors">
                 {college.name}
               </h3>
             </div>
@@ -165,18 +174,12 @@ export default function CollegeCard({ college }: CollegeCardProps) {
 
           {/* Programs */}
           {topPrograms.length > 0 && (
-            <div className="mb-3">
-              <div className="flex items-center gap-1 mb-1.5">
-                <BookOpen className="w-3 h-3 text-ink-muted" />
-                <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wide">Programs</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {topPrograms.map((name) => (
-                  <span key={name} className="px-2 py-0.5 bg-brand-50 text-brand-700 text-[11px] font-medium rounded-full border border-brand-100">
-                    {name}
-                  </span>
-                ))}
-              </div>
+            <div className="flex flex-wrap gap-1 mb-3">
+              {topPrograms.map((name) => (
+                <span key={name} className="px-2 py-0.5 bg-brand-50 text-brand text-[11px] font-medium rounded-full border border-brand-100">
+                  {name}
+                </span>
+              ))}
             </div>
           )}
 
@@ -192,9 +195,9 @@ export default function CollegeCard({ college }: CollegeCardProps) {
           {/* Footer */}
           <div className="flex items-center justify-between pt-3 border-t border-border mt-auto">
             {college.established_year && (
-              <span className="text-xs text-ink-muted">Est. {college.established_year}</span>
+              <span className="text-xs font-mono text-ink-muted">Est. {college.established_year}</span>
             )}
-            <span className="text-xs text-brand-600 font-semibold flex items-center gap-1 ml-auto group-hover:gap-1.5 transition-all">
+            <span className="text-xs text-brand font-semibold flex items-center gap-1 ml-auto group-hover:gap-1.5 transition-all">
               View Profile <ArrowRight className="w-3 h-3" />
             </span>
           </div>

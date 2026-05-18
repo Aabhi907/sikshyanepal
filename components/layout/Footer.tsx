@@ -1,28 +1,23 @@
 import Link from 'next/link'
-import { GraduationCap, Mail, MapPin, ArrowUpRight } from 'lucide-react'
+import { Mail, MapPin, ArrowUpRight } from 'lucide-react'
 
-const footerLinks = {
-  'Quick Links': [
-    { label: 'All Colleges',     href: '/colleges' },
-    { label: 'Compare Colleges', href: '/compare' },
-    { label: 'College Reviews',  href: '/colleges?tab=reviews' },
-    { label: 'Scholarships',     href: '/scholarships' },
-  ],
-  Programs: [
-    { label: 'IT & Computing',  href: '/programs?faculty=IT' },
-    { label: 'Engineering',     href: '/programs?faculty=Engineering' },
-    { label: 'Management',      href: '/programs?faculty=Management' },
-    { label: 'Medical',         href: '/programs?faculty=Medical' },
-  ],
-  Universities: [
-    { label: 'TU Results',      href: '/results?university=TU' },
-    { label: 'KU Notices',      href: '/notices?university=KU' },
-    { label: 'NEB Results',     href: '/results?university=NEB' },
-    { label: 'CTEVT Notices',   href: '/notices?university=CTEVT' },
-  ],
-}
+const exploreLinks = [
+  { label: 'All Colleges',     href: '/colleges' },
+  { label: 'Compare Colleges', href: '/compare' },
+  { label: 'Scholarships',     href: '/scholarships' },
+  { label: 'Programs',         href: '/programs' },
+  { label: 'Education News',   href: '/news' },
+]
 
-// Simple social SVG icons (no extra dependency)
+const universityLinks = [
+  { label: 'TU Results',     href: '/results?university=TU' },
+  { label: 'KU Results',     href: '/results?university=KU' },
+  { label: 'NEB Results',    href: '/results?university=NEB' },
+  { label: 'TU Notices',     href: '/notices?university=TU' },
+  { label: 'KU Notices',     href: '/notices?university=KU' },
+  { label: 'CTEVT Notices',  href: '/notices?university=CTEVT' },
+]
+
 function TwitterIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -40,48 +35,46 @@ function FacebookIcon({ className }: { className?: string }) {
 
 export default function Footer() {
   return (
-    <footer className="bg-[#0f172a] text-slate-400">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
+    <footer className="bg-navy text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
 
-          {/* ── Brand column ──────────────────────────────────── */}
-          <div className="lg:col-span-2">
-            <Link href="/" className="inline-flex items-center gap-2.5 mb-5 group">
-              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-white" strokeWidth={2.5} />
+          {/* ── Col 1: Brand ─────────────────────────────── */}
+          <div>
+            <Link href="/" className="inline-flex items-center gap-2.5 mb-5">
+              <div className="w-8 h-8 bg-brand rounded-md flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-display font-bold text-sm leading-none">S</span>
               </div>
-              <span className="text-[17px] font-bold text-white tracking-tight">
-                Sikshya<span className="text-brand-300">Nepal</span>
+              <span className="text-[17px] font-display font-bold text-white leading-none tracking-tight">
+                Sikshya<span className="text-brand-light">Nepal</span>
               </span>
             </Link>
 
             <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-xs">
               Nepal&apos;s most complete education platform. Find colleges, check results,
-              and get university notices — all in one place.
+              and stay updated with university notices.
             </p>
 
             <div className="space-y-2.5 mb-6">
               <a
                 href="mailto:info@sikshyanepal.com"
-                className="flex items-center gap-2.5 text-sm text-slate-400 hover:text-white transition-colors group"
+                className="flex items-center gap-2.5 text-sm text-slate-400 hover:text-white transition-colors"
               >
-                <Mail className="w-4 h-4 text-brand-400 flex-shrink-0" />
+                <Mail className="w-4 h-4 text-brand-light flex-shrink-0" />
                 info@sikshyanepal.com
               </a>
-              <div className="flex items-center gap-2.5 text-sm">
-                <MapPin className="w-4 h-4 text-brand-400 flex-shrink-0" />
+              <div className="flex items-center gap-2.5 text-sm text-slate-400">
+                <MapPin className="w-4 h-4 text-brand-light flex-shrink-0" />
                 Kathmandu, Nepal
               </div>
             </div>
 
-            {/* Social icons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <a
                 href="https://twitter.com/sikshyanepal"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center
-                           hover:bg-white/10 hover:border-white/20 transition-all"
+                className="w-8 h-8 rounded-md bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
                 aria-label="Twitter/X"
               >
                 <TwitterIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -90,8 +83,7 @@ export default function Footer() {
                 href="https://facebook.com/sikshyanepal"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center
-                           hover:bg-white/10 hover:border-white/20 transition-all"
+                className="w-8 h-8 rounded-md bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
                 aria-label="Facebook"
               >
                 <FacebookIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -99,37 +91,74 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* ── Link columns ──────────────────────────────────── */}
-          {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
-              <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-4">
-                {category}
-              </h3>
-              <ul className="space-y-2.5">
-                {links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-slate-400 hover:text-white transition-colors inline-flex items-center gap-1 group"
-                    >
-                      {link.label}
-                      <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* ── Col 2: Explore ───────────────────────────── */}
+          <div>
+            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-5">
+              ── Explore
+            </h3>
+            <ul className="space-y-3">
+              {exploreLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="group inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors"
+                  >
+                    {link.label}
+                    <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Col 3: Universities ──────────────────────── */}
+          <div>
+            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-5">
+              ── Universities
+            </h3>
+            <ul className="space-y-3">
+              {universityLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="group inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors"
+                  >
+                    {link.label}
+                    <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Col 4: Connect ───────────────────────────── */}
+          <div>
+            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-5">
+              ── Connect
+            </h3>
+            <p className="text-sm text-slate-400 leading-relaxed mb-6">
+              Get daily alerts for results and notices from Nepal&apos;s top universities
+              delivered straight to your inbox.
+            </p>
+            <Link
+              href="/colleges"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md
+                         bg-white/8 border border-white/20 text-white text-sm font-semibold
+                         hover:bg-white/15 hover:border-white/35 transition-all"
+            >
+              Find My College
+            </Link>
+          </div>
         </div>
 
-        {/* ── Bottom bar ────────────────────────────────────── */}
-        <div className="mt-12 pt-6 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-500">
+        {/* ── Bottom bar ───────────────────────────────── */}
+        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-500 font-mono">
             © {new Date().getFullYear()} SikshyaNepal. All rights reserved.
           </p>
           <div className="flex items-center gap-5 text-xs text-slate-500">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms"   className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms"   className="hover:text-white transition-colors">Terms</Link>
             <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
         </div>

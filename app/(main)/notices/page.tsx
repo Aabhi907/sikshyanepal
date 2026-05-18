@@ -6,7 +6,7 @@ import SearchBar from '@/components/ui/SearchBar'
 import type { Notice } from '@/types'
 import { Bell, RefreshCcw } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export const dynamic  = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ async function getNotices(sp: { q?: string; university?: string }) {
   let query = supabase
     .from('notices')
     .select('*, university:universities(id, name, short_name, slug, website, created_at)')
-    .order('published_date', { ascending: false }) // newest first — confirmed
+    .order('published_date', { ascending: false })
 
   if (sp.q) query = query.ilike('title', `%${sp.q}%`)
 
@@ -42,76 +42,83 @@ export default async function NoticesPage({
 }: {
   searchParams: { q?: string; university?: string }
 }) {
-  const notices    = await getNotices(searchParams)
-  const hasFilter  = !!(searchParams.university || searchParams.q)
+  const notices   = await getNotices(searchParams)
+  const hasFilter = !!(searchParams.university || searchParams.q)
 
-  const pill = (active: boolean) =>
-    `px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-      active
-        ? 'bg-blue-600 text-white border-blue-600'
-        : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-    }`
+  function filterUrl(university: string) {
+    const p = new URLSearchParams()
+    if (searchParams.q) p.set('q', searchParams.q)
+    if (university)     p.set('university', university)
+    const s = p.toString()
+    return `/notices${s ? `?${s}` : ''}`
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Bell className="w-6 h-6 text-orange-500" />
-          <h1 className="text-2xl font-bold text-gray-900">University Notices</h1>
-        </div>
-        <p className="text-gray-500 text-sm">Admission deadlines, exam schedules and official announcements</p>
-      </div>
-
-      <div className="mb-5">
-        <SearchBar placeholder="Search notices..." redirectTo="/notices" />
-      </div>
-
-      {/* University filter */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        <Link href="/notices" className={pill(!searchParams.university)}>All</Link>
-        {UNIVERSITIES.map((u) => (
-          <Link
-            key={u}
-            href={searchParams.q ? `/notices?q=${encodeURIComponent(searchParams.q)}&university=${u}` : `/notices?university=${u}`}
-            className={pill(searchParams.university === u)}
-          >
-            {u}
-          </Link>
-        ))}
-      </div>
-
-      {/* Count */}
-      <p className="text-sm text-gray-500 mb-4">
-        <span className="font-semibold text-gray-900">{notices.length}</span> notice{notices.length !== 1 ? 's' : ''} found
-        {searchParams.q && <> for &quot;{searchParams.q}&quot;</>}
-      </p>
-
-      {notices.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {notices.map((notice) => (
-            <NoticeCard key={notice.id} notice={notice} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
-          <Bell className="w-14 h-14 text-gray-200 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No notices found</h3>
-          <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto">
-            {hasFilter
-              ? 'Try removing some filters or searching with different keywords.'
-              : 'New notices will appear here as soon as they are published by universities.'}
+    <div>
+      {/* ── Dark mini hero ───────────────────────────────────────── */}
+      <div className="bg-navy border-b border-white/8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
+          <p className="section-eyebrow text-brand-light">University Notices</p>
+          <h1 className="font-display font-bold text-white text-4xl mb-2" style={{ letterSpacing: '-0.02em' }}>
+            Official Notices
+          </h1>
+          <p className="text-slate-400 text-sm mb-6">
+            Admission deadlines, exam schedules and official announcements from Nepal&apos;s universities
           </p>
-          {hasFilter && (
-            <Link
-              href="/notices"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 transition-colors"
-            >
-              <RefreshCcw className="w-4 h-4" />
-              Clear all filters
-            </Link>
-          )}
+          <SearchBar placeholder="Search notices..." redirectTo="/notices" />
         </div>
-      )}
+
+        {/* University chip filters */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-5">
+          <div className="flex flex-wrap gap-2">
+            <Link href="/notices" className={!searchParams.university ? 'chip-active' : 'chip-inactive'}>
+              All Universities
+            </Link>
+            {UNIVERSITIES.map((u) => (
+              <Link key={u} href={filterUrl(u)} className={searchParams.university === u ? 'chip-active' : 'chip-inactive'}>
+                {u}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Notices list ─────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        {/* Count */}
+        <p className="text-sm text-ink-secondary mb-4 font-mono">
+          <span className="font-bold text-ink">{notices.length}</span>{' '}
+          notice{notices.length !== 1 ? 's' : ''} found
+          {searchParams.q && <> for &ldquo;{searchParams.q}&rdquo;</>}
+        </p>
+
+        {notices.length > 0 ? (
+          <div className="space-y-2.5">
+            {notices.map((notice) => (
+              <NoticeCard key={notice.id} notice={notice} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-card rounded-2xl border border-border">
+            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-7 h-7 text-ink-muted" />
+            </div>
+            <h3 className="text-base font-semibold text-ink mb-2">No notices found</h3>
+            <p className="text-sm text-ink-secondary mb-6 max-w-xs mx-auto">
+              {hasFilter
+                ? 'Try removing some filters or searching with different keywords.'
+                : 'New notices will appear here as soon as they are published.'}
+            </p>
+            {hasFilter && (
+              <Link href="/notices" className="btn-navy text-sm">
+                <RefreshCcw className="w-4 h-4" />
+                Clear all filters
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

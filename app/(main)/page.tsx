@@ -156,7 +156,7 @@ export default async function HomePage() {
           HERO — two-column, light background
       ════════════════════════════════════════════════════════ */}
       <section className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-20 pb-16 sm:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16 items-center">
 
             {/* ── Left column (60%) ────────────────────── */}
@@ -187,82 +187,57 @@ export default async function HomePage() {
               <HeroSearch />
             </div>
 
-            {/* ── Right column (40%) — card stack ──────── */}
+            {/* ── Right column (40%) — card fan ──────── */}
             <div className="hidden lg:block lg:col-span-2">
-              <div className="relative h-[340px]">
+              <div className="relative h-[380px]">
 
-                {/* Back card — college */}
+                {/* Card 3 — bottom — Featured College (green) */}
                 <div
                   className="absolute bg-white rounded-2xl border border-gray-100 shadow-card p-4 w-full"
-                  style={{ top: '24px', left: '24px', transform: 'rotate(2deg)', zIndex: 1 }}
+                  style={{ top: '216px', left: '-10px', transform: 'rotate(2deg)', zIndex: 1 }}
                 >
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                      <Building2 className="w-3.5 h-3.5 text-amber-600" />
-                    </div>
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Featured College</span>
-                  </div>
-                  <p className="text-sm font-semibold text-ink line-clamp-2 leading-snug mb-2">
-                    {featuredFirst?.name ?? 'Tribhuvan University College'}
-                  </p>
-                  <span className="text-[11px] font-mono text-gray-400">
-                    {featuredFirst?.location ?? 'Kathmandu, Nepal'}
-                  </span>
+                  <StackCard
+                    icon={<Building2 className="w-3.5 h-3.5 text-emerald-600" />}
+                    label="Featured College"
+                    title={featuredFirst?.name ?? 'Tribhuvan University College'}
+                    meta={featuredFirst?.location ?? 'Kathmandu, Nepal'}
+                    accentColor="bg-emerald-50"
+                  />
                 </div>
 
-                {/* Middle card — notice */}
+                {/* Card 2 — middle — Latest Notice (orange) */}
                 <div
                   className="absolute bg-white rounded-2xl border border-gray-100 shadow-card-md p-4 w-full"
-                  style={{ top: '12px', left: '12px', transform: 'rotate(-1deg)', zIndex: 2 }}
+                  style={{ top: '108px', left: '10px', transform: 'rotate(-1.5deg)', zIndex: 2 }}
                 >
-                  {latestNotice ? (
-                    <StackCard
-                      icon={<Bell className="w-3.5 h-3.5 text-orange-600" />}
-                      label="New Notice"
-                      title={latestNotice.title}
-                      meta={latestNotice.university?.short_name ?? 'University'}
-                      accentColor="bg-orange-50"
-                    />
-                  ) : (
-                    <StackCard
-                      icon={<Bell className="w-3.5 h-3.5 text-orange-600" />}
-                      label="New Notice"
-                      title="KU Exam Schedule — Spring 2024"
-                      meta="Kathmandu University"
-                      accentColor="bg-orange-50"
-                    />
-                  )}
+                  <StackCard
+                    icon={<Bell className="w-3.5 h-3.5 text-orange-500" />}
+                    label="Latest Notice"
+                    title={latestNotice?.title ?? 'KU Exam Schedule — Spring 2025'}
+                    meta={latestNotice?.university?.short_name ?? 'Kathmandu University'}
+                    accentColor="bg-orange-50"
+                  />
                 </div>
 
-                {/* Front card — result */}
+                {/* Card 1 — top — Latest Result (blue) */}
                 <div
                   className="absolute bg-white rounded-2xl border border-gray-200 shadow-card-xl p-4 w-full"
-                  style={{ top: 0, left: 0, zIndex: 3 }}
+                  style={{ top: 0, left: 0, transform: 'rotate(0.5deg)', zIndex: 3 }}
                 >
-                  {latestResult ? (
-                    <StackCard
-                      icon={<FileText className="w-3.5 h-3.5 text-[#1847c4]" />}
-                      label="Latest Result"
-                      title={latestResult.title}
-                      meta={latestResult.university?.short_name ?? 'University'}
-                      accentColor="bg-blue-50"
-                    />
-                  ) : (
-                    <StackCard
-                      icon={<FileText className="w-3.5 h-3.5 text-[#1847c4]" />}
-                      label="Latest Result"
-                      title="TU BCA 4th Semester Result Published"
-                      meta="Tribhuvan University"
-                      accentColor="bg-blue-50"
-                    />
-                  )}
-
+                  <StackCard
+                    icon={<FileText className="w-3.5 h-3.5 text-[#1847c4]" />}
+                    label="Latest Result"
+                    title={latestResult?.title ?? 'TU BCA 4th Semester Result Published'}
+                    meta={latestResult?.university?.short_name ?? 'Tribhuvan University'}
+                    accentColor="bg-blue-50"
+                  />
                   {/* Live indicator */}
                   <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-[11px] text-gray-400 font-mono">Updated live · Just now</span>
                   </div>
                 </div>
+
               </div>
             </div>
           </div>

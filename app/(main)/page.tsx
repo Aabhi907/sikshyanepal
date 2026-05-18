@@ -55,10 +55,10 @@ export const metadata: Metadata = {
 }
 
 const UNIVERSITY_SHOWCASE = [
-  { short: 'TU',   label: 'Tribhuvan University',  affiliation: 'Tribhuvan University',  accent: 'border-blue-500   bg-blue-50   text-blue-700' },
-  { short: 'KU',   label: 'Kathmandu University',  affiliation: 'Kathmandu University',  accent: 'border-emerald-500 bg-emerald-50 text-emerald-700' },
-  { short: 'PU',   label: 'Pokhara University',    affiliation: 'Pokhara University',    accent: 'border-amber-500  bg-amber-50  text-amber-700' },
-  { short: 'PurU', label: 'Purbanchal University', affiliation: 'Purbanchal University', accent: 'border-purple-500 bg-purple-50 text-purple-700' },
+  { short: 'TU',   label: 'Tribhuvan University',  affiliation: 'Tribhuvan University',  textColor: 'text-blue-600',   iconBg: 'bg-blue-50' },
+  { short: 'KU',   label: 'Kathmandu University',  affiliation: 'Kathmandu University',  textColor: 'text-green-600',  iconBg: 'bg-green-50' },
+  { short: 'PU',   label: 'Pokhara University',    affiliation: 'Pokhara University',    textColor: 'text-orange-500', iconBg: 'bg-orange-50' },
+  { short: 'PurU', label: 'Purbanchal University', affiliation: 'Purbanchal University', textColor: 'text-purple-600', iconBg: 'bg-purple-50' },
 ]
 
 async function getHomeData() {
@@ -313,26 +313,18 @@ export default async function HomePage() {
           LATEST RESULTS — subtle blue bg
       ════════════════════════════════════════════════════════ */}
       <section className="bg-[#f0f4ff] border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="flex items-end justify-between mb-7">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex items-end justify-between mb-8">
             <div>
               <span className="section-tag-blue">Latest Updates</span>
-              <h2 className="section-heading">Results &amp; Notices</h2>
-              <p className="section-sub text-sm">Live from TU, KU, NEB, CTEVT &amp; more</p>
-            </div>
-            <div className="hidden sm:flex items-center gap-5">
-              <Link href="/results"
-                className="text-sm font-medium text-[#1847c4] hover:text-[#1340b0] flex items-center gap-1.5 transition-colors">
-                All Results <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link href="/notices"
-                className="text-sm font-medium text-[#1847c4] hover:text-[#1340b0] flex items-center gap-1.5 transition-colors">
-                All Notices <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+                Results &amp; Notices
+              </h2>
+              <p className="text-gray-400 text-sm mt-1">Live from TU, KU, NEB, CTEVT &amp; more</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Results panel */}
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-4">
@@ -342,13 +334,14 @@ export default async function HomePage() {
                   </div>
                   <span className="text-sm font-semibold text-ink">Latest Results</span>
                 </div>
-                <Link href="/results" className="text-xs text-[#1847c4] hover:underline flex items-center gap-1 sm:hidden">
-                  View all <ArrowRight className="w-3 h-3" />
+                <Link href="/results"
+                  className="text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] flex items-center gap-1 transition-colors duration-200">
+                  View all <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
               {results.length > 0 ? (
                 <div>
-                  {results.map((r) => (
+                  {results.slice(0, 5).map((r) => (
                     <ResultCard key={r.id} result={r} compact />
                   ))}
                 </div>
@@ -366,13 +359,14 @@ export default async function HomePage() {
                   </div>
                   <span className="text-sm font-semibold text-ink">University Notices</span>
                 </div>
-                <Link href="/notices" className="text-xs text-[#1847c4] hover:underline flex items-center gap-1 sm:hidden">
-                  View all <ArrowRight className="w-3 h-3" />
+                <Link href="/notices"
+                  className="text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] flex items-center gap-1 transition-colors duration-200">
+                  View all <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
               {notices.length > 0 ? (
                 <div>
-                  {notices.map((n) => (
+                  {notices.slice(0, 5).map((n) => (
                     <NoticeCard key={n.id} notice={n} compact />
                   ))}
                 </div>
@@ -380,17 +374,6 @@ export default async function HomePage() {
                 <p className="text-sm text-gray-400 py-6 text-center">No notices yet</p>
               )}
             </div>
-          </div>
-
-          <div className="flex items-center justify-center gap-6 mt-5 sm:hidden">
-            <Link href="/results"
-              className="text-sm font-medium text-[#1847c4] flex items-center gap-1.5">
-              All Results <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-            <Link href="/notices"
-              className="text-sm font-medium text-[#1847c4] flex items-center gap-1.5">
-              All Notices <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
         </div>
       </section>
@@ -400,15 +383,17 @@ export default async function HomePage() {
       ════════════════════════════════════════════════════════ */}
       {featuredColleges.length > 0 && (
         <section className="bg-white border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-            <div className="flex items-end justify-between mb-7">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="flex items-end justify-between mb-8">
               <div>
                 <span className="section-tag">Top Colleges</span>
-                <h2 className="section-heading">Featured Colleges</h2>
-                <p className="section-sub text-sm">Hand-picked institutions with strong academics &amp; placements</p>
+                <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+                  Featured Colleges
+                </h2>
+                <p className="text-gray-400 text-sm mt-1">Hand-picked institutions with strong academics &amp; placements</p>
               </div>
               <Link href="/colleges"
-                className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors">
+                className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors duration-200">
                 View All <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -433,14 +418,16 @@ export default async function HomePage() {
           BROWSE BY PROGRAM — subtle bg
       ════════════════════════════════════════════════════════ */}
       <section className="bg-[#f0f4ff] border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="flex items-end justify-between mb-7">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex items-end justify-between mb-8">
             <div>
               <span className="section-tag">Explore</span>
-              <h2 className="section-heading">Browse by Program</h2>
+              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+                Browse by Program
+              </h2>
             </div>
             <Link href="/programs"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors">
+              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors duration-200">
               All Programs <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -475,40 +462,40 @@ export default async function HomePage() {
           BROWSE BY UNIVERSITY — white
       ════════════════════════════════════════════════════════ */}
       <section className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="flex items-end justify-between mb-7">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex items-end justify-between mb-8">
             <div>
               <span className="section-tag-blue">Universities</span>
-              <h2 className="section-heading">Browse by University</h2>
+              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+                Browse by University
+              </h2>
             </div>
             <Link href="/colleges"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors">
+              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors duration-200">
               All Colleges <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {UNIVERSITY_SHOWCASE.map((u) => {
-              const count   = universityCounts[u.short] ?? 0
-              const [border, bg, text] = u.accent.split(' ')
+              const count = universityCounts[u.short] ?? 0
               return (
                 <Link
                   key={u.short}
                   href={`/colleges?affiliation=${encodeURIComponent(u.affiliation)}`}
-                  className={`flex flex-col gap-3 p-5 bg-white rounded-2xl border ${border}
-                              hover:shadow-card-lg hover:-translate-y-0.5 transition-all duration-200 group`}
+                  className="flex flex-col gap-3 p-5 bg-white rounded-2xl border border-gray-200
+                             hover:border-[#1847c4] hover:shadow-md transition-all duration-200 group"
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bg}`}>
-                    <span className={`text-base font-display font-bold ${text}`}>{u.short}</span>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${u.iconBg}`}>
+                    <span className={`text-xl font-display font-bold ${u.textColor}`}>{u.short}</span>
                   </div>
                   <div>
-                    <p className={`text-xs font-mono font-bold uppercase tracking-wide ${text}`}>{u.short}</p>
-                    <p className="text-sm font-semibold text-ink leading-tight mt-0.5">{u.label}</p>
+                    <p className="text-sm font-semibold text-gray-900 leading-tight">{u.label}</p>
                     {count > 0 && (
                       <p className="text-xs text-gray-400 mt-1">{count} college{count !== 1 ? 's' : ''}</p>
                     )}
                   </div>
-                  <span className={`text-xs font-semibold flex items-center gap-1 ${text} group-hover:gap-1.5 transition-all`}>
+                  <span className="text-xs font-semibold text-[#1847c4] flex items-center gap-1 group-hover:gap-1.5 transition-all duration-200">
                     Browse <ArrowRight className="w-3 h-3" />
                   </span>
                 </Link>
@@ -522,7 +509,7 @@ export default async function HomePage() {
           PROMO CARDS — subtle bg
       ════════════════════════════════════════════════════════ */}
       <section className="bg-[#f0f4ff] border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link href="/news"
               className="group flex items-center gap-4 p-5 rounded-2xl border border-gray-200 bg-white
@@ -569,7 +556,7 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════
           SOCIAL PROOF STRIP — dark navy
       ════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: '#0d1b3e' }} className="py-14 text-center">
+      <section style={{ backgroundColor: '#0d1b3e' }} className="py-16 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center gap-2 mb-3">
             <Users className="w-4 h-4 text-blue-400" />

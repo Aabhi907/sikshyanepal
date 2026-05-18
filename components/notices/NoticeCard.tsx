@@ -33,48 +33,38 @@ export default function NoticeCard({ notice, compact = false }: NoticeCardProps)
   const hasPdf    = notice.content_type === 'pdf'
   const hasImage  = notice.content_type === 'image'
 
-  // ── Compact ───────────────────────────────────────────────────
+  // ── Compact (homepage panels) ─────────────────────────────────
   if (compact) {
     return (
       <Link href={`/notices/${notice.slug}`} className="block group">
-        <div className="relative flex items-start gap-3 py-3 pl-4 pr-3 rounded-lg border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-          {/* Left bar */}
-          <div className={`absolute left-0 top-2 bottom-2 w-0.5 rounded-full ${accent.bar}`} />
+        <div className="relative flex items-center gap-3 py-2.5 pl-4 pr-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors duration-200 rounded-lg">
+          {/* Colored dot */}
+          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${accent.bar}`} />
 
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start gap-1.5 flex-wrap">
-              <p className="text-sm font-medium text-ink line-clamp-1 flex-1 min-w-0 group-hover:text-[#1847c4] transition-colors">
-                {notice.title}
-              </p>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {hasPdf && (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">
-                    <FileDown className="w-2.5 h-2.5" />PDF
-                  </span>
-                )}
-                {hasImage && (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-700">
-                    <ImageIcon className="w-2.5 h-2.5" />Img
-                  </span>
-                )}
-                {fresh && (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600">
-                    <Sparkles className="w-2.5 h-2.5" />New
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${accent.badge}`}>
-                {shortName}
+          <p className="text-sm font-medium text-gray-800 line-clamp-1 flex-1 min-w-0 group-hover:text-[#1847c4] transition-colors duration-200">
+            {notice.title}
+          </p>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {hasPdf && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white">
+                <FileDown className="w-2.5 h-2.5" />PDF
               </span>
-              <span className="text-xs font-mono text-gray-400">
-                {timeAgo(notice.published_date)}
+            )}
+            {fresh && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600">
+                <Sparkles className="w-2.5 h-2.5" />New
               </span>
-            </div>
+            )}
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${accent.badge}`}>
+              {shortName}
+            </span>
+            <span className="text-[10px] font-mono text-gray-400 hidden sm:block">
+              {timeAgo(notice.published_date)}
+            </span>
           </div>
 
-          <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-50 text-gray-400 transition-opacity mt-0.5" />
+          <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-40 text-gray-400 transition-opacity" />
         </div>
       </Link>
     )

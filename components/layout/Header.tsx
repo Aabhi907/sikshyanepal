@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown, BookOpenCheck } from 'lucide-react'
 import SubscribeButton from '@/components/notifications/SubscribeButton'
 
 const navLinks = [
@@ -65,7 +65,9 @@ export default function Header() {
 
             {/* ── Logo ─────────────────────────────────────── */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-xl">🎓</span>
+              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookOpenCheck className="w-4 h-4 text-white" />
+              </div>
               <span className="font-display font-bold text-[17px] leading-none tracking-tight">
                 <span className="text-ink">Sikshya</span>
                 <span className="text-primary">Nepal</span>
@@ -146,7 +148,9 @@ export default function Header() {
             {/* Header */}
             <div className="flex items-center justify-between px-5 h-16 border-b border-border flex-shrink-0">
               <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-                <span className="text-lg">🎓</span>
+                <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center flex-shrink-0">
+                  <BookOpenCheck className="w-3.5 h-3.5 text-white" />
+                </div>
                 <span className="font-display font-bold text-[16px]">
                   <span className="text-ink">Sikshya</span>
                   <span className="text-primary">Nepal</span>

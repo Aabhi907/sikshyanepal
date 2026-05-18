@@ -175,7 +175,7 @@ export default async function CollegeProfilePage({
       <div className="bg-card rounded-2xl border border-border overflow-hidden mb-6 shadow-card">
         {/* Cover — real image if available, else a beautiful gradient */}
         <div
-          className={`h-52 relative overflow-hidden mb-12 bg-gradient-to-br ${getCoverStyle(college.affiliation).gradient}`}
+          className={`h-[200px] relative overflow-hidden mb-12 bg-gradient-to-br ${getCoverStyle(college.affiliation).gradient}`}
         >
           {college.cover_url ? (
             <Image
@@ -218,20 +218,36 @@ export default async function CollegeProfilePage({
           )}
         </div>
         <div className="px-6 pb-6">
-          {/* Logo — only this floats up over the cover, NOT the name */}
-          <div className="w-20 h-20 -mt-10 mb-4 bg-white rounded-xl border-2 border-border shadow-card-md flex items-center justify-center text-3xl font-extrabold text-brand-600 flex-shrink-0 overflow-hidden">
-            {college.logo_url ? (
-              <Image
-                src={college.logo_url}
-                alt={`${college.name} logo`}
-                width={80}
-                height={80}
-                className="object-contain w-full h-full"
-              />
-            ) : (
-              college.name.charAt(0)
-            )}
-          </div>
+          {/* Logo — circle avatar floating over cover */}
+          {(() => {
+            const aff = college.affiliation ?? ''
+            const avatarGradient = aff.includes('Tribhuvan')
+              ? 'from-blue-500 to-blue-700'
+              : aff.includes('Kathmandu')
+              ? 'from-emerald-500 to-emerald-700'
+              : aff.includes('Pokhara')
+              ? 'from-amber-400 to-orange-600'
+              : aff.includes('Purbanchal')
+              ? 'from-purple-500 to-purple-700'
+              : 'from-[#1847c4] to-blue-800'
+            return (
+              <div className="w-16 h-16 -mt-8 ml-6 mb-4 rounded-full ring-4 ring-white shadow-md flex-shrink-0 overflow-hidden relative">
+                {college.logo_url ? (
+                  <Image
+                    src={college.logo_url}
+                    alt={`${college.name} logo`}
+                    width={64}
+                    height={64}
+                    className="object-contain w-full h-full bg-white"
+                  />
+                ) : (
+                  <div className={`w-full h-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center`}>
+                    <span className="text-white font-bold text-2xl">{college.name.charAt(0)}</span>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Name + meta — sits fully inside the white card, no overlap */}
           <div className="mb-4">

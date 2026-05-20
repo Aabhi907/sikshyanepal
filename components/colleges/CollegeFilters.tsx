@@ -7,6 +7,7 @@ import { Filter, X, SlidersHorizontal } from 'lucide-react'
 const LOCATIONS = ['Kathmandu', 'Pokhara', 'Chitwan', 'Biratnagar', 'Butwal', 'Other']
 
 const AFFILIATIONS = [
+  { label: 'NEB',   value: 'NEB' },
   { label: 'TU',    value: 'Tribhuvan University' },
   { label: 'KU',    value: 'Kathmandu University' },
   { label: 'PU',    value: 'Pokhara University' },
@@ -15,14 +16,15 @@ const AFFILIATIONS = [
 ]
 
 const FACULTIES = [
-  'IT', 'Management', 'Engineering', 'Medical',
-  'Humanities', 'Law', 'Nursing', 'Education',
+  'Science', 'Management', 'Humanities', 'Education',
+  'IT', 'Engineering', 'Medical', 'Law', 'Nursing',
 ]
 
 const LEVELS = [
-  { label: 'Bachelor', value: 'bachelor' },
-  { label: 'Master',   value: 'master'   },
-  { label: 'Diploma',  value: 'diploma'  },
+  { label: '+2 / Intermediate', value: '+2'      },
+  { label: 'Bachelor',          value: 'bachelor' },
+  { label: 'Master',            value: 'master'   },
+  { label: 'Diploma',           value: 'diploma'  },
 ]
 
 export type CollegeSearchParams = {

@@ -31,6 +31,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 
 const FACULTY_ICONS: Record<string, LucideIcon> = {
+  'plus-two':    BookOpen,      // +2 / Intermediate — first & most prominent
   'it':          Monitor,
   'management':  BarChart3,
   'engineering': Wrench,
@@ -384,20 +385,31 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
             {FACULTIES.map((faculty) => {
               const Icon = FACULTY_ICONS[faculty.slug] ?? Monitor
+              // +2 Programs links to college filter (level=+2) — most relevant for post-SEE students
+              const href = faculty.slug === 'plus-two'
+                ? '/colleges?level=%2B2'
+                : `/programs?faculty=${faculty.slug}`
+              const isPlus2 = faculty.slug === 'plus-two'
               return (
                 <Link
                   key={faculty.slug}
-                  href={`/programs?faculty=${faculty.slug}`}
-                  className="group flex flex-col items-center gap-3 text-center p-6 bg-white rounded-2xl
-                             border border-gray-200 hover:bg-[#1847c4] hover:border-[#1847c4]
-                             hover:shadow-lg transition-all duration-200 cursor-pointer"
+                  href={href}
+                  className={`group flex flex-col items-center gap-3 text-center p-6 rounded-2xl
+                             border transition-all duration-200 cursor-pointer
+                             ${isPlus2
+                               ? 'bg-amber-50 border-amber-200 hover:bg-[#1847c4] hover:border-[#1847c4]'
+                               : 'bg-white border-gray-200 hover:bg-[#1847c4] hover:border-[#1847c4]'}
+                             hover:shadow-lg`}
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center
-                                  group-hover:bg-white/20 transition-colors">
-                    <Icon className="w-8 h-8 text-[#1847c4] group-hover:text-white transition-colors" />
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center
+                                  group-hover:bg-white/20 transition-colors
+                                  ${isPlus2 ? 'bg-amber-100' : 'bg-blue-50'}`}>
+                    <Icon className={`w-8 h-8 group-hover:text-white transition-colors
+                                     ${isPlus2 ? 'text-amber-600' : 'text-[#1847c4]'}`} />
                   </div>
-                  <span className="font-semibold text-gray-900 text-sm leading-tight
-                                   group-hover:text-white transition-colors">
+                  <span className={`font-semibold text-sm leading-tight
+                                   group-hover:text-white transition-colors
+                                   ${isPlus2 ? 'text-amber-700' : 'text-gray-900'}`}>
                     {faculty.name}
                   </span>
                 </Link>

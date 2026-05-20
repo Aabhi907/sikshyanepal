@@ -3,9 +3,12 @@
 import { useState, FormEvent } from 'react'
 import { CheckCircle2, Loader2 } from 'lucide-react'
 
-const AFFILIATIONS = ['TU', 'KU', 'PU', 'PurU', 'Private / Independent']
+const AFFILIATIONS = ['NEB', 'TU', 'KU', 'PU', 'PurU', 'Private / Independent']
 const ROLES        = ['College Staff', 'Student', 'Alumni', 'Other']
 const PROGRAMS     = [
+  // +2 first — most common for newly submitted schools
+  '+2 Science', '+2 Management', '+2 Humanities', '+2 Education',
+  // Bachelor programs
   'BCA', 'BBA', 'MBBS', 'BSc CSIT', 'BIM', 'BHM',
   'MBA', 'BBS', 'BE', 'BPharm', 'BNurs', 'Other',
 ]

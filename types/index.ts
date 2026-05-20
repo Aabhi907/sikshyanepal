@@ -32,7 +32,7 @@ export interface Program {
   name: string
   slug: string
   duration: string
-  degree_level: 'bachelor' | 'master' | 'mphil' | 'phd' | 'diploma' | 'certificate'
+  degree_level: '+2' | 'bachelor' | 'master' | 'mphil' | 'phd' | 'diploma' | 'certificate'
   faculty: string
   created_at: string
 }

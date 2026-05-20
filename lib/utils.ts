@@ -64,6 +64,8 @@ export function formatCurrency(amount: number): string {
 }
 
 export const FACULTIES = [
+  // +2 entry first — biggest audience (post-SEE students)
+  { name: '+2 Programs', slug: 'plus-two', icon: '📖', color: 'bg-amber-100 text-amber-700' },
   { name: 'IT & Computing', slug: 'it', icon: '💻', color: 'bg-blue-100 text-blue-700' },
   { name: 'Management', slug: 'management', icon: '📊', color: 'bg-green-100 text-green-700' },
   { name: 'Engineering', slug: 'engineering', icon: '⚙️', color: 'bg-orange-100 text-orange-700' },

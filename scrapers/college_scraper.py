@@ -1,6 +1,6 @@
 """
 SikshyaNepal — College Scraper
-Scrapes affiliated college lists from TU, KU, and PU websites.
+Scrapes affiliated college lists from TU, KU, PU, and NEB (+2) websites.
 Inserts new colleges into the colleges table with status='pending_review'.
 
 Sources:
@@ -8,6 +8,9 @@ Sources:
         https://tribhuvan-university.edu.np/constituent-colleges
   KU  — https://ku.edu.np/affiliated-colleges
   PU  — https://pu.edu.np/affiliated-colleges
+  NEB — https://www.neb.gov.np/schools  (+2 / higher secondary)
+        https://www.neb.gov.np/hseb-schools
+        https://seen.gov.np/schools
 """
 
 import re
@@ -43,6 +46,20 @@ SOURCES = [
         "urls": [
             "https://pu.edu.np/affiliated-colleges",
             "https://pu.edu.np/affiliated-college",
+        ],
+    },
+    {
+        "university_short": "NEB",
+        "university_full":  "National Examinations Board",
+        "affiliation":      "NEB",
+        "urls": [
+            # NEB lists of registered +2 / higher secondary schools
+            "https://www.neb.gov.np/schools",
+            "https://www.neb.gov.np/hseb-schools",
+            "https://www.neb.gov.np/affiliated-schools",
+            # School Education — secondary level institutions
+            "https://seen.gov.np/schools",
+            "https://seen.gov.np/higher-secondary",
         ],
     },
 ]
@@ -205,7 +222,8 @@ class CollegeScraper(BaseScraper):
         """
         COLLEGE_SUFFIXES = re.compile(
             r"\b(college|campus|institute|academy|polytechnic|school|"
-            r"university|medical|engineering|management|technology|nursing)\b",
+            r"university|medical|engineering|management|technology|nursing|"
+            r"higher secondary|mahavidyalaya|vidyalaya|secondary|hseb)\b",
             re.IGNORECASE,
         )
         results = []

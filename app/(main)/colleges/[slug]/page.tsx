@@ -333,35 +333,51 @@ export default async function CollegeProfilePage({
             </div>
             {programs.length > 0 ? (
               <div className="space-y-3">
-                {programs.map((cp) => (
-                  <div
-                    key={cp.program_id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100"
-                  >
-                    <div>
-                      <p className="font-medium text-gray-800 text-sm">
-                        {cp.program?.name}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="gray">{cp.program?.faculty}</Badge>
-                        <span className="text-xs text-gray-500">
-                          {cp.program?.duration}
-                        </span>
-                        {cp.scholarship_available && (
-                          <Badge variant="green">Scholarship Available</Badge>
+                {[...programs]
+                  // +2 programs float to the top
+                  .sort((a, b) => {
+                    const aIs2 = a.program?.degree_level === '+2'
+                    const bIs2 = b.program?.degree_level === '+2'
+                    if (aIs2 && !bIs2) return -1
+                    if (!aIs2 && bIs2) return  1
+                    return 0
+                  })
+                  .map((cp) => {
+                    const isPlus2 = cp.program?.degree_level === '+2'
+                    return (
+                      <div
+                        key={cp.program_id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-800 text-sm">
+                            {cp.program?.name}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {/* Show +2 badge for intermediate programs, faculty badge otherwise */}
+                            {isPlus2
+                              ? <Badge variant="blue">+2</Badge>
+                              : <Badge variant="gray">{cp.program?.faculty}</Badge>
+                            }
+                            <span className="text-xs text-gray-500">
+                              {isPlus2 ? '2 Years (+2)' : cp.program?.duration}
+                            </span>
+                            {cp.scholarship_available && (
+                              <Badge variant="green">Scholarship Available</Badge>
+                            )}
+                          </div>
+                        </div>
+                        {cp.fee && (
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-gray-900">
+                              NPR {cp.fee.toLocaleString()}
+                            </p>
+                            <p className="text-xs text-gray-500">per year</p>
+                          </div>
                         )}
                       </div>
-                    </div>
-                    {cp.fee && (
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">
-                          NPR {cp.fee.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">per year</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    )
+                  })}
               </div>
             ) : (
               <p className="text-sm text-gray-500">No programs listed yet.</p>
@@ -456,7 +472,7 @@ export default async function CollegeProfilePage({
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-gray-500">Programs</dt>
+                <dt className="text-gray-500">Programs Offered</dt>
                 <dd className="font-medium text-gray-800">{programs.length}</dd>
               </div>
             </dl>

@@ -263,7 +263,7 @@ export default function SubmitCollegeForm() {
         <textarea
           value={form.description}
           onChange={(e) => set('description', e.target.value.slice(0, 500))}
-          placeholder="Tell students about this college — its strengths, programs, location, and what makes it stand out."
+          placeholder="Brief description — programs offered, facilities, hostel availability, notable achievements, entrance requirements..."
           rows={4}
           className={fieldClass() + ' resize-none'}
         />

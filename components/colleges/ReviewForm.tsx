@@ -116,7 +116,7 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
             type="text"
             value={form.program}
             onChange={e => set('program', e.target.value)}
-            placeholder="e.g. BIT, BBA, BE Civil"
+            placeholder="e.g. BCA, BBA, +2 Science, MBBS"
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -124,12 +124,12 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
 
       {/* Year */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Year of Study / Passed Out</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Year of Study / Batch</label>
         <input
           type="number"
           value={form.year}
           onChange={e => set('year', e.target.value)}
-          placeholder="e.g. 2023"
+          placeholder="e.g. 2081, 2023"
           min="1990"
           max={new Date().getFullYear() + 1}
           className="w-full sm:w-40 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -145,7 +145,7 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
           value={form.review_text}
           onChange={e => set('review_text', e.target.value)}
           rows={5}
-          placeholder="Share your experience — teaching quality, facilities, campus life, placement support, value for money..."
+          placeholder="Share your experience — teaching quality, facilities, campus environment, hostel, canteen, value for money..."
           required
           className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />

@@ -21,6 +21,7 @@ import type { LucideIcon } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 
 const FACULTY_ICONS: Record<string, LucideIcon> = {
+  'plus-two':     BookOpen,       // +2 / Intermediate
   'it':           Monitor,
   'management':   BarChart3,
   'engineering':  Wrench,
@@ -43,16 +44,31 @@ export const metadata: Metadata = {
   description: 'Explore all university programs available in Nepal. IT, Engineering, Management, Medical and more.',
 }
 
-const DEGREE_LEVELS = ['bachelor', 'master', 'phd', 'diploma', 'certificate']
+// Label shown in the chip, value sent in the URL / compared to DB
+const DEGREE_LEVELS = [
+  { label: '+2 / Intermediate', value: '+2'         },
+  { label: 'Bachelor',          value: 'bachelor'   },
+  { label: 'Master',            value: 'master'     },
+  { label: 'PhD',               value: 'phd'        },
+  { label: 'Diploma',           value: 'diploma'    },
+  { label: 'Certificate',       value: 'certificate'},
+]
 
 async function getPrograms(searchParams: { faculty?: string; degree?: string }) {
   const supabase = createServerSupabaseClient()
   let query = supabase.from('programs').select('*').order('faculty').order('name')
+
   if (searchParams.faculty) {
-    const faculty = FACULTIES.find((f) => f.slug === searchParams.faculty)
-    if (faculty) query = query.ilike('faculty', `%${faculty.name.split(' ')[0]}%`)
+    if (searchParams.faculty === 'plus-two') {
+      // +2 programs are stored with degree_level='+2', not a distinct faculty value
+      query = query.eq('degree_level', '+2')
+    } else {
+      const faculty = FACULTIES.find((f) => f.slug === searchParams.faculty)
+      if (faculty) query = query.ilike('faculty', `%${faculty.name.split(' ')[0]}%`)
+    }
   }
   if (searchParams.degree) {
+    // Values are always lowercase (or '+2') — compare directly, no transform needed
     query = query.eq('degree_level', searchParams.degree)
   }
   const { data } = await query
@@ -107,10 +123,17 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
 
       {/* Degree Filter */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {DEGREE_LEVELS.map((d) => (
-          <Link key={d} href={`/programs?${searchParams.faculty ? `faculty=${searchParams.faculty}&` : ''}degree=${d}`}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors capitalize ${searchParams.degree === d ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}>
-            {d}
+        {DEGREE_LEVELS.map(({ label, value }) => (
+          <Link
+            key={value}
+            href={`/programs?${searchParams.faculty ? `faculty=${searchParams.faculty}&` : ''}degree=${encodeURIComponent(value)}`}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              searchParams.degree === value
+                ? 'bg-gray-800 text-white border-gray-800'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+            }`}
+          >
+            {label}
           </Link>
         ))}
       </div>

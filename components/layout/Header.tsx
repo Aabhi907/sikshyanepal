@@ -39,16 +39,43 @@ export default function Header() {
   const [scrolled,   setScrolled]   = useState(false)
   const pathname = usePathname()
 
-  useEffect(() => { setMobileOpen(false) }, [pathname])
+  // Close dropdown on route change
+  useEffect(() => { setMobileOpen(false); setOpenDrop(null) }, [pathname])
+
+  // Scroll shadow
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 4)
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])
+
+  // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!openDrop) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.nav-dropdown')) {
+        setOpenDrop(null)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [openDrop])
+
+  // Close dropdown on Escape key
+  useEffect(() => {
+    if (!openDrop) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenDrop(null)
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [openDrop])
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -79,35 +106,53 @@ export default function Header() {
               {navLinks.map((link) => (
                 <div
                   key={link.label}
-                  className="relative"
-                  onMouseEnter={() => link.sub && setOpenDrop(link.label)}
-                  onMouseLeave={() => setOpenDrop(null)}
+                  // nav-dropdown class is the sentinel for outside-click detection
+                  className="relative nav-dropdown"
                 >
-                  <Link
-                    href={link.href}
-                    className={`flex items-center gap-0.5 px-3.5 py-2 text-sm font-[500] rounded-lg transition-colors duration-150 ${
-                      isActive(link.href)
-                        ? 'text-primary bg-primary-50'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    {link.label}
-                    {link.sub && (
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${openDrop === link.label ? 'rotate-180' : ''}`} />
-                    )}
-                  </Link>
+                  {link.sub ? (
+                    /* Items with sub-menu: button toggles dropdown, no navigation */
+                    <button
+                      onClick={() => setOpenDrop(openDrop === link.label ? null : link.label)}
+                      className={`flex items-center gap-0.5 px-3.5 py-2 text-sm font-[500] rounded-lg transition-colors duration-150 ${
+                        isActive(link.href)
+                          ? 'text-primary bg-primary-50'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      {link.label}
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${openDrop === link.label ? 'rotate-180' : ''}`} />
+                    </button>
+                  ) : (
+                    /* Plain links: navigate directly */
+                    <Link
+                      href={link.href}
+                      className={`flex items-center gap-0.5 px-3.5 py-2 text-sm font-[500] rounded-lg transition-colors duration-150 ${
+                        isActive(link.href)
+                          ? 'text-primary bg-primary-50'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
 
                   {link.sub && openDrop === link.label && (
-                    <div className="absolute top-full left-0 mt-1.5 w-52 bg-white border border-border rounded-xl shadow-card-lg py-1.5 z-50 animate-slide-down">
-                      {link.sub.map((s) => (
-                        <Link
-                          key={s.label}
-                          href={s.href}
-                          className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
-                        >
-                          {s.label}
-                        </Link>
-                      ))}
+                    <div className="absolute top-full left-0 z-50">
+                      {/* Invisible bridge: fills the gap between trigger bottom and
+                          dropdown top so the mouse never "misses" while moving down */}
+                      <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent" />
+                      <div className="mt-1.5 w-52 bg-white border border-border rounded-xl shadow-card-lg py-1.5 animate-slide-down">
+                        {link.sub.map((s) => (
+                          <Link
+                            key={s.label}
+                            href={s.href}
+                            onClick={() => setOpenDrop(null)}
+                            className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
+                          >
+                            {s.label}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

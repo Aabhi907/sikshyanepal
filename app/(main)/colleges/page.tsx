@@ -6,6 +6,7 @@ import CollegeFilters from '@/components/colleges/CollegeFilters'
 import SearchBar from '@/components/ui/SearchBar'
 import type { College, CollegeProgram, Review } from '@/types'
 import { Building2 } from 'lucide-react'
+import AdUnit from '@/components/ads/AdUnit'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -123,11 +124,27 @@ export default async function CollegesPage({
 
       {/* Grid */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((college) => (
-            <CollegeCard key={college.id} college={college} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filtered.slice(0, 6).map((college) => (
+              <CollegeCard key={college.id} college={college} />
+            ))}
+          </div>
+          {filtered.length > 6 && (
+            <AdUnit
+              slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_COLLEGES ?? ''}
+              format="horizontal"
+              className="my-5 rounded-xl border border-gray-200 bg-white min-h-[90px]"
+            />
+          )}
+          {filtered.length > 6 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filtered.slice(6).map((college) => (
+                <CollegeCard key={college.id} college={college} />
+              ))}
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
           <Building2 className="w-14 h-14 text-gray-200 mx-auto mb-4" />

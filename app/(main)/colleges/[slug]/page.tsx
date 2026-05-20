@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import ReviewForm from "@/components/colleges/ReviewForm";
+import AdUnit from "@/components/ads/AdUnit";
 import type { College, CollegeProgram, Review } from "@/types";
 
 // Affiliation → gradient config
@@ -474,6 +475,13 @@ export default async function CollegeProfilePage({
               </a>
             )}
           </div>
+
+          {/* Ad — below Quick Info */}
+          <AdUnit
+            slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR ?? ''}
+            format="rectangle"
+            className="flex justify-center"
+          />
 
           {/* Scholarships */}
           {scholarships.length > 0 && (

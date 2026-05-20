@@ -8,9 +8,17 @@ Repo: kasamthapa/sikshyanepal
 ## Stack
 - Next.js 14 App Router + TypeScript
 - Supabase (PostgreSQL) — pobwvtynnqgkbazunzib.supabase.co
-- Tailwind CSS
+- Tailwind CSS (custom design system — primary #1847c4, accent #f97316)
 - Deployed on Vercel
-- Python scrapers on GitHub Actions
+- Python scrapers on GitHub Actions (every 6 hours)
+- Resend for transactional email
+- Google AdSense for monetisation
+
+## Design System
+- Fonts: Sora (display/headings), DM Sans (body), DM Mono (numbers/badges)
+- Primary: #1847c4 | Accent: #f97316 | Navy: #0d1b3e | Page bg: #f0f4ff
+- Tailwind tokens: primary, accent, navy, ink, card, border
+- Components: .btn-primary, .chip-active, .chip-inactive, .section-tag, .section-tag-blue
 
 ## Principles
 - Write clean, readable, maintainable code
@@ -20,14 +28,70 @@ Repo: kasamthapa/sikshyanepal
 - After every task tell me: what was built, what to test, next step
 - Never delete existing working code without warning
 - Keep SEO in mind for every page
+- Commit and push after every change
 
-## What's Built
-- 13 pages live and working
+## What's Built — Session 6 Complete
+
+### Core Platform
+- 13+ pages live (colleges, results, notices, news, programs, compare, scholarships)
 - 12 Supabase tables with RLS
-- Admin panel with full CRUD
-- Scrapers running every 6 hours
+- Admin panel with full CRUD + System Info dashboard
+- Scrapers running every 6 hours on GitHub Actions
 - College filters, comparison, reviews, search
-- Push notifications and email subscriptions
+
+### Notifications
+- Push notifications via OneSignal (SubscribeButton component)
+- Email subscriptions via EmailSubscribe component (stores to `subscribers` table)
+- Email delivery via Resend — lib/email.ts → sendResultNotification()
+- POST /api/notify-subscribers (secret-guarded) — called by scrapers after new results
+- GET /api/unsubscribe?email=&token= — sets subscriber is_active=false
+- Unsubscribe links embedded in every result alert email
+
+### Monetisation
+- Google AdSense integrated in layout.tsx (afterInteractive, env-gated)
+- AdUnit component: components/ads/AdUnit.tsx (client, no layout shift, responsive)
+- Ad placements: results (after item 5), notices (after item 5), colleges (after row 2),
+  news (after article 3), college profile sidebar (below Quick Info)
+
+### SEO
+- Sitemap: app/sitemap.ts — all pages with correct priorities and lastModified
+  Homepage 1.0, /colleges|results|notices 0.9, /news|programs 0.8,
+  individual colleges 0.8, results/notices/news 0.7, programs 0.6
+- Robots: app/robots.ts — blocks /admin, /api, /search; blocks AI training bots
+
+### Performance
+- loading.tsx skeletons for /colleges, /results, /notices (animate-pulse)
+
+## Required Environment Variables
+
+### Vercel (Next.js app)
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+ADMIN_PASSWORD=
+NEXT_PUBLIC_ONESIGNAL_APP_ID=
+RESEND_API_KEY=                        # from resend.com
+NOTIFICATION_SECRET=                   # random string, shared with scrapers
+NEXT_PUBLIC_SITE_URL=https://sikshyanepal.vercel.app
+NEXT_PUBLIC_ADSENSE_CLIENT_ID=         # ca-pub-XXXXXXXXXXXXXXXX
+NEXT_PUBLIC_ADSENSE_SLOT_RESULTS=      # slot id for results/notices pages
+NEXT_PUBLIC_ADSENSE_SLOT_COLLEGES=     # slot id for colleges page
+NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR=      # slot id for college profile sidebar
+```
+
+### GitHub Secrets (scrapers)
+```
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+VERCEL_DEPLOY_HOOK_URL=
+ONESIGNAL_APP_ID=
+ONESIGNAL_REST_API_KEY=
+FB_PAGE_ID=                            # optional
+FB_PAGE_ACCESS_TOKEN=                  # optional
+SIKSHYANEPAL_URL=https://sikshyanepal.vercel.app
+NOTIFICATION_SECRET=                   # must match Vercel NOTIFICATION_SECRET
+```
 
 ## Key Differentiator — Inline Content Viewing
 SikshyaNepal shows results, notices, and news DIRECTLY on platform.
@@ -52,9 +116,19 @@ base_scraper.extract_content(item_url) → {"url", "type"}
 4. Fallback → type='link', url=None
 Called only for NEW records (check_exists first) to avoid re-fetching.
 All 7 scrapers call extract_content() in process_items().
+run_all.py collects new_records from result scrapers → calls notify_subscribers()
 
 ### Frontend components
 - components/results/PdfViewer.tsx — client, iframe + Google Docs fallback
-- ResultCard / NoticeCard badges: green PDF, blue Image, emerald New
+- components/ads/AdUnit.tsx — Google AdSense unit, client-only, no-layout-shift
+- ResultCard / NoticeCard badges: green PDF, blue Image, red New
 - results/[slug]/page.tsx, notices/[slug]/page.tsx, news/[slug]/page.tsx
   all handle pdf/image/link rendering with appropriate CTAs
+
+## Sessions Log
+- Session 1: Project setup, Supabase schema, basic pages
+- Session 2: Scraper pipeline, content extraction, admin panel
+- Session 3: College profiles, reviews, comparison, search
+- Session 4: UI redesign — Modern South Asian Digital direction, Sora/DM Sans/DM Mono
+- Session 5: Final UI polish — cards, hero fan stack, program icons, loading states
+- Session 6: AdSense, Resend email notifications, sitemap/robots, skeletons, admin System Info

@@ -1,15 +1,35 @@
 import { MetadataRoute } from 'next'
 
+const BASE_URL = 'https://sikshyanepal.vercel.app'
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
+        // Good bots — full access except protected paths
         userAgent: '*',
-        allow: '/',
-        disallow: ['/admin/', '/api/'],
+        allow:    '/',
+        disallow: [
+          '/admin/',
+          '/api/',
+          '/search',
+        ],
+      },
+      {
+        // Block known bad scrapers / AI training bots
+        userAgent: [
+          'GPTBot',
+          'ChatGPT-User',
+          'CCBot',
+          'anthropic-ai',
+          'Claude-Web',
+          'Omgilibot',
+          'FacebookBot',
+        ],
+        disallow: '/',
       },
     ],
-    sitemap: 'https://sikshyanepal.vercel.app/sitemap.xml',
-    host: 'https://sikshyanepal.vercel.app',
+    sitemap:     `${BASE_URL}/sitemap.xml`,
+    host:        BASE_URL,
   }
 }

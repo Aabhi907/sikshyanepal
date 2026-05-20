@@ -6,6 +6,7 @@ import SearchBar from '@/components/ui/SearchBar'
 import { formatDateShort } from '@/lib/utils'
 import type { News } from '@/types'
 import { Calendar, Newspaper, ArrowRight } from 'lucide-react'
+import AdUnit from '@/components/ads/AdUnit'
 
 export const dynamic   = 'force-dynamic'
 export const revalidate = 0
@@ -138,54 +139,70 @@ export default async function NewsPage({ searchParams }: { searchParams: { q?: s
             )}
 
             {/* ── Rest — 3-col grid ─────────────────────────── */}
-            {((searchParams.q ? newsList : rest)).length > 0 && (
-              <>
-                {!searchParams.q && (
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                      More Stories
-                    </span>
-                    <div className="flex-1 h-px bg-gray-200" />
-                  </div>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {(searchParams.q ? newsList : rest).map((news, idx) => (
-                    <Link key={news.id} href={`/news/${news.slug}`} className="group block">
-                      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden
-                                      hover:border-[#1847c4] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-                        <div className="relative h-44 overflow-hidden">
-                          {news.image_url ? (
-                            <Image
-                              src={news.image_url}
-                              alt={news.title}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                          ) : (
-                            <GradientCover title={news.title} idx={idx + 1} />
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <div className="flex items-center gap-1.5 text-[10px] font-mono text-gray-400 mb-2">
-                            <Calendar className="w-3 h-3" />
-                            <span>{formatDateShort(news.published_date)}</span>
-                          </div>
-                          <h2 className="font-semibold text-ink text-sm leading-snug line-clamp-2 mb-1
-                                         group-hover:text-[#1847c4] transition-colors">
-                            {news.title}
-                          </h2>
-                          {news.content && (
-                            <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
-                              {news.content}
-                            </p>
-                          )}
-                        </div>
+            {(searchParams.q ? newsList : rest).length > 0 && (() => {
+              const articles = searchParams.q ? newsList : rest
+              const before   = articles.slice(0, 3)
+              const after    = articles.slice(3)
+
+              function NewsCard({ news, idx }: { news: typeof articles[0]; idx: number }) {
+                return (
+                  <Link key={news.id} href={`/news/${news.slug}`} className="group block">
+                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden
+                                    hover:border-[#1847c4] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                      <div className="relative h-44 overflow-hidden">
+                        {news.image_url ? (
+                          <Image src={news.image_url} alt={news.title} fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <GradientCover title={news.title} idx={idx + 1} />
+                        )}
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
+                      <div className="p-4">
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-gray-400 mb-2">
+                          <Calendar className="w-3 h-3" />
+                          <span>{formatDateShort(news.published_date)}</span>
+                        </div>
+                        <h2 className="font-semibold text-ink text-sm leading-snug line-clamp-2 mb-1
+                                       group-hover:text-[#1847c4] transition-colors">
+                          {news.title}
+                        </h2>
+                        {news.content && (
+                          <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">{news.content}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                )
+              }
+
+              return (
+                <>
+                  {!searchParams.q && (
+                    <div className="flex items-center gap-3 mb-6">
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        More Stories
+                      </span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {before.map((news, idx) => <NewsCard key={news.id} news={news} idx={idx} />)}
+                  </div>
+                  {after.length > 0 && (
+                    <AdUnit
+                      slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RESULTS ?? ''}
+                      format="horizontal"
+                      className="my-6 rounded-xl border border-gray-200 bg-white min-h-[90px]"
+                    />
+                  )}
+                  {after.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {after.map((news, idx) => <NewsCard key={news.id} news={news} idx={idx + 3} />)}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
           </>
         )}
       </div>

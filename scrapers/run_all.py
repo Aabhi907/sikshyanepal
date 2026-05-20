@@ -35,6 +35,35 @@ logging.basicConfig(
 logger = logging.getLogger("RunAll")
 
 
+def notify_subscribers(new_results: list[dict]) -> None:
+    """
+    POST newly inserted result records to the notify-subscribers API endpoint.
+    Silently skips if SIKSHYANEPAL_URL or NOTIFICATION_SECRET are not set,
+    or if there are no new results.
+    """
+    site_url = os.getenv("SIKSHYANEPAL_URL")
+    secret   = os.getenv("NOTIFICATION_SECRET")
+    if not site_url or not secret:
+        logger.info("SIKSHYANEPAL_URL / NOTIFICATION_SECRET not set — skipping email notification")
+        return
+    if not new_results:
+        logger.info("No new results — skipping email notification")
+        return
+    try:
+        resp = requests.post(
+            f"{site_url}/api/notify-subscribers",
+            json={"results": new_results, "secret": secret},
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            logger.info(f"Email notifications sent: {data.get('sent', 0)}, errors: {data.get('errors', 0)}")
+        else:
+            logger.warning(f"notify-subscribers returned {resp.status_code}: {resp.text[:200]}")
+    except Exception as e:
+        logger.warning(f"Email notification failed: {e}")
+
+
 def trigger_vercel_deploy(total_inserted: int) -> None:
     hook_url = os.getenv("VERCEL_DEPLOY_HOOK_URL")
     if not hook_url:
@@ -94,8 +123,9 @@ def run() -> int:
     ]
 
     totals = {"inserted": 0, "skipped": 0, "errors": 0}
-    failed_scrapers = []
+    failed_scrapers  = []
     per_scraper: list[tuple[str, dict]] = []
+    new_result_records: list[dict] = []  # accumulate inserted result rows for email
 
     for label, ScraperClass in scrapers:
         logger.info(f"{'=' * 50}")
@@ -107,6 +137,10 @@ def run() -> int:
             totals["skipped"]  += result.get("skipped", 0)
             totals["errors"]   += result.get("errors", 0)
             per_scraper.append((label, result))
+            # Collect new result records if the scraper returns them
+            # Convention: scrape() may return {"inserted": N, "new_records": [...]}
+            if "results" in label.lower() and result.get("new_records"):
+                new_result_records.extend(result["new_records"])
         except Exception as e:
             logger.error(f"{label} scraper crashed entirely: {e}")
             failed_scrapers.append(label)
@@ -136,6 +170,9 @@ def run() -> int:
     logger.info("=" * 50)
 
     trigger_vercel_deploy(totals["inserted"])
+
+    # Email subscribers about new results
+    notify_subscribers(new_result_records)
 
     # Facebook summary post (only when new records inserted)
     if totals["inserted"] > 0:

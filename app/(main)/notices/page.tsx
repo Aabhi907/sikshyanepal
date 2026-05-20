@@ -5,6 +5,7 @@ import NoticeCard from '@/components/notices/NoticeCard'
 import SearchBar from '@/components/ui/SearchBar'
 import type { Notice } from '@/types'
 import { Bell, RefreshCcw } from 'lucide-react'
+import AdUnit from '@/components/ads/AdUnit'
 
 export const dynamic   = 'force-dynamic'
 export const revalidate = 0
@@ -97,8 +98,18 @@ export default async function NoticesPage({
 
         {notices.length > 0 ? (
           <div className="space-y-2.5">
-            {notices.map((notice) => (
-              <NoticeCard key={notice.id} notice={notice} />
+            {notices.map((notice, idx) => (
+              <>
+                <NoticeCard key={notice.id} notice={notice} />
+                {idx === 4 && (
+                  <AdUnit
+                    key="ad-notices"
+                    slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RESULTS ?? ''}
+                    format="auto"
+                    className="my-1 rounded-xl border border-gray-200 bg-white min-h-[90px]"
+                  />
+                )}
+              </>
             ))}
           </div>
         ) : (

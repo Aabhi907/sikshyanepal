@@ -1,12 +1,12 @@
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { Building2, Newspaper, Bell, Award, Star, FileText, Mail } from 'lucide-react'
+import { Building2, Newspaper, Bell, Award, Star, FileText, Mail, Clock, Activity } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
 async function getStats() {
   const supabase = createAdminSupabaseClient()
-  const [colleges, news, notices, scholarships, reviews, results, subscribers] = await Promise.all([
+  const [colleges, news, notices, scholarships, reviews, results, subscribers, latestResult] = await Promise.all([
     supabase.from('colleges').select('id', { count: 'exact', head: true }),
     supabase.from('news').select('id', { count: 'exact', head: true }),
     supabase.from('notices').select('id', { count: 'exact', head: true }),
@@ -14,6 +14,7 @@ async function getStats() {
     supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('is_approved', false),
     supabase.from('results').select('id', { count: 'exact', head: true }),
     supabase.from('subscribers').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('results').select('created_at').order('created_at', { ascending: false }).limit(1).single(),
   ])
   return {
     colleges:        colleges.count        || 0,
@@ -23,7 +24,19 @@ async function getStats() {
     pendingReviews:  reviews.count         || 0,
     results:         results.count         || 0,
     subscribers:     subscribers.count     || 0,
+    lastScraperRun:  latestResult.data?.created_at ?? null,
   }
+}
+
+function formatRelativeTime(iso: string | null): string {
+  if (!iso) return 'Never'
+  const diff = Date.now() - new Date(iso).getTime()
+  const h = Math.floor(diff / 3_600_000)
+  const m = Math.floor((diff % 3_600_000) / 60_000)
+  if (h === 0) return `${m}m ago`
+  if (h < 24)  return `${h}h ${m}m ago`
+  const d = Math.floor(h / 24)
+  return `${d}d ago`
 }
 
 const cards = [
@@ -67,6 +80,47 @@ export default async function AdminDashboard() {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* ── System Info ─────────────────────────────────── */}
+      <div className="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6">
+        <div className="flex items-center gap-2 mb-5">
+          <Activity className="w-4 h-4 text-teal-400" />
+          <h3 className="font-semibold text-white">System Info</h3>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[
+            { label: 'Colleges',    value: stats.colleges,    color: 'text-blue-400' },
+            { label: 'Results',     value: stats.results,     color: 'text-teal-400' },
+            { label: 'Notices',     value: stats.notices,     color: 'text-yellow-400' },
+            { label: 'Subscribers', value: stats.subscribers, color: 'text-pink-400' },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="bg-gray-700/50 rounded-lg p-3 text-center">
+              <p className={`text-2xl font-bold ${color}`}>{value.toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+            </div>
+          ))}
+
+          {/* Last scraper run */}
+          <div className="bg-gray-700/50 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Clock className="w-3.5 h-3.5 text-gray-400" />
+            </div>
+            <p className="text-sm font-semibold text-white leading-tight">
+              {formatRelativeTime(stats.lastScraperRun)}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">Last scraper run</p>
+          </div>
+
+          {/* Scraper status */}
+          <div className="bg-gray-700/50 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-semibold text-emerald-400">Active</span>
+            </div>
+            <p className="text-xs text-gray-400">Every 6 hours</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

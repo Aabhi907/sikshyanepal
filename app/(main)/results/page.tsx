@@ -5,6 +5,7 @@ import ResultCard from '@/components/results/ResultCard'
 import SearchBar from '@/components/ui/SearchBar'
 import type { Result } from '@/types'
 import { FileText, RefreshCcw } from 'lucide-react'
+import AdUnit from '@/components/ads/AdUnit'
 
 export const dynamic   = 'force-dynamic'
 export const revalidate = 0
@@ -117,8 +118,18 @@ export default async function ResultsPage({
 
         {results.length > 0 ? (
           <div className="space-y-2.5">
-            {results.map((result) => (
-              <ResultCard key={result.id} result={result} />
+            {results.map((result, idx) => (
+              <>
+                <ResultCard key={result.id} result={result} />
+                {idx === 4 && (
+                  <AdUnit
+                    key="ad-results"
+                    slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_RESULTS ?? ''}
+                    format="auto"
+                    className="my-1 rounded-xl border border-gray-200 bg-white min-h-[90px]"
+                  />
+                )}
+              </>
             ))}
           </div>
         ) : (

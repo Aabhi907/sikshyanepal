@@ -190,17 +190,13 @@ export default async function CollegeProfilePage({
             <>
               {/* Dot-grid texture overlay */}
               <div
-                className="absolute inset-0 opacity-20"
+                className="absolute inset-0 opacity-10"
                 style={{
                   backgroundImage:
                     "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)",
                   backgroundSize: "28px 28px",
                 }}
               />
-              {/* Large college initial — subtle watermark only */}
-              <span className="absolute right-8  bottom-[-12px] text-[130px] font-black text-white/10 leading-none select-none">
-                {college.name.charAt(0)}
-              </span>
               {/* Affiliation label top-left — no name duplication */}
               <div className="absolute top-5 left-5">
                 <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/15 border border-white/20 text-white/90 text-xs font-semibold tracking-wide backdrop-blur-sm">

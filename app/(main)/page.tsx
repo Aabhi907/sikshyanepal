@@ -114,30 +114,31 @@ async function getHomeData() {
   }
 }
 
-// ── Mini card for the hero card stack ─────────────────────────────
-function StackCard({
-  icon,
-  label,
-  title,
-  meta,
-  accentColor,
+// ── Hero sidebar card — 3 clean list items ─────────────────────────
+function HeroCard({
+  result, notice, college,
 }: {
-  icon: React.ReactNode
-  label: string
-  title: string
-  meta: string
-  accentColor: string
+  result:  { title: string } | null
+  notice:  { title: string } | null
+  college: { name: string; location?: string | null } | null
 }) {
+  const items = [
+    { label: 'Latest Result',  text: result?.title  ?? 'TU BCA 4th Semester Result Published' },
+    { label: 'Latest Notice',  text: notice?.title  ?? 'KU Exam Schedule — Spring 2025' },
+    { label: 'College Added',  text: college?.name  ?? 'Tribhuvan University College' },
+  ]
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-card-lg p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${accentColor}`}>
-          {icon}
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-card-xl p-5">
+      {items.map((item, i) => (
+        <div key={item.label} className={`py-3.5 ${i < items.length - 1 ? 'border-b border-gray-100' : ''}`}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">
+            {item.label}
+          </p>
+          <p className="text-sm font-medium text-ink leading-snug line-clamp-2">
+            {item.text}
+          </p>
         </div>
-        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{label}</span>
-      </div>
-      <p className="text-sm font-semibold text-ink line-clamp-2 leading-snug mb-2">{title}</p>
-      <span className="text-[11px] font-mono text-gray-400">{meta}</span>
+      ))}
     </div>
   )
 }
@@ -162,11 +163,10 @@ export default async function HomePage() {
             {/* ── Left column (60%) ────────────────────── */}
             <div className="lg:col-span-3">
 
-              {/* Pill badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium
-                              bg-blue-50 text-[#1847c4] border border-blue-200 mb-4">
-                🇳🇵 Trusted by students across Nepal
-              </div>
+              {/* Eyebrow */}
+              <p className="text-sm text-gray-400 font-medium mb-4">
+                Trusted by students across Nepal
+              </p>
 
               {/* Headline */}
               <h1
@@ -187,58 +187,13 @@ export default async function HomePage() {
               <HeroSearch />
             </div>
 
-            {/* ── Right column (40%) — card fan ──────── */}
+            {/* ── Right column (40%) — live updates card ─ */}
             <div className="hidden lg:block lg:col-span-2">
-              <div className="relative h-[380px]">
-
-                {/* Card 3 — bottom — Featured College (green) */}
-                <div
-                  className="absolute bg-white rounded-2xl border border-gray-100 shadow-card p-4 w-full"
-                  style={{ top: '216px', left: '-10px', transform: 'rotate(2deg)', zIndex: 1 }}
-                >
-                  <StackCard
-                    icon={<Building2 className="w-3.5 h-3.5 text-emerald-600" />}
-                    label="Featured College"
-                    title={featuredFirst?.name ?? 'Tribhuvan University College'}
-                    meta={featuredFirst?.location ?? 'Kathmandu, Nepal'}
-                    accentColor="bg-emerald-50"
-                  />
-                </div>
-
-                {/* Card 2 — middle — Latest Notice (orange) */}
-                <div
-                  className="absolute bg-white rounded-2xl border border-gray-100 shadow-card-md p-4 w-full"
-                  style={{ top: '108px', left: '10px', transform: 'rotate(-1.5deg)', zIndex: 2 }}
-                >
-                  <StackCard
-                    icon={<Bell className="w-3.5 h-3.5 text-orange-500" />}
-                    label="Latest Notice"
-                    title={latestNotice?.title ?? 'KU Exam Schedule — Spring 2025'}
-                    meta={latestNotice?.university?.short_name ?? 'Kathmandu University'}
-                    accentColor="bg-orange-50"
-                  />
-                </div>
-
-                {/* Card 1 — top — Latest Result (blue) */}
-                <div
-                  className="absolute bg-white rounded-2xl border border-gray-200 shadow-card-xl p-4 w-full"
-                  style={{ top: 0, left: 0, transform: 'rotate(0.5deg)', zIndex: 3 }}
-                >
-                  <StackCard
-                    icon={<FileText className="w-3.5 h-3.5 text-[#1847c4]" />}
-                    label="Latest Result"
-                    title={latestResult?.title ?? 'TU BCA 4th Semester Result Published'}
-                    meta={latestResult?.university?.short_name ?? 'Tribhuvan University'}
-                    accentColor="bg-blue-50"
-                  />
-                  {/* Live indicator */}
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[11px] text-gray-400 font-mono">Updated live · Just now</span>
-                  </div>
-                </div>
-
-              </div>
+              <HeroCard
+                result={latestResult ?? null}
+                notice={latestNotice ?? null}
+                college={featuredFirst ?? null}
+              />
             </div>
           </div>
         </div>
@@ -249,15 +204,13 @@ export default async function HomePage() {
       ════════════════════════════════════════════════════════ */}
       <section style={{ backgroundColor: '#0d1b3e' }} className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-white/10">
-            {heroStats.map((stat, i) => (
-              <div key={stat.label} className={`px-6 py-2 text-center ${i === 0 ? 'pl-0' : ''} ${i === heroStats.length - 1 ? 'pr-0' : ''}`}>
-                <p className="font-mono text-white text-4xl leading-none mb-1"
-                   style={{ fontWeight: 800, letterSpacing: '-0.025em' }}>
-                  {stat.value}
-                </p>
-                <p className="text-[11px] font-medium text-blue-300 uppercase tracking-wider">
-                  {stat.label}
+          <div className="flex flex-wrap justify-center sm:justify-between gap-0 divide-x divide-white/20">
+            {heroStats.map((stat) => (
+              <div key={stat.label} className="px-8 py-2 text-center">
+                <p className="font-mono text-white text-2xl leading-none" style={{ letterSpacing: '-0.02em' }}>
+                  <span style={{ fontWeight: 800 }}>{stat.value}</span>
+                  {' '}
+                  <span className="font-normal" style={{ opacity: 0.6 }}>{stat.label.toLowerCase()}</span>
                 </p>
               </div>
             ))}
@@ -291,13 +244,9 @@ export default async function HomePage() {
       <section className="bg-[#f0f4ff] border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-end justify-between mb-8">
-            <div>
-              <span className="section-tag-blue">Latest Updates</span>
-              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
-                Results &amp; Notices
-              </h2>
-              <p className="text-gray-400 text-sm mt-1">Live from TU, KU, NEB, CTEVT &amp; more</p>
-            </div>
+            <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
+              Results &amp; Notices
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -311,8 +260,8 @@ export default async function HomePage() {
                   <span className="text-sm font-semibold text-ink">Latest Results</span>
                 </div>
                 <Link href="/results"
-                  className="text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] flex items-center gap-1 transition-colors duration-200">
-                  View all <ArrowRight className="w-3.5 h-3.5" />
+                  className="text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] transition-colors duration-150">
+                  View all
                 </Link>
               </div>
               {results.length > 0 ? (
@@ -336,8 +285,8 @@ export default async function HomePage() {
                   <span className="text-sm font-semibold text-ink">University Notices</span>
                 </div>
                 <Link href="/notices"
-                  className="text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] flex items-center gap-1 transition-colors duration-200">
-                  View all <ArrowRight className="w-3.5 h-3.5" />
+                  className="text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] transition-colors duration-150">
+                  View all
                 </Link>
               </div>
               {notices.length > 0 ? (
@@ -362,15 +311,14 @@ export default async function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <span className="section-tag">Top Colleges</span>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Featured</p>
                 <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
                   Featured Colleges
                 </h2>
-                <p className="text-gray-400 text-sm mt-1">Hand-picked institutions with strong academics &amp; placements</p>
               </div>
               <Link href="/colleges"
-                className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors duration-200">
-                View All <ArrowRight className="w-3.5 h-3.5" />
+                className="hidden sm:block text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] transition-colors duration-150">
+                View all
               </Link>
             </div>
 
@@ -396,15 +344,12 @@ export default async function HomePage() {
       <section className="bg-[#f0f4ff] border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-end justify-between mb-8">
-            <div>
-              <span className="section-tag">Explore</span>
-              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
-                Browse by Program
-              </h2>
-            </div>
+            <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
+              Browse by Program
+            </h2>
             <Link href="/programs"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors duration-200">
-              All Programs <ArrowRight className="w-3.5 h-3.5" />
+              className="hidden sm:block text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] transition-colors duration-150">
+              All programs
             </Link>
           </div>
 
@@ -440,15 +385,12 @@ export default async function HomePage() {
       <section className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-end justify-between mb-8">
-            <div>
-              <span className="section-tag-blue">Universities</span>
-              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
-                Browse by University
-              </h2>
-            </div>
+            <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
+              Browse by University
+            </h2>
             <Link href="/colleges"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[#1847c4] hover:text-[#1340b0] transition-colors duration-200">
-              All Colleges <ArrowRight className="w-3.5 h-3.5" />
+              className="hidden sm:block text-sm font-semibold text-[#1847c4] hover:text-[#1340b0] transition-colors duration-150">
+              All colleges
             </Link>
           </div>
 
@@ -471,8 +413,8 @@ export default async function HomePage() {
                       <p className="text-xs text-gray-400 mt-1">{count} college{count !== 1 ? 's' : ''}</p>
                     )}
                   </div>
-                  <span className="text-xs font-semibold text-[#1847c4] flex items-center gap-1 group-hover:gap-1.5 transition-all duration-200">
-                    Browse <ArrowRight className="w-3 h-3" />
+                  <span className="text-xs font-semibold text-[#1847c4]">
+                    Browse colleges
                   </span>
                 </Link>
               )

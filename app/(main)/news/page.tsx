@@ -33,26 +33,14 @@ async function getNews(searchParams: { q?: string }) {
   return (data || []) as News[]
 }
 
-function GradientCover({ title, idx, featured = false }: { title: string; idx: number; featured?: boolean }) {
+function GradientCover({ idx }: { idx: number }) {
   const grad = CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
   return (
     <div className={`w-full h-full bg-gradient-to-br ${grad.from} ${grad.to} relative overflow-hidden`}>
       <div
-        className="absolute inset-0 opacity-20"
-        style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '18px 18px' }}
+        className="absolute inset-0 opacity-10"
+        style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}
       />
-      <span className={`absolute font-display font-black text-white/15 select-none leading-none
-        ${featured ? 'text-[140px] right-2 -bottom-4' : 'text-[72px] -right-1 -bottom-2'}`}>
-        {title.charAt(0).toUpperCase()}
-      </span>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-2">
-          <span className="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white font-display font-black text-lg">
-            S
-          </span>
-          <span className="text-xs font-medium text-white/70 tracking-wide">SikshyaNepal</span>
-        </div>
-      </div>
     </div>
   )
 }
@@ -68,9 +56,9 @@ export default async function NewsPage({ searchParams }: { searchParams: { q?: s
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
-          <span className="section-tag">Education News</span>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Education News</p>
           <h1 className="font-display font-bold text-ink text-3xl sm:text-4xl mb-2"
-              style={{ letterSpacing: '-0.02em' }}>
+              style={{ letterSpacing: '-0.025em' }}>
             Latest Updates
           </h1>
           <p className="text-gray-500 text-sm mb-6">
@@ -105,7 +93,7 @@ export default async function NewsPage({ searchParams }: { searchParams: { q?: s
                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                       />
                     ) : (
-                      <GradientCover title={featured.title} idx={0} featured />
+                      <GradientCover idx={0} />
                     )}
                     <div className="absolute top-4 left-4">
                       <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-[#1847c4] text-white">
@@ -154,7 +142,7 @@ export default async function NewsPage({ searchParams }: { searchParams: { q?: s
                           <Image src={news.image_url} alt={news.title} fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500" />
                         ) : (
-                          <GradientCover title={news.title} idx={idx + 1} />
+                          <GradientCover idx={idx + 1} />
                         )}
                       </div>
                       <div className="p-4">

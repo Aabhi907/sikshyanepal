@@ -60,9 +60,9 @@ export default async function NoticesPage({
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
-          <span className="section-tag">University Notices</span>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">University Notices</p>
           <h1 className="font-display font-bold text-ink text-3xl sm:text-4xl mb-2"
-              style={{ letterSpacing: '-0.02em' }}>
+              style={{ letterSpacing: '-0.025em' }}>
             Official Notices
           </h1>
           <p className="text-gray-500 text-sm mb-6">

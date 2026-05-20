@@ -4,7 +4,7 @@ import type { Result } from '@/types'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sikshyanepal.vercel.app'
-const FROM_EMAIL = 'SikshyaNepal <noreply@sikshyanepal.vercel.app>'
+const FROM_EMAIL = 'SikshyaNepal <onboarding@resend.dev>'
 
 // ── HTML email template ──────────────────────────────────────────────────────
 

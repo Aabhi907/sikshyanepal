@@ -24,6 +24,7 @@ from pou_notices import POUNoticesScraper
 from ctevt_notices import CTEVTNoticesScraper
 from tu_notices import TUNoticesScraper
 from neb_notices import NEBNoticesScraper
+from college_scraper import CollegeScraper
 
 load_dotenv()
 
@@ -120,6 +121,8 @@ def run() -> int:
         ("CTEVT Notices", CTEVTNoticesScraper),
         ("TU Notices",    TUNoticesScraper),
         ("NEB Notices",   NEBNoticesScraper),
+        # College scraper runs last — inserts go to pending_review, not live
+        ("Colleges",      CollegeScraper),
     ]
 
     totals = {"inserted": 0, "skipped": 0, "errors": 0}

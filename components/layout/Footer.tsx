@@ -7,6 +7,7 @@ const exploreLinks = [
   { label: 'Scholarships',     href: '/scholarships' },
   { label: 'Programs',         href: '/programs' },
   { label: 'Education News',   href: '/news' },
+  { label: 'Add Your College', href: '/submit-college' },
 ]
 
 const universityLinks = [

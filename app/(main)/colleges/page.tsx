@@ -44,6 +44,8 @@ async function getColleges(sp: {
       ),
       reviews(rating, is_approved)
     `)
+    // Only show active colleges (or legacy rows with no status column yet)
+    .or('status.eq.active,status.is.null')
     .order('is_featured', { ascending: false })
     .order('name')
     .limit(200)

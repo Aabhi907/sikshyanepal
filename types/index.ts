@@ -13,6 +13,14 @@ export interface College {
   affiliation: string | null
   established_year: number | null
   is_featured: boolean
+  /** 'active' (default / null means active) | 'pending_review' */
+  status: string | null
+  /** 'manual' | 'scraped' | 'public_submission' */
+  source: string | null
+  programs_offered: string | null
+  submitted_by: string | null
+  submitter_role: string | null
+  submitter_contact: string | null
   created_at: string
   programs?: CollegeProgram[]
   reviews?: Review[]

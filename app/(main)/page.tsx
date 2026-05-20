@@ -79,7 +79,7 @@ async function getHomeData() {
       .select('*, university:universities(id, name, short_name, slug, website, created_at)')
       .order('published_date', { ascending: false })
       .limit(6),
-    supabase.from('colleges').select('*').eq('is_featured', true).limit(6),
+    supabase.from('colleges').select('*').eq('is_featured', true).or('status.eq.active,status.is.null').limit(6),
     supabase.from('colleges').select('id', { count: 'exact', head: true }),
     supabase.from('programs').select('id',  { count: 'exact', head: true }),
     supabase.from('colleges').select('id', { count: 'exact', head: true }).ilike('affiliation', '%Tribhuvan%'),

@@ -9,7 +9,16 @@ Follows each notice page for new records to extract inline content
 from base_scraper import BaseScraper
 
 BASE_URL = "https://www.neb.gov.np"
+NEB_TIMEOUT = 30  # NEB server is slow — use a longer timeout
+
 NOTICE_URLS = [
+    # Alternative paths that may be active when the main ones return 500
+    "https://neb.gov.np/en/notices",
+    "https://neb.gov.np/en/news",
+    "https://neb.gov.np/en/results",
+    "https://neb.gov.np/category/notices",
+    "https://neb.gov.np/category/results",
+    # Original paths kept as further fallbacks
     f"{BASE_URL}/notices",
     f"{BASE_URL}/notice",
     f"{BASE_URL}/news-and-notices",
@@ -139,7 +148,7 @@ class NEBNoticesScraper(BaseScraper):
         items = []
         for url in NOTICE_URLS:
             self.logger.info(f"Trying {url}")
-            soup = self.fetch_page(url)
+            soup = self.fetch_page(url, timeout=NEB_TIMEOUT)
             if soup:
                 items = self.parse_notices(soup)
                 if items:

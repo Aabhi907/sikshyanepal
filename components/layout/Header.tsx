@@ -85,10 +85,10 @@ export default function Header() {
                 >
                   <Link
                     href={link.href}
-                    className={`flex items-center gap-0.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    className={`flex items-center gap-0.5 px-3.5 py-2 text-sm font-[500] rounded-lg transition-colors duration-150 ${
                       isActive(link.href)
                         ? 'text-primary bg-primary-50'
-                        : 'text-ink-secondary hover:text-ink hover:bg-gray-50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >
                     {link.label}
@@ -103,7 +103,7 @@ export default function Header() {
                         <Link
                           key={s.label}
                           href={s.href}
-                          className="block px-4 py-2.5 text-sm text-ink-secondary hover:bg-gray-50 hover:text-primary transition-colors"
+                          className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
                         >
                           {s.label}
                         </Link>
@@ -119,7 +119,8 @@ export default function Header() {
               <SubscribeButton variant="header" />
               <Link
                 href="/colleges"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors duration-150"
+                style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)' }}
               >
                 Find College
               </Link>

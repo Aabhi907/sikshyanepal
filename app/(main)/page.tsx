@@ -164,14 +164,14 @@ export default async function HomePage() {
 
               {/* Pill badge */}
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium
-                              bg-blue-50 text-[#1847c4] border border-blue-200 mb-6">
+                              bg-blue-50 text-[#1847c4] border border-blue-200 mb-4">
                 🇳🇵 Trusted by students across Nepal
               </div>
 
               {/* Headline */}
               <h1
-                className="font-display font-bold text-ink leading-[1.1] tracking-tight mb-5 text-balance"
-                style={{ fontSize: 'clamp(2.6rem, 5.5vw, 3.75rem)' }}
+                className="font-display font-extrabold text-ink leading-[1.1] mb-5 text-balance"
+                style={{ fontSize: 'clamp(2.6rem, 5.5vw, 3.75rem)', letterSpacing: '-0.03em' }}
               >
                 Everything about<br />
                 <span className="text-[#1847c4]">Education in Nepal.</span>
@@ -252,7 +252,8 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-white/10">
             {heroStats.map((stat, i) => (
               <div key={stat.label} className={`px-6 py-2 text-center ${i === 0 ? 'pl-0' : ''} ${i === heroStats.length - 1 ? 'pr-0' : ''}`}>
-                <p className="font-mono font-bold text-white text-3xl leading-none mb-1">
+                <p className="font-mono text-white text-4xl leading-none mb-1"
+                   style={{ fontWeight: 800, letterSpacing: '-0.025em' }}>
                   {stat.value}
                 </p>
                 <p className="text-[11px] font-medium text-blue-300 uppercase tracking-wider">
@@ -288,11 +289,11 @@ export default async function HomePage() {
           LATEST RESULTS — subtle blue bg
       ════════════════════════════════════════════════════════ */}
       <section className="bg-[#f0f4ff] border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-end justify-between mb-8">
             <div>
               <span className="section-tag-blue">Latest Updates</span>
-              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
                 Results &amp; Notices
               </h2>
               <p className="text-gray-400 text-sm mt-1">Live from TU, KU, NEB, CTEVT &amp; more</p>
@@ -358,11 +359,11 @@ export default async function HomePage() {
       ════════════════════════════════════════════════════════ */}
       {featuredColleges.length > 0 && (
         <section className="bg-white border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <div className="flex items-end justify-between mb-8">
               <div>
                 <span className="section-tag">Top Colleges</span>
-                <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+                <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
                   Featured Colleges
                 </h2>
                 <p className="text-gray-400 text-sm mt-1">Hand-picked institutions with strong academics &amp; placements</p>
@@ -393,11 +394,11 @@ export default async function HomePage() {
           BROWSE BY PROGRAM — subtle bg
       ════════════════════════════════════════════════════════ */}
       <section className="bg-[#f0f4ff] border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-end justify-between mb-8">
             <div>
               <span className="section-tag">Explore</span>
-              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
                 Browse by Program
               </h2>
             </div>
@@ -437,11 +438,11 @@ export default async function HomePage() {
           BROWSE BY UNIVERSITY — white
       ════════════════════════════════════════════════════════ */}
       <section className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-end justify-between mb-8">
             <div>
               <span className="section-tag-blue">Universities</span>
-              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+              <h2 className="font-display font-bold text-3xl text-ink" style={{ letterSpacing: '-0.025em' }}>
                 Browse by University
               </h2>
             </div>
@@ -484,7 +485,7 @@ export default async function HomePage() {
           PROMO CARDS — subtle bg
       ════════════════════════════════════════════════════════ */}
       <section className="bg-[#f0f4ff] border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link href="/news"
               className="group flex items-center gap-4 p-5 rounded-2xl border border-gray-200 bg-white
@@ -531,7 +532,7 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════
           SOCIAL PROOF STRIP — dark navy
       ════════════════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: '#0d1b3e' }} className="py-16 text-center">
+      <section style={{ backgroundColor: '#0d1b3e' }} className="py-20 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center gap-2 mb-3">
             <Users className="w-4 h-4 text-blue-400" />
@@ -539,7 +540,7 @@ export default async function HomePage() {
               Trusted by students across Nepal
             </span>
           </div>
-          <p className="font-display font-bold text-white text-4xl mb-2" style={{ letterSpacing: '-0.02em' }}>
+          <p className="font-display font-bold text-white text-4xl mb-2" style={{ letterSpacing: '-0.025em' }}>
             10,000+ Students
           </p>
           <p className="text-slate-400 text-sm mb-8">

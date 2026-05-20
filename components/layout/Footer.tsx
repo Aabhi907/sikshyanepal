@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Mail, MapPin, ArrowUpRight } from 'lucide-react'
+import { Mail, MapPin, ArrowUpRight, BookOpenCheck } from 'lucide-react'
 
 const exploreLinks = [
   { label: 'All Colleges',     href: '/colleges' },
@@ -35,14 +35,16 @@ function FacebookIcon({ className }: { className?: string }) {
 
 export default function Footer() {
   return (
-    <footer style={{ backgroundColor: '#0d1b3e' }} className="text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+    <footer style={{ backgroundColor: '#0d1b3e' }} className="text-white border-t border-white/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
 
           {/* ── Col 1: Brand ─────────────────────────────── */}
           <div>
             <Link href="/" className="inline-flex items-center gap-2 mb-5">
-              <span className="text-xl">🎓</span>
+              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookOpenCheck className="w-4 h-4 text-white" />
+              </div>
               <span className="font-display font-bold text-[17px] leading-none tracking-tight">
                 <span className="text-white">Sikshya</span>
                 <span className="text-blue-400">Nepal</span>
@@ -57,7 +59,7 @@ export default function Footer() {
             <div className="space-y-2.5 mb-6">
               <a
                 href="mailto:info@sikshyanepal.com"
-                className="flex items-center gap-2.5 text-sm text-slate-400 hover:text-white transition-colors"
+                className="flex items-center gap-2.5 text-sm text-slate-400 hover:text-white transition-colors duration-150"
               >
                 <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
                 info@sikshyanepal.com
@@ -98,7 +100,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="group inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors"
+                    className="group inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors duration-150"
                   >
                     {link.label}
                     <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -118,7 +120,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="group inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors"
+                    className="group inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors duration-150"
                   >
                     {link.label}
                     <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -154,9 +156,9 @@ export default function Footer() {
             © {new Date().getFullYear()} SikshyaNepal. All rights reserved.
           </p>
           <div className="flex items-center gap-5 text-xs text-slate-500">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-            <Link href="/terms"   className="hover:text-white transition-colors">Terms</Link>
-            <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors duration-150">Privacy</Link>
+            <Link href="/terms"   className="hover:text-white transition-colors duration-150">Terms</Link>
+            <Link href="/contact" className="hover:text-white transition-colors duration-150">Contact</Link>
           </div>
         </div>
       </div>

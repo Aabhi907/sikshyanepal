@@ -120,25 +120,50 @@ function HeroCard({
 }: {
   result:  { title: string } | null
   notice:  { title: string } | null
-  college: { name: string; location?: string | null } | null
+  college: { name: string; slug: string; location?: string | null } | null
 }) {
-  const items = [
-    { label: 'Latest Result',  text: result?.title  ?? 'TU BCA 4th Semester Result Published' },
-    { label: 'Latest Notice',  text: notice?.title  ?? 'KU Exam Schedule — Spring 2025' },
-    { label: 'College Added',  text: college?.name  ?? 'Tribhuvan University College' },
-  ]
+  const fallbackCollege = { name: 'Tribhuvan University College', slug: '', location: 'Kathmandu' }
+  const col = college ?? fallbackCollege
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-card-xl p-5">
-      {items.map((item, i) => (
-        <div key={item.label} className={`py-3.5 ${i < items.length - 1 ? 'border-b border-gray-100' : ''}`}>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">
-            {item.label}
-          </p>
-          <p className="text-sm font-medium text-ink leading-snug line-clamp-2">
-            {item.text}
-          </p>
-        </div>
-      ))}
+
+      {/* Latest Result */}
+      <div className="py-3.5 border-b border-gray-100">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">
+          Latest Result
+        </p>
+        <p className="text-sm font-medium text-ink leading-snug line-clamp-2">
+          {result?.title ?? 'TU BCA 4th Semester Result Published'}
+        </p>
+      </div>
+
+      {/* Latest Notice */}
+      <div className="py-3.5 border-b border-gray-100">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">
+          Latest Notice
+        </p>
+        <p className="text-sm font-medium text-ink leading-snug line-clamp-2">
+          {notice?.title ?? 'KU Exam Schedule — Spring 2025'}
+        </p>
+      </div>
+
+      {/* Featured College — clickable */}
+      <Link
+        href={col.slug ? `/colleges/${col.slug}` : '/colleges'}
+        className="block py-3.5 group"
+      >
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">
+          Featured College
+        </p>
+        <p className="text-sm font-medium text-ink leading-snug line-clamp-2 group-hover:text-[#1847c4] transition-colors">
+          {col.name}
+        </p>
+        {col.location && (
+          <p className="text-xs text-gray-400 mt-1">{col.location}</p>
+        )}
+      </Link>
+
     </div>
   )
 }
@@ -148,7 +173,10 @@ export default async function HomePage() {
 
   const latestResult  = results[0]
   const latestNotice  = notices[0]
-  const featuredFirst = featuredColleges[0]
+  // Pick a random featured college so the card feels live, not static
+  const randomCollege = featuredColleges.length > 0
+    ? featuredColleges[Math.floor(Math.random() * featuredColleges.length)]
+    : null
 
   return (
     <div>
@@ -190,9 +218,9 @@ export default async function HomePage() {
             {/* ── Right column (40%) — live updates card ─ */}
             <div className="hidden lg:block lg:col-span-2">
               <HeroCard
-                result={latestResult ?? null}
-                notice={latestNotice ?? null}
-                college={featuredFirst ?? null}
+                result={latestResult  ?? null}
+                notice={latestNotice  ?? null}
+                college={randomCollege ?? null}
               />
             </div>
           </div>

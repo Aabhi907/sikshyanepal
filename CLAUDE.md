@@ -125,6 +125,23 @@ run_all.py collects new_records from result scrapers → calls notify_subscriber
 - results/[slug]/page.tsx, notices/[slug]/page.tsx, news/[slug]/page.tsx
   all handle pdf/image/link rendering with appropriate CTAs
 
+## College Data Strategy
+
+Nepal university websites (TU, KU, PU, NEB) are unreliable for scraping:
+- Most return HTTP 500, timeout, or serve JS-rendered pages with no static HTML
+- KU affiliated-colleges page has program names (BDS, BBIS) in column 1, not college names
+- NEB school lists require authenticated/search-based access
+- college_scraper.py exists but should not be relied on for bulk data
+
+**Primary college data collection strategy — in priority order:**
+1. **Manual entry** via `/admin/colleges/new` (admin panel)
+2. **Public submission form** at `/submit-college` (reviewed at `/admin/colleges/pending`)
+3. **SQL seeds** — insert well-known colleges directly in Supabase SQL editor
+
+college_scraper.py is kept in the codebase and runs in run_all.py for opportunistic
+scraping, but do not spend engineering time improving it further until university
+websites become more stable/structured.
+
 ## Sessions Log
 - Session 1: Project setup, Supabase schema, basic pages
 - Session 2: Scraper pipeline, content extraction, admin panel
@@ -132,3 +149,4 @@ run_all.py collects new_records from result scrapers → calls notify_subscriber
 - Session 4: UI redesign — Modern South Asian Digital direction, Sora/DM Sans/DM Mono
 - Session 5: Final UI polish — cards, hero fan stack, program icons, loading states
 - Session 6: AdSense, Resend email notifications, sitemap/robots, skeletons, admin System Info
+- Session 7: +2 support, college submission form, admin review queue, nav dropdown fix, college scraper (deprioritised)

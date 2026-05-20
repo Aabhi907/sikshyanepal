@@ -22,42 +22,36 @@ from base_scraper import BaseScraper
 
 SOURCES = [
     {
-        "university_short": "TU",
-        "university_full":  "Tribhuvan University",
-        "affiliation":      "Tribhuvan University",
+        "affiliation": "Tribhuvan University",
         "urls": [
             "https://tribhuvan-university.edu.np/affiliated-colleges",
             "https://tribhuvan-university.edu.np/constituent-colleges",
         ],
     },
     {
-        "university_short": "KU",
-        "university_full":  "Kathmandu University",
-        "affiliation":      "Kathmandu University",
+        "affiliation": "Kathmandu University",
         "urls": [
+            # Schools & Institutes page lists actual department/school names
+            "https://ku.edu.np/schools-institutes",
+            "https://ku.edu.np/affiliated",
             "https://ku.edu.np/affiliated-colleges",
-            "https://ku.edu.np/component/content/article/34-affiliated-colleges",
+            "https://ku.edu.np/content/ku-affiliated-colleges",
+            "https://ku.edu.np/index.php/affiliated-colleges",
         ],
     },
     {
-        "university_short": "PU",
-        "university_full":  "Pokhara University",
-        "affiliation":      "Pokhara University",
+        "affiliation": "Pokhara University",
         "urls": [
             "https://pu.edu.np/affiliated-colleges",
             "https://pu.edu.np/affiliated-college",
         ],
     },
     {
-        "university_short": "NEB",
-        "university_full":  "National Examinations Board",
-        "affiliation":      "NEB",
+        "affiliation": "NEB",
         "urls": [
-            # NEB lists of registered +2 / higher secondary schools
             "https://www.neb.gov.np/schools",
             "https://www.neb.gov.np/hseb-schools",
             "https://www.neb.gov.np/affiliated-schools",
-            # School Education — secondary level institutions
             "https://seen.gov.np/schools",
             "https://seen.gov.np/higher-secondary",
         ],
@@ -79,11 +73,46 @@ NAME_SELECTORS = [
     ".field-content",
 ]
 
-# Noise words that indicate a row isn't a college name
+# Exact-match headers / labels that are never college names
 SKIP_PATTERNS = re.compile(
     r"^(s\.?\s*no\.?|sn|#|serial|name of|college name|institution|sl\.?\s*no|"
     r"address|location|contact|phone|email|website|district|province|"
-    r"affiliated|remarks|facult|program|department)$",
+    r"affiliated|remarks|facult|program|department|s\.no)$",
+    re.IGNORECASE,
+)
+
+# Substrings that immediately disqualify a candidate
+GARBAGE_SUBSTRINGS = re.compile(
+    r"copyright|all right reserved|all rights reserved|"
+    r"privacy policy|terms of use|terms and condition|"
+    r"powered by|designed by|developed by|webmaster|"
+    r"follow us|contact us|quick link|sitemap|"
+    r"home\s*[\|»>]|back to top",
+    re.IGNORECASE,
+)
+
+# Names of universities themselves — should not be listed as colleges
+UNIVERSITY_NAMES_EXACT = {
+    "tribhuvan university", "kathmandu university", "pokhara university",
+    "purbanchal university", "mid-western university", "far-western university",
+    "rajarshi janak university", "nepal open university", "lumbini buddhist university",
+    "agriculture and forestry university",
+    "national examinations board", "neb", "ctevt",
+    "tu", "ku", "pu", "puru", "mwu",
+}
+
+# Words that immediately identify a name as a program abbreviation or header
+# (all-caps, ≤ 8 chars — things like BDS, BBIS, BHTM, MBA, etc.)
+_ALL_CAPS_SHORT = re.compile(r"^[A-Z]{2,8}$")
+
+# Institution-identity words — a name MUST contain one of these
+# (OR be longer than 20 chars) to be considered a real college name
+INSTITUTION_WORDS = re.compile(
+    r"\b(college|campus|school|institute|academy|polytechnic|"
+    r"mahavidyalaya|vidyalaya|higher secondary|hsss|hss|"
+    r"secondary school|technical school|vocational|health science|"
+    r"nursing home|hospital college|dental college|medical college|"
+    r"engineering college|management college|law college)\b",
     re.IGNORECASE,
 )
 
@@ -111,19 +140,54 @@ def _clean(text: str) -> str:
 
 
 def _looks_like_college(text: str) -> bool:
-    """Heuristic: a college name is 3–120 chars, not a header/label."""
+    """
+    Strict heuristic — return True only for plausible institution names.
+
+    Rejects:
+      • Too short (< 10 chars) or too long (> 150 chars)
+      • Pure header labels  (S.N., Address, Program…)
+      • Garbage substrings  (copyright, powered by…)
+      • University names themselves  (Tribhuvan University, KU…)
+      • All-caps abbreviations ≤ 8 chars  (BDS, BBIS, BHTM…)
+      • Pure numbers or single words
+      • Names with no institution keyword AND shorter than 20 chars
+    """
     text = text.strip()
-    if len(text) < 3 or len(text) > 120:
+
+    # ── Length bounds ─────────────────────────────────────────────────
+    if len(text) < 10 or len(text) > 150:
         return False
+
+    # ── Header / label exact-match ────────────────────────────────────
     if SKIP_PATTERNS.match(text):
         return False
-    # Must contain at least one word of length ≥ 3
+
+    # ── Garbage substrings (copyright, nav links, etc.) ──────────────
+    if GARBAGE_SUBSTRINGS.search(text):
+        return False
+
+    # ── University name itself (not a college) ────────────────────────
+    if text.lower().strip() in UNIVERSITY_NAMES_EXACT:
+        return False
+
+    # ── All-caps program abbreviations  (BDS, BBIS, BHTM, MBA…) ─────
+    if _ALL_CAPS_SHORT.match(text):
+        return False
+
+    # ── Must be multi-word (real names are at least 2 words) ─────────
     words = text.split()
-    if not any(len(w) >= 3 for w in words):
+    if len(words) < 2:
         return False
-    # Reject pure numbers
-    if text.isdigit():
+
+    # ── Pure digits or codes ─────────────────────────────────────────
+    if text.isdigit() or re.match(r"^\d[\d\s\-]+$", text):
         return False
+
+    # ── Must contain an institution keyword  OR  be ≥ 20 chars ───────
+    # (short names without a keyword like "School" are usually junk)
+    if not INSTITUTION_WORDS.search(text) and len(text) < 20:
+        return False
+
     return True
 
 
@@ -269,8 +333,7 @@ class CollegeScraper(BaseScraper):
     # ------------------------------------------------------------------
 
     def _insert_college(self, name: str, location: str, phone: str | None,
-                        website: str | None, affiliation: str,
-                        university_id: str | None) -> bool:
+                        website: str | None, affiliation: str) -> bool:
         name_key = name.lower().strip()
         if name_key in self._seen_names:
             self.skipped += 1
@@ -287,6 +350,7 @@ class CollegeScraper(BaseScraper):
         aff_short = affiliation.split()[0].lower()[:3]
         full_slug  = f"{slug}-{aff_short}"
 
+        # colleges table uses affiliation TEXT — no university_id FK column
         row: dict = {
             "name":        name,
             "slug":        full_slug,
@@ -296,10 +360,8 @@ class CollegeScraper(BaseScraper):
             "status":      "pending_review",
             "source":      "scraped",
         }
-        if phone:    row["phone"]   = phone
-        if website:  row["website"] = website
-        if university_id:
-            row["university_id"] = university_id
+        if phone:   row["phone"]   = phone
+        if website: row["website"] = website
 
         return self.insert_record("colleges", row)
 
@@ -308,11 +370,7 @@ class CollegeScraper(BaseScraper):
     # ------------------------------------------------------------------
 
     def _scrape_source(self, source: dict) -> int:
-        short  = source["university_short"]
-        full   = source["university_full"]
-        aff    = source["affiliation"]
-        uid    = self.get_university_id(short, full)
-
+        aff = source["affiliation"]
         inserted_this_source = 0
 
         for url in source["urls"]:
@@ -332,7 +390,6 @@ class CollegeScraper(BaseScraper):
                     phone=c.get("phone"),
                     website=c.get("website"),
                     affiliation=c["affiliation"],
-                    university_id=uid,
                 )
                 if ok:
                     inserted_this_source += 1

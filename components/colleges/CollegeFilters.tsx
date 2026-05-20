@@ -7,12 +7,12 @@ import { Filter, X, SlidersHorizontal } from 'lucide-react'
 const LOCATIONS = ['Kathmandu', 'Pokhara', 'Chitwan', 'Biratnagar', 'Butwal', 'Other']
 
 const AFFILIATIONS = [
-  { label: 'NEB',   value: 'NEB' },
-  { label: 'TU',    value: 'Tribhuvan University' },
-  { label: 'KU',    value: 'Kathmandu University' },
-  { label: 'PU',    value: 'Pokhara University' },
-  { label: 'PurU',  value: 'Purbanchal University' },
-  { label: 'Private', value: 'Private' },
+  { label: 'TU',      value: 'Tribhuvan University',  hint: null },
+  { label: 'KU',      value: 'Kathmandu University',  hint: null },
+  { label: 'PU',      value: 'Pokhara University',    hint: null },
+  { label: 'PurU',    value: 'Purbanchal University', hint: null },
+  { label: 'NEB',     value: 'NEB',                   hint: '+2' },
+  { label: 'Private', value: 'Private',               hint: null },
 ]
 
 const FACULTIES = [
@@ -90,12 +90,15 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
 
         {/* Affiliation */}
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">University</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Affiliation</p>
           <div className="flex flex-wrap gap-2">
             {AFFILIATIONS.map((aff) => (
               <Link key={aff.value} href={buildUrl(searchParams, 'affiliation', aff.value)}
                 onClick={() => setOpen(false)} className={pill(searchParams.affiliation === aff.value)}>
                 {aff.label}
+                {aff.hint && (
+                  <span className="text-xs ml-1 opacity-70">({aff.hint})</span>
+                )}
               </Link>
             ))}
           </div>

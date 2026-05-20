@@ -403,7 +403,7 @@ class CollegeScraper(BaseScraper):
     def scrape(self) -> dict:
         self.logger.info("Starting college scraper")
         for source in SOURCES:
-            self.logger.info(f"=== {source['university_short']} ===")
+            self.logger.info(f"=== {source['affiliation']} ===")
             self._scrape_source(source)
         return self.summary()
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Review must be at least 20 characters' }, { status: 400 })
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
   const { data, error } = await supabase
     .from('reviews')
     .insert({ college_id, student_name, program, year: year || null, rating, review_text, is_approved: false })

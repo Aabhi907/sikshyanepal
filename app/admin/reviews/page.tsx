@@ -54,7 +54,7 @@ export default function AdminReviewsPage() {
         return // don't touch state — DB unchanged
       }
       setReviews(prev => prev.map(r => r.id === id ? { ...r, is_approved } : r))
-    } catch (e) {
+    } catch (_e) {
       setMutError('Network error — review not updated')
     } finally {
       setUpdating(null)
@@ -73,7 +73,7 @@ export default function AdminReviewsPage() {
         return
       }
       setReviews(prev => prev.filter(r => r.id !== id))
-    } catch (e) {
+    } catch (_e) {
       setMutError('Network error — review not deleted')
     } finally {
       setUpdating(null)

@@ -66,7 +66,7 @@ export default function AdminLeadsPage() {
         return
       }
       await fetchLeads()
-    } catch (e) {
+    } catch (_e) {
       alert('Network error — status not updated')
     } finally {
       setUpdating(null)
@@ -84,7 +84,7 @@ export default function AdminLeadsPage() {
       }
       setLeads(l => l.filter(x => x.id !== id))
       setTotal(t => t - 1)
-    } catch (e) {
+    } catch (_e) {
       alert('Network error — lead not deleted')
     }
   }

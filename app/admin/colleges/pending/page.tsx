@@ -63,7 +63,7 @@ export default function PendingCollegesPage() {
         return
       }
       setColleges((c) => c.filter((x) => x.id !== id))
-    } catch (_e) {
+    } catch {
       alert('Network error — college not approved')
     } finally {
       setWorking(null)
@@ -81,7 +81,7 @@ export default function PendingCollegesPage() {
         return
       }
       setColleges((c) => c.filter((x) => x.id !== id))
-    } catch (_e) {
+    } catch {
       alert('Network error — college not rejected')
     } finally {
       setWorking(null)

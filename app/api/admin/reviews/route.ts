@@ -7,6 +7,9 @@ export async function GET() {
     .from('reviews')
     .select('*, college:colleges(id, name, slug)')
     .order('created_at', { ascending: false })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  if (error) {
+    console.error('[admin/reviews] GET error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+  return NextResponse.json(data ?? [])
 }

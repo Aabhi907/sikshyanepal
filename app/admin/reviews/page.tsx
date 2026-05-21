@@ -19,10 +19,28 @@ interface Review {
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'all'>('pending')
 
   useEffect(() => {
-    fetch('/api/admin/reviews').then(r => r.json()).then(d => { setReviews(d); setLoading(false) })
+    setLoading(true)
+    setFetchError(null)
+    fetch('/api/admin/reviews')
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d)) {
+          setReviews(d)
+        } else {
+          // API returned an error object instead of an array
+          setFetchError(d?.error || 'Failed to load reviews')
+          setReviews([])
+        }
+        setLoading(false)
+      })
+      .catch(err => {
+        setFetchError(err.message || 'Network error')
+        setLoading(false)
+      })
   }, [])
 
   const updateReview = async (id: string, is_approved: boolean) => {
@@ -64,7 +82,12 @@ export default function AdminReviewsPage() {
         ))}
       </div>
 
-      {loading ? <div className="text-center py-16 text-gray-500">Loading...</div> : (
+      {loading ? <div className="text-center py-16 text-gray-500">Loading...</div> : fetchError ? (
+        <div className="bg-red-900/30 border border-red-700 rounded-xl p-6 text-red-300 text-sm">
+          <p className="font-semibold mb-1">Failed to load reviews</p>
+          <p className="text-red-400 font-mono text-xs">{fetchError}</p>
+        </div>
+      ) : (
         <div className="space-y-4">
           {filtered.length === 0 ? (
             <div className="text-center py-16 bg-gray-800 rounded-xl border border-gray-700 text-gray-500">

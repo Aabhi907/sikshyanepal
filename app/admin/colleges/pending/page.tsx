@@ -52,12 +52,19 @@ export default function PendingCollegesPage() {
     if (!confirm('Approve this college? It will become publicly visible.')) return
     setWorking(id)
     try {
-      await fetch(`/api/admin/colleges/${id}`, {
+      const res = await fetch(`/api/admin/colleges/${id}`, {
         method:  'PUT',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ status: 'active' }),
       })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(`Failed to approve: ${err.error || res.status}`)
+        return
+      }
       setColleges((c) => c.filter((x) => x.id !== id))
+    } catch (e) {
+      alert('Network error — college not approved')
     } finally {
       setWorking(null)
     }
@@ -67,8 +74,15 @@ export default function PendingCollegesPage() {
     if (!confirm(`Reject and delete "${name}"? This cannot be undone.`)) return
     setWorking(id)
     try {
-      await fetch(`/api/admin/colleges/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/colleges/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(`Failed to reject: ${err.error || res.status}`)
+        return
+      }
       setColleges((c) => c.filter((x) => x.id !== id))
+    } catch (e) {
+      alert('Network error — college not rejected')
     } finally {
       setWorking(null)
     }

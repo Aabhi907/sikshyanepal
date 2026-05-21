@@ -17,45 +17,67 @@ interface Review {
 }
 
 export default function AdminReviewsPage() {
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [loading, setLoading] = useState(true)
+  const [reviews,   setReviews]   = useState<Review[]>([])
+  const [loading,   setLoading]   = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'pending' | 'approved' | 'all'>('pending')
+  const [mutError,  setMutError]  = useState<string | null>(null)
+  const [updating,  setUpdating]  = useState<string | null>(null)
+  const [filter,    setFilter]    = useState<'pending' | 'approved' | 'all'>('pending')
 
-  useEffect(() => {
+  function loadReviews() {
     setLoading(true)
     setFetchError(null)
     fetch('/api/admin/reviews')
       .then(r => r.json())
       .then(d => {
-        if (Array.isArray(d)) {
-          setReviews(d)
-        } else {
-          // API returned an error object instead of an array
-          setFetchError(d?.error || 'Failed to load reviews')
-          setReviews([])
-        }
+        setReviews(Array.isArray(d) ? d : [])
+        if (!Array.isArray(d)) setFetchError(d?.error || 'Failed to load reviews')
         setLoading(false)
       })
-      .catch(err => {
-        setFetchError(err.message || 'Network error')
-        setLoading(false)
-      })
-  }, [])
+      .catch(err => { setFetchError(err.message || 'Network error'); setLoading(false) })
+  }
+
+  useEffect(() => { loadReviews() }, [])
 
   const updateReview = async (id: string, is_approved: boolean) => {
-    await fetch(`/api/admin/reviews/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_approved }),
-    })
-    setReviews(prev => prev.map(r => r.id === id ? { ...r, is_approved } : r))
+    setUpdating(id)
+    setMutError(null)
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}`, {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ is_approved }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        setMutError(err.error || `Server error ${res.status}`)
+        return // don't touch state — DB unchanged
+      }
+      setReviews(prev => prev.map(r => r.id === id ? { ...r, is_approved } : r))
+    } catch (e) {
+      setMutError('Network error — review not updated')
+    } finally {
+      setUpdating(null)
+    }
   }
 
   const deleteReview = async (id: string) => {
     if (!confirm('Delete this review?')) return
-    await fetch(`/api/admin/reviews/${id}`, { method: 'DELETE' })
-    setReviews(prev => prev.filter(r => r.id !== id))
+    setUpdating(id)
+    setMutError(null)
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        setMutError(err.error || `Server error ${res.status}`)
+        return
+      }
+      setReviews(prev => prev.filter(r => r.id !== id))
+    } catch (e) {
+      setMutError('Network error — review not deleted')
+    } finally {
+      setUpdating(null)
+    }
   }
 
   const filtered = reviews.filter(r =>
@@ -72,6 +94,13 @@ export default function AdminReviewsPage() {
         </h1>
         <p className="text-gray-400 text-sm mt-1">{pending > 0 && <span className="text-orange-400 font-medium">{pending} pending approval — </span>}{reviews.length} total</p>
       </div>
+
+      {mutError && (
+        <div className="mb-4 px-4 py-3 bg-red-900/40 border border-red-700 rounded-xl text-red-300 text-sm flex items-center justify-between">
+          <span>⚠ {mutError}</span>
+          <button onClick={() => setMutError(null)} className="text-red-400 hover:text-red-200 ml-4 text-lg leading-none">&times;</button>
+        </div>
+      )}
 
       <div className="flex gap-2 mb-6">
         {(['pending', 'approved', 'all'] as const).map(f => (
@@ -118,18 +147,29 @@ export default function AdminReviewsPage() {
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   {!review.is_approved ? (
-                    <button onClick={() => updateReview(review.id, true)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-xs font-medium rounded-lg transition-colors">
-                      <Check className="w-3 h-3" /> Approve
+                    <button
+                      onClick={() => updateReview(review.id, true)}
+                      disabled={updating === review.id}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Check className="w-3 h-3" />
+                      {updating === review.id ? '…' : 'Approve'}
                     </button>
                   ) : (
-                    <button onClick={() => updateReview(review.id, false)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs font-medium rounded-lg transition-colors">
-                      <X className="w-3 h-3" /> Unapprove
+                    <button
+                      onClick={() => updateReview(review.id, false)}
+                      disabled={updating === review.id}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <X className="w-3 h-3" />
+                      {updating === review.id ? '…' : 'Unapprove'}
                     </button>
                   )}
-                  <button onClick={() => deleteReview(review.id)}
-                    className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors">
+                  <button
+                    onClick={() => deleteReview(review.id)}
+                    disabled={updating === review.id}
+                    className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                  >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>

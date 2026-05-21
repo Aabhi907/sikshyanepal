@@ -54,20 +54,39 @@ export default function AdminLeadsPage() {
 
   async function updateStatus(id: string, status: string) {
     setUpdating(id)
-    await fetch(`/api/admin/leads/${id}`, {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ status }),
-    })
-    await fetchLeads()
-    setUpdating(null)
+    try {
+      const res = await fetch(`/api/admin/leads/${id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(`Failed to update status: ${err.error || res.status}`)
+        return
+      }
+      await fetchLeads()
+    } catch (e) {
+      alert('Network error — status not updated')
+    } finally {
+      setUpdating(null)
+    }
   }
 
   async function deleteLead(id: string) {
     if (!confirm('Delete this lead? This cannot be undone.')) return
-    await fetch(`/api/admin/leads/${id}`, { method: 'DELETE' })
-    setLeads(l => l.filter(x => x.id !== id))
-    setTotal(t => t - 1)
+    try {
+      const res = await fetch(`/api/admin/leads/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(`Failed to delete: ${err.error || res.status}`)
+        return
+      }
+      setLeads(l => l.filter(x => x.id !== id))
+      setTotal(t => t - 1)
+    } catch (e) {
+      alert('Network error — lead not deleted')
+    }
   }
 
   // Stats per status

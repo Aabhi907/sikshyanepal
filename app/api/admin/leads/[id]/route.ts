@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
+import { cookies } from 'next/headers'
+
+function isAuthed() {
+  return cookies().get('admin_session')?.value === 'authenticated'
+}
 
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } },
 ) {
+  if (!isAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const body   = await request.json()
   const { status } = body
 
@@ -33,6 +40,8 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { id: string } },
 ) {
+  if (!isAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const supabase = createAdminSupabaseClient()
   const { error } = await supabase
     .from('leads')

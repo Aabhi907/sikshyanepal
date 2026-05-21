@@ -1,12 +1,15 @@
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { Building2, Newspaper, Bell, Award, Star, FileText, Mail, Clock, Activity } from 'lucide-react'
+import { Building2, Newspaper, Bell, Award, Star, FileText, Mail, Clock, Activity, Send } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
 async function getStats() {
   const supabase = createAdminSupabaseClient()
-  const [colleges, news, notices, scholarships, reviews, results, subscribers, latestResult, pendingColleges] = await Promise.all([
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+  const [colleges, news, notices, scholarships, reviews, results, subscribers, latestResult, pendingColleges, newLeads] = await Promise.all([
     supabase.from('colleges').select('id', { count: 'exact', head: true }),
     supabase.from('news').select('id', { count: 'exact', head: true }),
     supabase.from('notices').select('id', { count: 'exact', head: true }),
@@ -16,6 +19,7 @@ async function getStats() {
     supabase.from('subscribers').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('results').select('created_at').order('created_at', { ascending: false }).limit(1).single(),
     supabase.from('colleges').select('id', { count: 'exact', head: true }).eq('status', 'pending_review'),
+    supabase.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'new').gte('created_at', monthStart),
   ])
   return {
     colleges:        colleges.count        || 0,
@@ -26,6 +30,7 @@ async function getStats() {
     pendingColleges: pendingColleges.count || 0,
     results:         results.count         || 0,
     subscribers:     subscribers.count     || 0,
+    newLeads:        newLeads.count        || 0,
     lastScraperRun:  latestResult.data?.created_at ?? null,
   }
 }
@@ -42,14 +47,15 @@ function formatRelativeTime(iso: string | null): string {
 }
 
 const cards = [
-  { label: 'Colleges',           key: 'colleges',        icon: Building2, href: '/admin/colleges',          color: 'text-blue-400 bg-blue-900/30' },
-  { label: 'Pending Colleges',   key: 'pendingColleges', icon: Building2, href: '/admin/colleges/pending',  color: 'text-yellow-400 bg-yellow-900/30', alert: true },
-  { label: 'News Articles',      key: 'news',            icon: Newspaper, href: '/admin/news',               color: 'text-purple-400 bg-purple-900/30' },
-  { label: 'Notices',            key: 'notices',         icon: Bell,      href: '/admin/notices',            color: 'text-yellow-400 bg-yellow-900/30' },
-  { label: 'Scholarships',       key: 'scholarships',    icon: Award,     href: '/admin/scholarships',       color: 'text-green-400 bg-green-900/30' },
-  { label: 'Pending Reviews',    key: 'pendingReviews',  icon: Star,      href: '/admin/reviews',            color: 'text-orange-400 bg-orange-900/30' },
-  { label: 'Results',            key: 'results',         icon: FileText,  href: '/admin/reviews',            color: 'text-teal-400 bg-teal-900/30' },
-  { label: 'Email Subscribers',  key: 'subscribers',     icon: Mail,      href: '/admin/subscribers',        color: 'text-pink-400 bg-pink-900/30' },
+  { label: 'Colleges',             key: 'colleges',        icon: Building2, href: '/admin/colleges',          color: 'text-blue-400 bg-blue-900/30' },
+  { label: 'Pending Colleges',     key: 'pendingColleges', icon: Building2, href: '/admin/colleges/pending',  color: 'text-yellow-400 bg-yellow-900/30', alert: true },
+  { label: 'New Applications',     key: 'newLeads',        icon: Send,      href: '/admin/leads',              color: 'text-green-400 bg-green-900/30',   revenue: true },
+  { label: 'News Articles',        key: 'news',            icon: Newspaper, href: '/admin/news',               color: 'text-purple-400 bg-purple-900/30' },
+  { label: 'Notices',              key: 'notices',         icon: Bell,      href: '/admin/notices',            color: 'text-yellow-400 bg-yellow-900/30' },
+  { label: 'Scholarships',         key: 'scholarships',    icon: Award,     href: '/admin/scholarships',       color: 'text-green-400 bg-green-900/30' },
+  { label: 'Pending Reviews',      key: 'pendingReviews',  icon: Star,      href: '/admin/reviews',            color: 'text-orange-400 bg-orange-900/30' },
+  { label: 'Results',              key: 'results',         icon: FileText,  href: '/admin/reviews',            color: 'text-teal-400 bg-teal-900/30' },
+  { label: 'Email Subscribers',    key: 'subscribers',     icon: Mail,      href: '/admin/subscribers',        color: 'text-pink-400 bg-pink-900/30' },
 ]
 
 export default async function AdminDashboard() {
@@ -63,13 +69,15 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-10">
-        {cards.map(({ label, key, icon: Icon, href, color, alert }) => {
+        {cards.map(({ label, key, icon: Icon, href, color, alert, revenue }) => {
           const val = stats[key as keyof typeof stats] as number
-          const isAlert = alert && val > 0
+          const isAlert   = alert   && val > 0
+          const isRevenue = revenue && val > 0
           return (
             <Link key={key} href={href} className="group block">
               <div className={`bg-gray-800 rounded-xl border p-5 hover:border-gray-600 transition-all ${
-                isAlert ? 'border-yellow-500/50' : 'border-gray-700'
+                isAlert   ? 'border-yellow-500/50' :
+                isRevenue ? 'border-green-500/50'  : 'border-gray-700'
               }`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
@@ -78,6 +86,11 @@ export default async function AdminDashboard() {
                   {isAlert && (
                     <span className="px-2 py-0.5 bg-yellow-500 text-gray-900 text-xs font-bold rounded-full">
                       needs review
+                    </span>
+                  )}
+                  {isRevenue && (
+                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full">
+                      {val} new
                     </span>
                   )}
                   {key === 'pendingReviews' && val > 0 && (

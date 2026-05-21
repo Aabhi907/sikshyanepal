@@ -13,13 +13,15 @@ import {
   LogOut,
   ExternalLink,
   Mail,
+  Send,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { label: 'Dashboard',        href: '/admin',                  icon: LayoutDashboard },
   { label: 'Colleges',         href: '/admin/colleges',         icon: Building2 },
-  { label: 'Pending Colleges', href: '/admin/colleges/pending', icon: Building2,       pending: true },
+  { label: 'Pending Colleges', href: '/admin/colleges/pending', icon: Building2,  pending: true },
+  { label: 'Applications',     href: '/admin/leads',            icon: Send,        revenue: true },
   { label: 'News',             href: '/admin/news',             icon: Newspaper },
   { label: 'Notices',          href: '/admin/notices',          icon: Bell },
   { label: 'Scholarships',     href: '/admin/scholarships',     icon: Award },
@@ -52,7 +54,7 @@ export default function AdminSidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(({ label, href, icon: Icon, pending }) => {
+        {navItems.map(({ label, href, icon: Icon, pending, revenue }) => {
           const active = pathname === href || (href !== '/admin' && pathname.startsWith(href))
           return (
             <Link
@@ -63,13 +65,19 @@ export default function AdminSidebar() {
                 active
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-gray-700',
-                pending && !active && 'text-yellow-400 hover:text-yellow-300',
+                pending  && !active && 'text-yellow-400 hover:text-yellow-300',
+                revenue  && !active && 'text-green-400 hover:text-green-300',
               )}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
               <span className="flex-1">{label}</span>
-              {pending && (
+              {pending && !active && (
                 <span className="w-2 h-2 rounded-full bg-yellow-400 flex-shrink-0" />
+              )}
+              {revenue && !active && (
+                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green-900/60 text-green-300 rounded flex-shrink-0">
+                  $
+                </span>
               )}
             </Link>
           )

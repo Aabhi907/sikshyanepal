@@ -147,6 +147,20 @@ export interface OldQuestion {
   university?: University
 }
 
+export interface Lead {
+  id: string
+  college_id: string
+  college_name: string
+  student_name: string
+  student_email: string | null
+  student_phone: string
+  program_interest: string | null
+  message: string | null
+  /** 'new' | 'contacted' | 'enrolled' | 'rejected' */
+  status: 'new' | 'contacted' | 'enrolled' | 'rejected'
+  created_at: string
+}
+
 export type FacultyType = 'IT' | 'Management' | 'Engineering' | 'Medical' | 'Humanities' | 'Science' | 'Education' | 'Law'
 
 export type DegreeLevelType = Program['degree_level']

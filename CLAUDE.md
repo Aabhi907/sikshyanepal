@@ -150,3 +150,53 @@ websites become more stable/structured.
 - Session 5: Final UI polish — cards, hero fan stack, program icons, loading states
 - Session 6: AdSense, Resend email notifications, sitemap/robots, skeletons, admin System Info
 - Session 7: +2 support, college submission form, admin review queue, nav dropdown fix, college scraper (deprioritised)
+- Session 8: Apply Now lead capture system (primary revenue feature)
+
+## Lead Capture System (Revenue)
+
+The primary monetisation mechanism: colleges pay to receive qualified student leads.
+
+### How it works
+1. Student visits college profile → clicks **"Apply Now — It's Free"** button in sidebar
+2. `ApplyNowModal` captures: name, phone (required), email (optional), program, message
+3. `POST /api/apply` validates, inserts to `leads` table, emails admin via Resend
+4. Admin works leads at `/admin/leads` — changes status: new → contacted → enrolled | rejected
+
+### Database
+```sql
+CREATE TABLE leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  college_id UUID REFERENCES colleges(id) ON DELETE CASCADE,
+  college_name TEXT NOT NULL,
+  student_name TEXT NOT NULL,
+  student_email TEXT,
+  student_phone TEXT NOT NULL,
+  program_interest TEXT,
+  message TEXT,
+  status TEXT DEFAULT 'new',   -- 'new' | 'contacted' | 'enrolled' | 'rejected'
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "service_role_all" ON leads FOR ALL USING (auth.role() = 'service_role');
+```
+
+### Key files
+- `components/colleges/ApplyNowButton.tsx` — client wrapper (button + modal toggle + lead counter)
+- `components/colleges/ApplyNowModal.tsx` — full modal with form, validation, success state
+- `app/api/apply/route.ts` — POST: insert lead, send admin email
+- `app/api/admin/leads/route.ts` — GET: list all leads (admin)
+- `app/api/admin/leads/[id]/route.ts` — PATCH status / DELETE
+- `app/admin/leads/page.tsx` — admin UI: cards, filters, status updates, delete
+
+### Lead counter
+`getCollege()` queries leads for the current month:
+```ts
+.from("leads").select("id", { count: "exact", head: true })
+  .eq("college_id", college.id).gte("created_at", monthStart)
+```
+Shown below Apply Now button: "X students applied this month"
+
+### Revenue model
+- Phase 1 (now): Capture leads, build proof-of-concept dataset
+- Phase 2: Charge colleges per qualified lead (phone-verified application)
+- Phase 3: Subscription dashboard for colleges to view their own leads

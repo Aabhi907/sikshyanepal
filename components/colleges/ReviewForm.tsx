@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Star, Send, CheckCircle, Clock } from 'lucide-react'
+import { Star, Send, CheckCircle } from 'lucide-react'
 
 interface ReviewFormProps {
   collegeId:   string
@@ -94,21 +94,17 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
           </div>
           <div>
             <h3 className="font-semibold text-green-800 text-base mb-1">
-              Thank you for your review!
+              Review submitted!
             </h3>
             <p className="text-sm text-green-700 leading-relaxed mb-3">
-              Your review of <strong>{collegeName}</strong> has been submitted and is pending admin approval.
+              Your review of <strong>{collegeName}</strong> has been submitted. If not yet visible above, it may still be pending approval.
             </p>
-            <div className="flex items-center gap-2 text-xs text-green-600 bg-green-100 rounded-lg px-3 py-2 w-fit">
-              <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-              Usually approved within 24 hours — then visible to all students
-            </div>
             <button
               onClick={() => {
                 try { localStorage.removeItem(LS_KEY(collegeId)) } catch {}
                 setSubmitted(false)
               }}
-              className="mt-3 text-xs text-green-700 hover:text-green-900 underline underline-offset-2"
+              className="mt-1 text-xs text-green-700 hover:text-green-900 underline underline-offset-2"
             >
               Submit a different review
             </button>

@@ -1,68 +1,118 @@
 'use client'
 
-import { useState } from 'react'
-import { Star, Send, CheckCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Star, Send, CheckCircle, Clock } from 'lucide-react'
 
 interface ReviewFormProps {
-  collegeId: string
+  collegeId:   string
   collegeName: string
 }
 
 const STAR_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent']
+const LS_KEY      = (id: string) => `review_submitted_${id}`
+const EXPIRY_MS   = 7 * 24 * 60 * 60 * 1000  // 7 days
 
 export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) {
   const [form, setForm] = useState({
     student_name: '',
-    program: '',
-    year: '',
-    rating: 0,
-    review_text: '',
+    program:      '',
+    year:         '',
+    rating:       0,
+    review_text:  '',
   })
   const [hoverRating, setHoverRating] = useState(0)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState('')
+  const [submitting,  setSubmitting]  = useState(false)
+  const [submitted,   setSubmitted]   = useState(false)
+  const [error,       setError]       = useState('')
+
+  // Restore submitted state from localStorage (persists across refreshes)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY(collegeId))
+      if (raw) {
+        const ts = parseInt(raw, 10)
+        if (Date.now() - ts < EXPIRY_MS) {
+          setSubmitted(true)
+        } else {
+          localStorage.removeItem(LS_KEY(collegeId))
+        }
+      }
+    } catch {
+      // localStorage not available (SSR guard)
+    }
+  }, [collegeId])
 
   const set = (field: string, value: string | number) =>
-    setForm(prev => ({ ...prev, [field]: value }))
+    setForm((prev) => ({ ...prev, [field]: value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.rating === 0) { setError('Please select a rating'); return }
+    if (form.rating === 0)           { setError('Please select a rating'); return }
+    if (!form.student_name.trim())   { setError('Please enter your name'); return }
     if (form.review_text.length < 20) { setError('Review must be at least 20 characters'); return }
 
     setSubmitting(true)
     setError('')
 
-    const res = await fetch('/api/reviews', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, college_id: collegeId, year: form.year ? parseInt(form.year) : null }),
-    })
+    try {
+      const res = await fetch('/api/reviews', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          ...form,
+          college_id: collegeId,
+          year: form.year ? parseInt(form.year, 10) : null,
+        }),
+      })
 
-    if (res.ok) {
-      setSubmitted(true)
-    } else {
-      const data = await res.json()
-      setError(data.error || 'Failed to submit review')
+      if (res.ok) {
+        // Persist submitted state so page refreshes don't show the form again
+        try {
+          localStorage.setItem(LS_KEY(collegeId), Date.now().toString())
+        } catch {
+          // ignore
+        }
+        setSubmitted(true)
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Failed to submit review')
+      }
+    } catch {
+      setError('Network error — please try again')
+    } finally {
+      setSubmitting(false)
     }
-    setSubmitting(false)
   }
 
+  // ── Submitted state (shown across refreshes until 7-day expiry) ──────────
   if (submitted) {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-        <h3 className="font-semibold text-green-800 text-lg mb-1">Review Submitted!</h3>
-        <p className="text-sm text-green-700">
-          Thank you for reviewing <strong>{collegeName}</strong>. Your review will appear after admin approval (usually within 24 hours).
-        </p>
+      <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <CheckCircle className="w-6 h-6 text-green-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-green-800 text-base mb-1">
+              Thank you for your review!
+            </h3>
+            <p className="text-sm text-green-700 leading-relaxed mb-3">
+              Your review of <strong>{collegeName}</strong> has been submitted and is pending admin approval.
+            </p>
+            <div className="flex items-center gap-2 text-xs text-green-600 bg-green-100 rounded-lg px-3 py-2 w-fit">
+              <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+              Usually approved within 24 hours — then visible to all students
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
 
+  // ── Review form ───────────────────────────────────────────────────────────
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+
       {/* Star Rating */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -104,19 +154,20 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
           <input
             type="text"
             value={form.student_name}
-            onChange={e => set('student_name', e.target.value)}
+            onChange={(e) => set('student_name', e.target.value)}
             placeholder="e.g. Ram Sharma"
-            required
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Program Studied</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Program Studied
+          </label>
           <input
             type="text"
             value={form.program}
-            onChange={e => set('program', e.target.value)}
-            placeholder="e.g. BCA, BBA, +2 Science, MBBS"
+            onChange={(e) => set('program', e.target.value)}
+            placeholder="e.g. BCA, BBA, +2 Science"
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -124,11 +175,13 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
 
       {/* Year */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Year of Study / Batch</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          Year of Study / Batch
+        </label>
         <input
           type="number"
           value={form.year}
-          onChange={e => set('year', e.target.value)}
+          onChange={(e) => set('year', e.target.value)}
           placeholder="e.g. 2081, 2023"
           min="1990"
           max={new Date().getFullYear() + 1}
@@ -143,19 +196,21 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
         </label>
         <textarea
           value={form.review_text}
-          onChange={e => set('review_text', e.target.value)}
+          onChange={(e) => set('review_text', e.target.value)}
           rows={5}
-          placeholder="Share your experience — teaching quality, facilities, campus environment, hostel, canteen, value for money..."
-          required
+          placeholder="Share your experience — teaching quality, facilities, campus life, hostel, canteen, value for money..."
           className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
         <p className={`text-xs mt-1 ${form.review_text.length < 20 ? 'text-gray-400' : 'text-green-600'}`}>
-          {form.review_text.length} characters {form.review_text.length < 20 && '(minimum 20)'}
+          {form.review_text.length} characters
+          {form.review_text.length < 20 && ' (minimum 20)'}
         </p>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {error}
+        </div>
       )}
 
       <div className="flex items-center gap-3">
@@ -165,7 +220,7 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
           className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
           <Send className="w-4 h-4" />
-          {submitting ? 'Submitting...' : 'Submit Review'}
+          {submitting ? 'Submitting…' : 'Submit Review'}
         </button>
         <p className="text-xs text-gray-400">Reviews appear after admin approval</p>
       </div>

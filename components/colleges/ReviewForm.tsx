@@ -103,6 +103,15 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
               <Clock className="w-3.5 h-3.5 flex-shrink-0" />
               Usually approved within 24 hours — then visible to all students
             </div>
+            <button
+              onClick={() => {
+                try { localStorage.removeItem(LS_KEY(collegeId)) } catch {}
+                setSubmitted(false)
+              }}
+              className="mt-3 text-xs text-green-700 hover:text-green-900 underline underline-offset-2"
+            >
+              Submit a different review
+            </button>
           </div>
         </div>
       </div>

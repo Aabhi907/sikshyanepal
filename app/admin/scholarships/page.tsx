@@ -22,7 +22,7 @@ export default function AdminScholarshipsPage() {
   const { toasts, toast, dismiss } = useToast()
 
   useEffect(() => {
-    fetch('/api/admin/scholarships')
+    fetch(`/api/admin/scholarships?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => { setItems(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(() => { toast.error('Failed to load scholarships'); setLoading(false) })

@@ -28,9 +28,13 @@ export default function AdminReviewsPage() {
 
   function loadReviews() {
     setLoading(true)
-    fetch('/api/admin/reviews')
+    fetch(`/api/admin/reviews?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
-      .then((d) => { setReviews(Array.isArray(d) ? d : []); setLoading(false) })
+      .then((d) => {
+        if (!Array.isArray(d)) { toast.error(d?.error || 'Failed to load reviews'); setLoading(false); return }
+        setReviews(d)
+        setLoading(false)
+      })
       .catch(() => { toast.error('Failed to load reviews'); setLoading(false) })
   }
 

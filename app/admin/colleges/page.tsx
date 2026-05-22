@@ -26,7 +26,7 @@ export default function AdminCollegesPage() {
   const { toasts, toast, dismiss } = useToast()
 
   useEffect(() => {
-    fetch('/api/admin/colleges')
+    fetch(`/api/admin/colleges?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((data) => {
         setColleges(Array.isArray(data) ? data : [])

@@ -45,10 +45,10 @@ export default function AdminLeadsPage() {
   const fetchLeads = useCallback(async () => {
     setLoading(true)
     const url = filter === 'all'
-      ? '/api/admin/leads?limit=200'
-      : `/api/admin/leads?status=${filter}&limit=200`
+      ? `/api/admin/leads?limit=200&t=${Date.now()}`
+      : `/api/admin/leads?status=${filter}&limit=200&t=${Date.now()}`
     try {
-      const res  = await fetch(url)
+      const res  = await fetch(url, { cache: 'no-store' })
       const data = await res.json()
       setLeads(data.leads || [])
       setTotal(data.total || 0)

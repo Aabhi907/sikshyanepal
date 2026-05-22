@@ -23,7 +23,7 @@ export default function AdminNoticesPage() {
   const { toasts, toast, dismiss } = useToast()
 
   useEffect(() => {
-    fetch('/api/admin/notices')
+    fetch(`/api/admin/notices?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => { setItems(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(() => { toast.error('Failed to load notices'); setLoading(false) })

@@ -42,7 +42,7 @@ export default function PendingCollegesPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res  = await fetch('/api/admin/colleges/pending')
+      const res  = await fetch(`/api/admin/colleges/pending?t=${Date.now()}`, { cache: 'no-store' })
       const data = await res.json()
       setColleges(Array.isArray(data) ? data : [])
     } catch {

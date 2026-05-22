@@ -25,6 +25,9 @@ export function createServerSupabaseClient() {
 
 // Admin server client — bypasses RLS for write operations
 export function createAdminSupabaseClient() {
+  if (!supabaseServiceKey) {
+    console.error('[supabase] SUPABASE_SERVICE_ROLE_KEY is not set — falling back to anon key, RLS will apply!')
+  }
   const key = supabaseServiceKey || anonKey
   return createClient(url, key, {
     auth: { persistSession: false },

@@ -2,16 +2,25 @@ import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const NO_CACHE = { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' }
 
 export async function GET() {
+  const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+  console.log('[admin/reviews] service key present:', hasServiceKey)
+
   const supabase = createAdminSupabaseClient()
   const { data, error } = await supabase
     .from('reviews')
     .select('*, college:colleges(id, name, slug)')
     .order('created_at', { ascending: false })
+
+  console.log('[admin/reviews] rows returned:', data?.length, 'error:', error?.message)
+
   if (error) {
     console.error('[admin/reviews] GET error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500, headers: NO_CACHE })
   }
-  return NextResponse.json(data ?? [])
+  return NextResponse.json(data ?? [], { headers: NO_CACHE })
 }

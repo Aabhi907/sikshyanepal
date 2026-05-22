@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus, Pencil, Trash2, Star, Building2, Search, ExternalLink } from 'lucide-react'
+import ConfirmDialog, { ConfirmState, CONFIRM_CLOSED } from '@/components/ui/ConfirmDialog'
+import { ToastList, useToast } from '@/components/ui/Toast'
 
 interface College {
   id: string
@@ -15,42 +17,75 @@ interface College {
 }
 
 export default function AdminCollegesPage() {
-  const [colleges, setColleges] = useState<College[]>([])
-  const [filtered, setFiltered] = useState<College[]>([])
-  const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [deleting, setDeleting] = useState<string | null>(null)
+  const [colleges,  setColleges]  = useState<College[]>([])
+  const [filtered,  setFiltered]  = useState<College[]>([])
+  const [search,    setSearch]    = useState('')
+  const [loading,   setLoading]   = useState(true)
+  const [working,   setWorking]   = useState<string | null>(null)
+  const [dialog,    setDialog]    = useState<ConfirmState>(CONFIRM_CLOSED)
+  const { toasts, toast, dismiss } = useToast()
 
   useEffect(() => {
     fetch('/api/admin/colleges')
       .then((r) => r.json())
       .then((data) => {
-        setColleges(data)
-        setFiltered(data)
+        setColleges(Array.isArray(data) ? data : [])
+        setFiltered(Array.isArray(data) ? data : [])
         setLoading(false)
       })
+      .catch(() => { toast.error('Failed to load colleges'); setLoading(false) })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     const q = search.toLowerCase()
-    setFiltered(colleges.filter((c) => c.name.toLowerCase().includes(q) || c.location?.toLowerCase().includes(q)))
+    setFiltered(colleges.filter((c) =>
+      c.name.toLowerCase().includes(q) || c.location?.toLowerCase().includes(q)
+    ))
   }, [search, colleges])
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
-    setDeleting(id)
-    await fetch(`/api/admin/colleges/${id}`, { method: 'DELETE' })
-    setColleges((prev) => prev.filter((c) => c.id !== id))
-    setDeleting(null)
+  const handleDelete = (id: string, name: string) => {
+    setDialog({
+      isOpen: true,
+      title: 'Delete College',
+      message: `Delete "${name}"? This cannot be undone and will remove all associated data.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        setDialog(CONFIRM_CLOSED)
+        setWorking(id)
+        try {
+          const res = await fetch(`/api/admin/colleges/${id}`, { method: 'DELETE' })
+          if (!res.ok) { toast.error('Failed to delete college'); return }
+          setColleges((prev) => prev.filter((c) => c.id !== id))
+          toast.success(`"${name}" deleted`)
+        } catch {
+          toast.error('Network error — college not deleted')
+        } finally {
+          setWorking(null)
+        }
+      },
+    })
   }
 
   const toggleFeatured = async (college: College) => {
-    await fetch(`/api/admin/colleges/${college.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_featured: !college.is_featured }),
-    })
-    setColleges((prev) => prev.map((c) => c.id === college.id ? { ...c, is_featured: !c.is_featured } : c))
+    setWorking(college.id)
+    try {
+      const res = await fetch(`/api/admin/colleges/${college.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_featured: !college.is_featured }),
+      })
+      if (!res.ok) { toast.error('Failed to update featured status'); return }
+      setColleges((prev) =>
+        prev.map((c) => c.id === college.id ? { ...c, is_featured: !c.is_featured } : c)
+      )
+      toast.success(college.is_featured ? 'Removed from featured' : 'Marked as featured')
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setWorking(null)
+    }
   }
 
   return (
@@ -62,8 +97,10 @@ export default function AdminCollegesPage() {
           </h1>
           <p className="text-gray-400 text-sm mt-1">{colleges.length} total colleges</p>
         </div>
-        <Link href="/admin/colleges/new"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+        <Link
+          href="/admin/colleges/new"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus className="w-4 h-4" /> Add College
         </Link>
       </div>
@@ -103,28 +140,42 @@ export default function AdminCollegesPage() {
                   <tr key={college.id} className="border-b border-gray-700/50 hover:bg-gray-750 transition-colors">
                     <td className="px-5 py-3">
                       <div className="font-medium text-white">{college.name}</div>
-                      <a href={`/colleges/${college.slug}`} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-blue-400 hover:underline flex items-center gap-1 mt-0.5">
+                      <a
+                        href={`/colleges/${college.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-400 hover:underline flex items-center gap-1 mt-0.5"
+                      >
                         {college.slug} <ExternalLink className="w-2.5 h-2.5" />
                       </a>
                     </td>
                     <td className="px-5 py-3 text-gray-400 hidden md:table-cell">{college.location}</td>
                     <td className="px-5 py-3 text-gray-400 hidden lg:table-cell">{college.affiliation || '—'}</td>
                     <td className="px-5 py-3 text-center">
-                      <button onClick={() => toggleFeatured(college)} title="Toggle featured"
-                        className={`transition-colors ${college.is_featured ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}>
+                      <button
+                        onClick={() => toggleFeatured(college)}
+                        disabled={working === college.id}
+                        title="Toggle featured"
+                        className={`transition-colors disabled:opacity-50 ${
+                          college.is_featured ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'
+                        }`}
+                      >
                         <Star className={`w-4 h-4 ${college.is_featured ? 'fill-yellow-400' : ''}`} />
                       </button>
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <Link href={`/admin/colleges/${college.id}/edit`}
-                          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded transition-colors">
+                        <Link
+                          href={`/admin/colleges/${college.id}/edit`}
+                          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded transition-colors"
+                        >
                           <Pencil className="w-3.5 h-3.5" />
                         </Link>
-                        <button onClick={() => handleDelete(college.id, college.name)}
-                          disabled={deleting === college.id}
-                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors disabled:opacity-50">
+                        <button
+                          onClick={() => handleDelete(college.id, college.name)}
+                          disabled={working === college.id}
+                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -136,6 +187,12 @@ export default function AdminCollegesPage() {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        {...dialog}
+        onCancel={() => setDialog(CONFIRM_CLOSED)}
+      />
+      <ToastList toasts={toasts} onDismiss={dismiss} />
     </div>
   )
 }

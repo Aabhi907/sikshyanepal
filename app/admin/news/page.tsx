@@ -4,35 +4,70 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus, Pencil, Trash2, Newspaper } from 'lucide-react'
 import { formatDateShort } from '@/lib/utils'
+import ConfirmDialog, { ConfirmState, CONFIRM_CLOSED } from '@/components/ui/ConfirmDialog'
+import { ToastList, useToast } from '@/components/ui/Toast'
 
 interface NewsItem { id: string; title: string; slug: string; published_date: string }
 
 export default function AdminNewsPage() {
-  const [items, setItems] = useState<NewsItem[]>([])
+  const [items,   setItems]   = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [working, setWorking] = useState<string | null>(null)
+  const [dialog,  setDialog]  = useState<ConfirmState>(CONFIRM_CLOSED)
+  const { toasts, toast, dismiss } = useToast()
 
   useEffect(() => {
-    fetch('/api/admin/news').then(r => r.json()).then(d => { setItems(d); setLoading(false) })
+    fetch('/api/admin/news')
+      .then((r) => r.json())
+      .then((d) => { setItems(Array.isArray(d) ? d : []); setLoading(false) })
+      .catch(() => { toast.error('Failed to load news'); setLoading(false) })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"?`)) return
-    await fetch(`/api/admin/news/${id}`, { method: 'DELETE' })
-    setItems(prev => prev.filter(n => n.id !== id))
+  const handleDelete = (id: string, title: string) => {
+    setDialog({
+      isOpen: true,
+      title: 'Delete Article',
+      message: `Delete "${title}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        setDialog(CONFIRM_CLOSED)
+        setWorking(id)
+        try {
+          const res = await fetch(`/api/admin/news/${id}`, { method: 'DELETE' })
+          if (!res.ok) { toast.error('Failed to delete article'); return }
+          setItems((prev) => prev.filter((n) => n.id !== id))
+          toast.success('Article deleted')
+        } catch {
+          toast.error('Network error — article not deleted')
+        } finally {
+          setWorking(null)
+        }
+      },
+    })
   }
 
   return (
     <div className="p-8 text-gray-100">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Newspaper className="w-6 h-6 text-purple-400" /> News Articles</h1>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Newspaper className="w-6 h-6 text-purple-400" /> News Articles
+          </h1>
           <p className="text-gray-400 text-sm mt-1">{items.length} articles</p>
         </div>
-        <Link href="/admin/news/new" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+        <Link
+          href="/admin/news/new"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus className="w-4 h-4" /> Add Article
         </Link>
       </div>
-      {loading ? <div className="text-center py-16 text-gray-500">Loading...</div> : (
+
+      {loading ? (
+        <div className="text-center py-16 text-gray-500">Loading...</div>
+      ) : (
         <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -44,26 +79,49 @@ export default function AdminNewsPage() {
             </thead>
             <tbody>
               {items.length === 0 ? (
-                <tr><td colSpan={3} className="text-center py-10 text-gray-500">No articles yet. <Link href="/admin/news/new" className="text-blue-400 hover:underline">Add one</Link></td></tr>
-              ) : items.map(item => (
-                <tr key={item.id} className="border-b border-gray-700/50">
-                  <td className="px-5 py-3">
-                    <div className="font-medium text-white line-clamp-1">{item.title}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{item.slug}</div>
-                  </td>
-                  <td className="px-5 py-3 text-gray-400 hidden md:table-cell">{formatDateShort(item.published_date)}</td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link href={`/admin/news/${item.id}/edit`} className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
-                      <button onClick={() => handleDelete(item.id, item.title)} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
+                <tr>
+                  <td colSpan={3} className="text-center py-10 text-gray-500">
+                    No articles yet.{' '}
+                    <Link href="/admin/news/new" className="text-blue-400 hover:underline">Add one</Link>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-700/50">
+                    <td className="px-5 py-3">
+                      <div className="font-medium text-white line-clamp-1">{item.title}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{item.slug}</div>
+                    </td>
+                    <td className="px-5 py-3 text-gray-400 hidden md:table-cell">
+                      {formatDateShort(item.published_date)}
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/news/${item.id}/edit`}
+                          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(item.id, item.title)}
+                          disabled={working === item.id}
+                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       )}
+
+      <ConfirmDialog {...dialog} onCancel={() => setDialog(CONFIRM_CLOSED)} />
+      <ToastList toasts={toasts} onDismiss={dismiss} />
     </div>
   )
 }

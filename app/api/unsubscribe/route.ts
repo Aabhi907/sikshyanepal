@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 
 export const runtime = 'nodejs'
 
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   // Find subscriber by email (and optionally token)
   let query = supabase

@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Phone, Mail, GraduationCap, MessageSquare, Trash2, RefreshCw, Building2, TrendingUp } from 'lucide-react'
+import ConfirmDialog, { ConfirmState, CONFIRM_CLOSED } from '@/components/ui/ConfirmDialog'
+import { ToastList, useToast } from '@/components/ui/Toast'
 
 interface Lead {
   id: string
@@ -27,27 +29,35 @@ const ALL_STATUSES = ['new', 'contacted', 'enrolled', 'rejected'] as const
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-NP', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
 
 export default function AdminLeadsPage() {
-  const [leads,   setLeads]   = useState<Lead[]>([])
-  const [total,   setTotal]   = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [filter,  setFilter]  = useState<string>('all')
+  const [leads,    setLeads]    = useState<Lead[]>([])
+  const [total,    setTotal]    = useState(0)
+  const [loading,  setLoading]  = useState(true)
+  const [filter,   setFilter]   = useState<string>('all')
   const [updating, setUpdating] = useState<string | null>(null)
+  const [dialog,   setDialog]   = useState<ConfirmState>(CONFIRM_CLOSED)
+  const { toasts, toast, dismiss } = useToast()
 
   const fetchLeads = useCallback(async () => {
     setLoading(true)
     const url = filter === 'all'
       ? '/api/admin/leads?limit=200'
       : `/api/admin/leads?status=${filter}&limit=200`
-    const res  = await fetch(url)
-    const data = await res.json()
-    setLeads(data.leads || [])
-    setTotal(data.total || 0)
-    setLoading(false)
+    try {
+      const res  = await fetch(url)
+      const data = await res.json()
+      setLeads(data.leads || [])
+      setTotal(data.total || 0)
+    } catch {
+      toast.error('Failed to load applications')
+    } finally {
+      setLoading(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter])
 
   useEffect(() => { fetchLeads() }, [fetchLeads])
@@ -62,36 +72,46 @@ export default function AdminLeadsPage() {
       })
       if (!res.ok) {
         const err = await res.json()
-        alert(`Failed to update status: ${err.error || res.status}`)
+        toast.error(err.error || `Failed to update status (${res.status})`)
         return
       }
       await fetchLeads()
+      toast.success('Status updated')
     } catch {
-      alert('Network error — status not updated')
+      toast.error('Network error — status not updated')
     } finally {
       setUpdating(null)
     }
   }
 
-  async function deleteLead(id: string) {
-    if (!confirm('Delete this lead? This cannot be undone.')) return
-    try {
-      const res = await fetch(`/api/admin/leads/${id}`, { method: 'DELETE' })
-      if (!res.ok) {
-        const err = await res.json()
-        alert(`Failed to delete: ${err.error || res.status}`)
-        return
-      }
-      setLeads(l => l.filter(x => x.id !== id))
-      setTotal(t => t - 1)
-    } catch {
-      alert('Network error — lead not deleted')
-    }
+  function confirmDelete(id: string, name: string) {
+    setDialog({
+      isOpen: true,
+      title: 'Delete Application',
+      message: `Delete ${name}'s application? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        setDialog(CONFIRM_CLOSED)
+        try {
+          const res = await fetch(`/api/admin/leads/${id}`, { method: 'DELETE' })
+          if (!res.ok) {
+            const err = await res.json()
+            toast.error(err.error || 'Failed to delete')
+            return
+          }
+          setLeads((l) => l.filter((x) => x.id !== id))
+          setTotal((t) => t - 1)
+          toast.success('Application deleted')
+        } catch {
+          toast.error('Network error — lead not deleted')
+        }
+      },
+    })
   }
 
-  // Stats per status
   const counts: Record<string, number> = { new: 0, contacted: 0, enrolled: 0, rejected: 0 }
-  leads.forEach(l => { counts[l.status] = (counts[l.status] || 0) + 1 })
+  leads.forEach((l) => { counts[l.status] = (counts[l.status] || 0) + 1 })
 
   return (
     <div className="p-6 lg:p-8 text-gray-100 min-h-screen">
@@ -110,9 +130,9 @@ export default function AdminLeadsPage() {
         </button>
       </div>
 
-      {/* ── Stats strip ──────────────────────────────────── */}
+      {/* Stats strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {ALL_STATUSES.map(s => {
+        {ALL_STATUSES.map((s) => {
           const cfg = STATUS_CONFIG[s]
           return (
             <div key={s} className="bg-gray-800 rounded-xl border border-gray-700 p-4">
@@ -126,24 +146,28 @@ export default function AdminLeadsPage() {
         })}
       </div>
 
-      {/* ── Conversion metric ────────────────────────────── */}
+      {/* Conversion metric */}
       {total > 0 && (
         <div className="flex items-center gap-2 mb-6 px-4 py-3 bg-green-900/30 border border-green-700/50 rounded-xl text-sm text-green-300">
           <TrendingUp className="w-4 h-4 flex-shrink-0" />
           <span>
             Enrollment rate:{' '}
             <strong className="text-green-200">
-              {Math.round((counts.enrolled || 0) / total * 100)}%
+              {Math.round(((counts.enrolled || 0) / total) * 100)}%
             </strong>{' '}
             ({counts.enrolled || 0} enrolled out of {total} applications)
           </span>
         </div>
       )}
 
-      {/* ── Status filter tabs ───────────────────────────── */}
+      {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap mb-6">
-        {[{ label: `All (${total})`, value: 'all' },
-          ...ALL_STATUSES.map(s => ({ label: `${STATUS_CONFIG[s].label} (${counts[s] || 0})`, value: s }))
+        {[
+          { label: `All (${total})`, value: 'all' },
+          ...ALL_STATUSES.map((s) => ({
+            label: `${STATUS_CONFIG[s].label} (${counts[s] || 0})`,
+            value: s,
+          })),
         ].map(({ label, value }) => (
           <button
             key={value}
@@ -159,7 +183,7 @@ export default function AdminLeadsPage() {
         ))}
       </div>
 
-      {/* ── Leads table ──────────────────────────────────── */}
+      {/* Leads list */}
       {loading ? (
         <div className="text-center py-16 text-gray-400">Loading leads…</div>
       ) : leads.length === 0 ? (
@@ -185,31 +209,37 @@ export default function AdminLeadsPage() {
                     </span>
                   </div>
 
-                  {/* Main info */}
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <h3 className="font-semibold text-white">{lead.student_name}</h3>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}
+                      >
                         <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                         {cfg.label}
                       </span>
                     </div>
 
-                    {/* Contact row */}
                     <div className="flex flex-wrap gap-3 text-sm text-gray-400 mb-2">
-                      <a href={`tel:${lead.student_phone}`} className="flex items-center gap-1 hover:text-white transition-colors">
+                      <a
+                        href={`tel:${lead.student_phone}`}
+                        className="flex items-center gap-1 hover:text-white transition-colors"
+                      >
                         <Phone className="w-3.5 h-3.5" />
                         <span className="font-medium text-white">{lead.student_phone}</span>
                       </a>
                       {lead.student_email && (
-                        <a href={`mailto:${lead.student_email}`} className="flex items-center gap-1 hover:text-white transition-colors">
+                        <a
+                          href={`mailto:${lead.student_email}`}
+                          className="flex items-center gap-1 hover:text-white transition-colors"
+                        >
                           <Mail className="w-3.5 h-3.5" />
                           {lead.student_email}
                         </a>
                       )}
                     </div>
 
-                    {/* College + program */}
                     <div className="flex flex-wrap gap-4 text-xs text-gray-400">
                       <span className="flex items-center gap-1">
                         <Building2 className="w-3.5 h-3.5" />
@@ -223,7 +253,6 @@ export default function AdminLeadsPage() {
                       )}
                     </div>
 
-                    {/* Message */}
                     {lead.message && (
                       <div className="mt-2.5 flex items-start gap-1.5 text-xs text-gray-500">
                         <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
@@ -238,17 +267,16 @@ export default function AdminLeadsPage() {
                   <div className="flex flex-row sm:flex-col items-center gap-2 flex-shrink-0">
                     <select
                       value={lead.status}
-                      onChange={e => updateStatus(lead.id, e.target.value)}
+                      onChange={(e) => updateStatus(lead.id, e.target.value)}
                       disabled={updating === lead.id}
                       className="bg-gray-700 border border-gray-600 text-gray-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                     >
-                      {ALL_STATUSES.map(s => (
+                      {ALL_STATUSES.map((s) => (
                         <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
                       ))}
                     </select>
-
                     <button
-                      onClick={() => deleteLead(lead.id)}
+                      onClick={() => confirmDelete(lead.id, lead.student_name)}
                       className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-900/20 transition-colors"
                       title="Delete lead"
                     >
@@ -261,6 +289,9 @@ export default function AdminLeadsPage() {
           })}
         </div>
       )}
+
+      <ConfirmDialog {...dialog} onCancel={() => setDialog(CONFIRM_CLOSED)} />
+      <ToastList toasts={toasts} onDismiss={dismiss} />
     </div>
   )
 }

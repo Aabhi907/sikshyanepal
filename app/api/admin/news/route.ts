@@ -3,6 +3,8 @@ import { createAdminSupabaseClient } from '@/lib/supabase'
 import { slugify } from '@/lib/utils'
 import { cookies } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 function isAuthed() {
   return cookies().get('admin_session')?.value === 'authenticated'
 }

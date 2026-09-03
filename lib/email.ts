@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import type { Result } from '@/types'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sikshyanepal.vercel.app'
 const FROM_EMAIL = 'SikshyaNepal <onboarding@resend.dev>'
 
@@ -130,7 +130,7 @@ function buildEmailHtml(results: Result[]): string {
 
 export async function sendResultNotification(results: Result[]): Promise<{ sent: number; errors: number }> {
   if (!results.length) return { sent: 0, errors: 0 }
-  if (!process.env.RESEND_API_KEY) {
+  if (!resend) {
     console.warn('[email] RESEND_API_KEY not set — skipping notification')
     return { sent: 0, errors: 0 }
   }

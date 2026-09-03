@@ -21,10 +21,101 @@ export interface College {
   submitted_by: string | null
   submitter_role: string | null
   submitter_contact: string | null
+  province?: string | null
+  district?: string | null
+  local_level?: string | null
+  ward_number?: number | null
+  verification_status?: VerificationStatus
+  source_name?: string | null
+  source_url?: string | null
+  last_verified_at?: string | null
+  verified_by?: string | null
   created_at: string
   programs?: CollegeProgram[]
   reviews?: Review[]
   scholarships?: Scholarship[]
+}
+
+export type VerificationStatus = 'unverified' | 'source_verified' | 'institution_verified'
+
+export interface School {
+  id: string
+  iemis_code: string | null
+  name: string
+  slug: string
+  description: string | null
+  ownership_type: 'community' | 'institutional' | 'religious' | 'public' | 'private' | 'other' | null
+  school_level: 'pre_primary' | 'basic' | 'secondary' | 'higher_secondary' | 'multiple' | null
+  grades_from: number | null
+  grades_to: number | null
+  province: string
+  district: string
+  local_level: string | null
+  ward_number: number | null
+  location: string | null
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  logo_url: string | null
+  cover_url: string | null
+  principal_name: string | null
+  medium_of_instruction: string[] | null
+  streams: string[] | null
+  facilities: string[] | null
+  student_count: number | null
+  teacher_count: number | null
+  established_year: number | null
+  status: 'active' | 'pending_review' | 'inactive'
+  verification_status: VerificationStatus
+  source_name: string | null
+  source_url: string | null
+  source_published_at: string | null
+  last_verified_at: string | null
+  verified_by: string | null
+  is_featured: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Admission {
+  id: string
+  title: string
+  slug: string
+  institution_type: 'school' | 'college' | 'university' | 'training_provider' | 'other'
+  institution_name: string
+  school_id: string | null
+  college_id: string | null
+  programs: string[]
+  education_level: string | null
+  admission_type: 'general' | 'entrance' | 'scholarship' | 'quota' | 'transfer' | 'other'
+  summary: string | null
+  details: string | null
+  eligibility: string | null
+  required_documents: string[]
+  application_open_at: string | null
+  application_deadline: string | null
+  entrance_exam_at: string | null
+  application_fee: number | null
+  available_seats: number | null
+  application_url: string | null
+  contact_phone: string | null
+  contact_email: string | null
+  source_name: string
+  source_url: string
+  verification_status: VerificationStatus
+  last_verified_at: string | null
+  status: 'draft' | 'published' | 'closed' | 'archived'
+  is_featured: boolean
+  is_sponsored: boolean
+  sponsor_label: string | null
+  published_at: string | null
+  created_at: string
+  updated_at: string
+  school?: Pick<School, 'id' | 'name' | 'slug' | 'district' | 'province'> | null
+  college?: Pick<College, 'id' | 'name' | 'slug' | 'location'> | null
 }
 
 export interface Program {

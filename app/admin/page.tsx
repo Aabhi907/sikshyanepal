@@ -1,5 +1,5 @@
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { Building2, Newspaper, Bell, Award, Star, FileText, Mail, Clock, Activity, Send } from 'lucide-react'
+import { Building2, Newspaper, Bell, Award, Star, FileText, Mail, Clock, Activity, Send, School, Flag, CalendarCheck2 } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +9,10 @@ async function getStats() {
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-  const [colleges, news, notices, scholarships, reviews, results, subscribers, latestResult, pendingColleges, newLeads] = await Promise.all([
+  const [admissions, schools, corrections, colleges, news, notices, scholarships, reviews, results, subscribers, latestResult, pendingColleges, newLeads] = await Promise.all([
+    supabase.from('admissions').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+    supabase.from('schools').select('id', { count: 'exact', head: true }),
+    supabase.from('data_corrections').select('id', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']),
     supabase.from('colleges').select('id', { count: 'exact', head: true }),
     supabase.from('news').select('id', { count: 'exact', head: true }),
     supabase.from('notices').select('id', { count: 'exact', head: true }),
@@ -22,6 +25,9 @@ async function getStats() {
     supabase.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'new').gte('created_at', monthStart),
   ])
   return {
+    admissions:      admissions.count      || 0,
+    schools:         schools.count         || 0,
+    corrections:     corrections.count     || 0,
     colleges:        colleges.count        || 0,
     news:            news.count            || 0,
     notices:         notices.count         || 0,
@@ -47,6 +53,9 @@ function formatRelativeTime(iso: string | null): string {
 }
 
 const cards = [
+  { label: 'Admissions',           key: 'admissions',      icon: CalendarCheck2, href: '/admin/admissions',          color: 'text-cyan-400 bg-cyan-900/30' },
+  { label: 'Schools',              key: 'schools',         icon: School,    href: '/admin/schools',             color: 'text-blue-400 bg-blue-900/30' },
+  { label: 'Data Corrections',     key: 'corrections',     icon: Flag,      href: '/admin/corrections',         color: 'text-orange-400 bg-orange-900/30', alert: true },
   { label: 'Colleges',             key: 'colleges',        icon: Building2, href: '/admin/colleges',          color: 'text-blue-400 bg-blue-900/30' },
   { label: 'Pending Colleges',     key: 'pendingColleges', icon: Building2, href: '/admin/colleges/pending',  color: 'text-yellow-400 bg-yellow-900/30', alert: true },
   { label: 'New Applications',     key: 'newLeads',        icon: Send,      href: '/admin/leads',              color: 'text-green-400 bg-green-900/30',   revenue: true },
@@ -115,6 +124,7 @@ export default async function AdminDashboard() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
+            { label: 'Schools',     value: stats.schools,     color: 'text-blue-300' },
             { label: 'Colleges',    value: stats.colleges,    color: 'text-blue-400' },
             { label: 'Results',     value: stats.results,     color: 'text-teal-400' },
             { label: 'Notices',     value: stats.notices,     color: 'text-yellow-400' },
@@ -153,6 +163,7 @@ export default async function AdminDashboard() {
           <h3 className="font-semibold text-white mb-4">Quick Actions</h3>
           <div className="space-y-2">
             {[
+              { label: '+ Add Admission',   href: '/admin/admissions/new' },
               { label: '+ Add College',      href: '/admin/colleges/new' },
               { label: '+ Add News Article', href: '/admin/news/new' },
               { label: '+ Add Notice',       href: '/admin/notices/new' },
@@ -169,6 +180,8 @@ export default async function AdminDashboard() {
           <h3 className="font-semibold text-white mb-4">Site Links</h3>
           <div className="space-y-2">
             {[
+              { label: 'Admissions Open',   href: '/admissions' },
+              { label: 'School Directory',  href: '/schools' },
               { label: 'View Homepage',      href: '/' },
               { label: 'College Listings',   href: '/colleges' },
               { label: 'Results Page',       href: '/results' },

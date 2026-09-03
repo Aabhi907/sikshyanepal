@@ -8,6 +8,8 @@ import NoticeCard from '@/components/notices/NoticeCard'
 import CollegeCard from '@/components/colleges/CollegeCard'
 import EmailSubscribe from '@/components/notifications/EmailSubscribe'
 import type { Result, Notice, College } from '@/types'
+import type { Admission } from '@/types'
+import AdmissionCard from '@/components/admissions/AdmissionCard'
 import {
   Building2,
   FileText,
@@ -50,9 +52,9 @@ export const dynamic   = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: "SikshyaNepal — Nepal's #1 Education Portal | Colleges, Results & Notices",
+  title: "SikshyaNepal — Schools, Colleges, Results & Notices in Nepal",
   description:
-    'Find colleges, university programs, exam results, notices, scholarships, and education news in Nepal. Complete guide for Nepali students.',
+    'Find verified schools, colleges, programs, exam results, notices and scholarships across Nepal.',
 }
 
 const UNIVERSITY_SHOWCASE = [
@@ -66,10 +68,17 @@ async function getHomeData() {
   const supabase = createServerSupabaseClient()
 
   const [
-    resultsRes, noticesRes, collegesRes,
-    collegeCountRes, programCountRes,
+    admissionsRes, resultsRes, noticesRes, collegesRes,
+    schoolCountRes, collegeCountRes, programCountRes,
     tuCountRes, kuCountRes, puCountRes, purUCountRes,
   ] = await Promise.all([
+    supabase
+      .from('admissions')
+      .select('*, school:schools(id,name,slug,district,province), college:colleges(id,name,slug,location)')
+      .eq('status', 'published')
+      .order('is_featured', { ascending: false })
+      .order('application_deadline', { ascending: true, nullsFirst: false })
+      .limit(4),
     supabase
       .from('results')
       .select('*, university:universities(id, name, short_name, slug, website, created_at)')
@@ -81,6 +90,7 @@ async function getHomeData() {
       .order('published_date', { ascending: false })
       .limit(6),
     supabase.from('colleges').select('*').eq('is_featured', true).or('status.eq.active,status.is.null').limit(6),
+    supabase.from('schools').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('colleges').select('id', { count: 'exact', head: true }),
     supabase.from('programs').select('id',  { count: 'exact', head: true }),
     supabase.from('colleges').select('id', { count: 'exact', head: true }).ilike('affiliation', '%Tribhuvan%'),
@@ -90,13 +100,14 @@ async function getHomeData() {
   ])
 
   const collegeCount = collegeCountRes.count ?? 0
+  const schoolCount = schoolCountRes.count ?? 0
   const programCount = programCountRes.count ?? 0
 
   const heroStats = [
+    { label: 'Schools',      value: schoolCount > 0 ? schoolCount.toLocaleString() : 'Growing' },
     { label: 'Colleges',     value: collegeCount > 0 ? `${collegeCount}+` : '500+' },
     { label: 'Programs',     value: programCount > 0 ? `${programCount}+` : '50+' },
     { label: 'Universities', value: '8+' },
-    { label: 'Scholarships', value: '200+' },
   ]
 
   const universityCounts: Record<string, number> = {
@@ -107,6 +118,7 @@ async function getHomeData() {
   }
 
   return {
+    admissions:       (admissionsRes.data || []) as Admission[],
     results:          (resultsRes.data  || []) as Result[],
     notices:          (noticesRes.data  || []) as Notice[],
     featuredColleges: (collegesRes.data || []) as College[],
@@ -170,7 +182,7 @@ function HeroCard({
 }
 
 export default async function HomePage() {
-  const { results, notices, featuredColleges, heroStats, universityCounts } = await getHomeData()
+  const { admissions, results, notices, featuredColleges, heroStats, universityCounts } = await getHomeData()
 
   const latestResult  = results[0]
   const latestNotice  = notices[0]
@@ -208,8 +220,8 @@ export default async function HomePage() {
 
               {/* Sub */}
               <p className="text-gray-500 text-xl leading-relaxed mb-8 max-w-lg">
-                Colleges, results, notices, reviews, scholarships —
-                Nepal&apos;s most complete education platform. Updated daily.
+                Verified schools, colleges, programs, results and scholarships —
+                with sources you can check.
               </p>
 
               {/* Search */}
@@ -227,6 +239,15 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {admissions.length > 0 && (
+        <section className="border-b border-gray-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div className="mb-7 flex items-end justify-between gap-4"><div><p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">Plan your next step</p><h2 className="font-display text-3xl font-bold text-ink">Admissions open now</h2></div><Link href="/admissions" className="text-sm font-bold text-primary">All admissions →</Link></div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{admissions.map((admission) => <AdmissionCard key={admission.id} admission={admission} />)}</div>
+          </div>
+        </section>
+      )}
 
       {/* ════════════════════════════════════════════════════════
           STATS BAR — dark navy
@@ -523,18 +544,18 @@ export default async function HomePage() {
             </span>
           </div>
           <p className="font-display font-bold text-white text-4xl mb-2" style={{ letterSpacing: '-0.025em' }}>
-            10,000+ Students
+            One trusted education directory
           </p>
           <p className="text-slate-400 text-sm mb-8">
-            use SikshyaNepal to find colleges, results and notices every month
+            Find institutions across Nepal and see when their information was last checked.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              href="/colleges"
+              href="/schools"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
                          bg-[#1847c4] text-white text-sm font-semibold hover:bg-[#1340b0] transition-colors"
             >
-              Find Your College
+              Find Your School
             </Link>
             <Link
               href="/results"

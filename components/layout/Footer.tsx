@@ -4,6 +4,7 @@ import { Mail, MapPin, ArrowUpRight, BookOpenCheck } from 'lucide-react'
 const exploreLinks = [
   { label: 'All Schools',      href: '/schools' },
   { label: 'All Colleges',     href: '/colleges' },
+  { label: 'Admissions Open',  href: '/admissions' },
   { label: 'Compare Colleges', href: '/compare' },
   { label: 'Scholarships',     href: '/scholarships' },
   { label: 'Programs',         href: '/programs' },

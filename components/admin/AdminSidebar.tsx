@@ -16,6 +16,7 @@ import {
   Send,
   School,
   Flag,
+  CalendarCheck2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -23,6 +24,7 @@ const navItems = [
   { label: 'Dashboard',        href: '/admin',                  icon: LayoutDashboard },
   { label: 'Schools',          href: '/admin/schools',          icon: School },
   { label: 'Data Corrections', href: '/admin/corrections',      icon: Flag, pending: true },
+  { label: 'Admissions',       href: '/admin/admissions',       icon: CalendarCheck2, revenue: true },
   { label: 'Colleges',         href: '/admin/colleges',         icon: Building2 },
   { label: 'Pending Colleges', href: '/admin/colleges/pending', icon: Building2,  pending: true },
   { label: 'Applications',     href: '/admin/leads',            icon: Send,        revenue: true },

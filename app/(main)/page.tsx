@@ -8,6 +8,8 @@ import NoticeCard from '@/components/notices/NoticeCard'
 import CollegeCard from '@/components/colleges/CollegeCard'
 import EmailSubscribe from '@/components/notifications/EmailSubscribe'
 import type { Result, Notice, College } from '@/types'
+import type { Admission } from '@/types'
+import AdmissionCard from '@/components/admissions/AdmissionCard'
 import {
   Building2,
   FileText,
@@ -66,10 +68,17 @@ async function getHomeData() {
   const supabase = createServerSupabaseClient()
 
   const [
-    resultsRes, noticesRes, collegesRes,
+    admissionsRes, resultsRes, noticesRes, collegesRes,
     schoolCountRes, collegeCountRes, programCountRes,
     tuCountRes, kuCountRes, puCountRes, purUCountRes,
   ] = await Promise.all([
+    supabase
+      .from('admissions')
+      .select('*, school:schools(id,name,slug,district,province), college:colleges(id,name,slug,location)')
+      .eq('status', 'published')
+      .order('is_featured', { ascending: false })
+      .order('application_deadline', { ascending: true, nullsFirst: false })
+      .limit(4),
     supabase
       .from('results')
       .select('*, university:universities(id, name, short_name, slug, website, created_at)')
@@ -109,6 +118,7 @@ async function getHomeData() {
   }
 
   return {
+    admissions:       (admissionsRes.data || []) as Admission[],
     results:          (resultsRes.data  || []) as Result[],
     notices:          (noticesRes.data  || []) as Notice[],
     featuredColleges: (collegesRes.data || []) as College[],
@@ -172,7 +182,7 @@ function HeroCard({
 }
 
 export default async function HomePage() {
-  const { results, notices, featuredColleges, heroStats, universityCounts } = await getHomeData()
+  const { admissions, results, notices, featuredColleges, heroStats, universityCounts } = await getHomeData()
 
   const latestResult  = results[0]
   const latestNotice  = notices[0]
@@ -229,6 +239,15 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {admissions.length > 0 && (
+        <section className="border-b border-gray-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div className="mb-7 flex items-end justify-between gap-4"><div><p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">Plan your next step</p><h2 className="font-display text-3xl font-bold text-ink">Admissions open now</h2></div><Link href="/admissions" className="text-sm font-bold text-primary">All admissions →</Link></div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{admissions.map((admission) => <AdmissionCard key={admission.id} admission={admission} />)}</div>
+          </div>
+        </section>
+      )}
 
       {/* ════════════════════════════════════════════════════════
           STATS BAR — dark navy

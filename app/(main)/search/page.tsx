@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Search, Building2, BookOpen, Newspaper, FileText, GraduationCap, Award, School } from 'lucide-react'
+import { Search, Building2, BookOpen, Newspaper, FileText, GraduationCap, Award, School, CalendarCheck2 } from 'lucide-react'
 
 interface SearchResults {
+  admissions: { id: string; title: string; slug: string; institution_name: string; application_deadline: string | null }[]
   schools: { id: string; name: string; slug: string; district: string; province: string; verification_status: string }[]
   colleges: { id: string; name: string; slug: string; location: string; affiliation: string | null }[]
   programs: { id: string; name: string; faculty: string; duration: string }[]
@@ -22,7 +23,8 @@ const headers = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }
 
 async function fetchAll(q: string): Promise<SearchResults> {
   const enc = encodeURIComponent(q)
-  const [schools, colleges, programs, news, notices, results, scholarships] = await Promise.all([
+  const [admissions, schools, colleges, programs, news, notices, results, scholarships] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/admissions?or=(title.ilike.*${enc}*,institution_name.ilike.*${enc}*)&status=eq.published&select=id,title,slug,institution_name,application_deadline&limit=8`, { headers }).then(r => r.json()),
     fetch(`${SUPABASE_URL}/rest/v1/schools?name=ilike.*${enc}*&status=eq.active&select=id,name,slug,district,province,verification_status&limit=8`, { headers }).then(r => r.json()),
     fetch(`${SUPABASE_URL}/rest/v1/colleges?name=ilike.*${enc}*&select=id,name,slug,location,affiliation&limit=8`, { headers }).then(r => r.json()),
     fetch(`${SUPABASE_URL}/rest/v1/programs?name=ilike.*${enc}*&select=id,name,faculty,duration&limit=6`, { headers }).then(r => r.json()),
@@ -32,6 +34,7 @@ async function fetchAll(q: string): Promise<SearchResults> {
     fetch(`${SUPABASE_URL}/rest/v1/scholarships?title=ilike.*${enc}*&select=id,title,amount,deadline&limit=6`, { headers }).then(r => r.json()),
   ])
   return {
+    admissions: Array.isArray(admissions) ? admissions : [],
     schools: Array.isArray(schools) ? schools : [],
     colleges: Array.isArray(colleges) ? colleges : [],
     programs: Array.isArray(programs) ? programs : [],
@@ -73,7 +76,7 @@ function SearchPageInner() {
   }
 
   const totalResults = data
-    ? data.schools.length + data.colleges.length + data.programs.length + data.news.length +
+    ? data.admissions.length + data.schools.length + data.colleges.length + data.programs.length + data.news.length +
       data.notices.length + data.results.length + data.scholarships.length
     : 0
 
@@ -132,6 +135,14 @@ function SearchPageInner() {
       {/* Results */}
       {!loading && data && (
         <div className="space-y-8">
+          {/* Admissions */}
+          {data.admissions.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-3"><CalendarCheck2 className="w-4 h-4 text-cyan-600" /><h2 className="font-semibold text-gray-800">Admissions ({data.admissions.length})</h2></div>
+              <div className="space-y-2">{data.admissions.map((a) => <Link key={a.id} href={`/admissions/${a.slug}`} className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 hover:border-cyan-300"><div><p className="text-sm font-medium text-gray-900">{a.title}</p><p className="mt-1 text-xs text-gray-500">{a.institution_name}</p></div>{a.application_deadline && <span className="flex-shrink-0 text-xs font-medium text-orange-600">Closes {new Date(a.application_deadline).toLocaleDateString('en-NP', { day: 'numeric', month: 'short' })}</span>}</Link>)}</div>
+            </section>
+          )}
+
           {/* Schools */}
           {data.schools.length > 0 && (
             <section>

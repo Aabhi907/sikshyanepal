@@ -17,6 +17,7 @@ const navLinks = [
       { label: 'Community Schools', href: '/schools?ownership=community' },
     ],
   },
+  { label: 'Admissions',   href: '/admissions' },
   {
     label: 'Colleges',
     href: '/colleges',

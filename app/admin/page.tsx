@@ -1,5 +1,5 @@
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { Building2, Newspaper, Bell, Award, Star, FileText, Mail, Clock, Activity, Send, School, Flag } from 'lucide-react'
+import { Building2, Newspaper, Bell, Award, Star, FileText, Mail, Clock, Activity, Send, School, Flag, CalendarCheck2 } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +9,8 @@ async function getStats() {
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-  const [schools, corrections, colleges, news, notices, scholarships, reviews, results, subscribers, latestResult, pendingColleges, newLeads] = await Promise.all([
+  const [admissions, schools, corrections, colleges, news, notices, scholarships, reviews, results, subscribers, latestResult, pendingColleges, newLeads] = await Promise.all([
+    supabase.from('admissions').select('id', { count: 'exact', head: true }).eq('status', 'published'),
     supabase.from('schools').select('id', { count: 'exact', head: true }),
     supabase.from('data_corrections').select('id', { count: 'exact', head: true }).in('status', ['pending', 'reviewing']),
     supabase.from('colleges').select('id', { count: 'exact', head: true }),
@@ -24,6 +25,7 @@ async function getStats() {
     supabase.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'new').gte('created_at', monthStart),
   ])
   return {
+    admissions:      admissions.count      || 0,
     schools:         schools.count         || 0,
     corrections:     corrections.count     || 0,
     colleges:        colleges.count        || 0,
@@ -51,6 +53,7 @@ function formatRelativeTime(iso: string | null): string {
 }
 
 const cards = [
+  { label: 'Admissions',           key: 'admissions',      icon: CalendarCheck2, href: '/admin/admissions',          color: 'text-cyan-400 bg-cyan-900/30' },
   { label: 'Schools',              key: 'schools',         icon: School,    href: '/admin/schools',             color: 'text-blue-400 bg-blue-900/30' },
   { label: 'Data Corrections',     key: 'corrections',     icon: Flag,      href: '/admin/corrections',         color: 'text-orange-400 bg-orange-900/30', alert: true },
   { label: 'Colleges',             key: 'colleges',        icon: Building2, href: '/admin/colleges',          color: 'text-blue-400 bg-blue-900/30' },
@@ -160,6 +163,7 @@ export default async function AdminDashboard() {
           <h3 className="font-semibold text-white mb-4">Quick Actions</h3>
           <div className="space-y-2">
             {[
+              { label: '+ Add Admission',   href: '/admin/admissions/new' },
               { label: '+ Add College',      href: '/admin/colleges/new' },
               { label: '+ Add News Article', href: '/admin/news/new' },
               { label: '+ Add Notice',       href: '/admin/notices/new' },
@@ -176,6 +180,7 @@ export default async function AdminDashboard() {
           <h3 className="font-semibold text-white mb-4">Site Links</h3>
           <div className="space-y-2">
             {[
+              { label: 'Admissions Open',   href: '/admissions' },
               { label: 'School Directory',  href: '/schools' },
               { label: 'View Homepage',      href: '/' },
               { label: 'College Listings',   href: '/colleges' },

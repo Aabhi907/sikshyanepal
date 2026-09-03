@@ -6,6 +6,8 @@ import { createServerSupabaseClient } from '@/lib/supabase'
 import VerificationBadge from '@/components/institutions/VerificationBadge'
 import ReportCorrectionForm from '@/components/institutions/ReportCorrectionForm'
 import type { School } from '@/types'
+import type { Admission } from '@/types'
+import AdmissionCard from '@/components/admissions/AdmissionCard'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -33,6 +35,8 @@ function displayValue(value: string | number | null | undefined) {
 export default async function SchoolProfilePage({ params }: { params: { slug: string } }) {
   const school = await getSchool(params.slug)
   if (!school) notFound()
+  const { data: admissionData } = await createServerSupabaseClient().from('admissions').select('*, school:schools(id,name,slug,district,province)').eq('school_id', school.id).eq('status', 'published').order('application_deadline', { ascending: true }).limit(4)
+  const admissions = (admissionData || []) as Admission[]
   const address = [school.address || school.location, school.local_level, school.ward_number ? `Ward ${school.ward_number}` : null, school.district, school.province].filter(Boolean).join(', ')
   const gradeRange = school.grades_from != null && school.grades_to != null ? `${school.grades_from === 0 ? 'ECD' : `Grade ${school.grades_from}`} to Grade ${school.grades_to}` : null
   const verifiedDate = school.last_verified_at ? new Date(school.last_verified_at).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' }) : null
@@ -75,6 +79,8 @@ export default async function SchoolProfilePage({ params }: { params: { slug: st
           </div>
           {school.streams?.length ? <div className="mt-6"><h3 className="text-sm font-bold text-ink">Programs and streams</h3><div className="mt-3 flex flex-wrap gap-2">{school.streams.map((item) => <span key={item} className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-primary">{item}</span>)}</div></div> : null}
           </section>
+
+          {admissions.length > 0 && <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><div className="mb-5 flex items-center justify-between gap-4"><div><h2 className="font-display text-xl font-bold text-ink">Admissions open</h2><p className="mt-1 text-sm text-gray-500">Current verified opportunities from this school.</p></div><Link href={`/admissions?q=${encodeURIComponent(school.name)}`} className="text-sm font-bold text-primary">View all</Link></div><div className="grid gap-4 sm:grid-cols-2">{admissions.map((admission) => <AdmissionCard key={admission.id} admission={admission} />)}</div></section>}
 
           {school.facilities?.length ? <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><h2 className="font-display text-xl font-bold text-ink">Facilities</h2><div className="mt-4 grid gap-3 sm:grid-cols-2">{school.facilities.map((facility) => <div key={facility} className="flex items-center gap-2 rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-700"><ShieldCheck className="h-4 w-4 text-emerald-500" />{facility}</div>)}</div></section> : null}
 

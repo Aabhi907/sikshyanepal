@@ -23,6 +23,8 @@ import AdUnit from "@/components/ads/AdUnit";
 import type { College, CollegeProgram, Review } from "@/types";
 import VerificationBadge from "@/components/institutions/VerificationBadge";
 import ReportCorrectionForm from "@/components/institutions/ReportCorrectionForm";
+import AdmissionCard from "@/components/admissions/AdmissionCard";
+import type { Admission } from "@/types";
 
 // Affiliation → gradient config
 const AFFIL_COVER: Record<string, { gradient: string; pattern: string }> = {
@@ -72,7 +74,7 @@ async function getCollege(slug: string) {
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-  const [programsRes, reviewsRes, scholarshipsRes, leadsRes] = await Promise.all([
+  const [programsRes, reviewsRes, scholarshipsRes, leadsRes, admissionsRes] = await Promise.all([
     supabase
       .from("college_programs")
       .select("*, program:programs(*)")
@@ -90,6 +92,13 @@ async function getCollege(slug: string) {
       .select("id", { count: "exact", head: true })
       .eq("college_id", college.id)
       .gte("created_at", monthStart),
+    supabase
+      .from("admissions")
+      .select("*, college:colleges(id,name,slug,location)")
+      .eq("college_id", college.id)
+      .eq("status", "published")
+      .order("application_deadline", { ascending: true })
+      .limit(4),
   ]);
 
   return {
@@ -98,6 +107,7 @@ async function getCollege(slug: string) {
     reviews: (reviewsRes.data || []) as Review[],
     scholarships: scholarshipsRes.data || [],
     leadsCount: leadsRes.count || 0,
+    admissions: (admissionsRes.data || []) as Admission[],
   };
 }
 
@@ -134,7 +144,7 @@ export default async function CollegeProfilePage({
   const data = await getCollege(params.slug);
   if (!data) notFound();
 
-  const { college, programs, reviews, scholarships, leadsCount } = data;
+  const { college, programs, reviews, scholarships, leadsCount, admissions } = data;
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
@@ -426,6 +436,16 @@ export default async function CollegeProfilePage({
               <p className="text-sm text-gray-500">No programs listed yet.</p>
             )}
           </div>
+
+          {admissions.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div><h2 className="text-lg font-semibold text-gray-900">Admissions open</h2><p className="mt-1 text-sm text-gray-500">Verified opportunities and deadlines from this college.</p></div>
+                <Link href={`/admissions?q=${encodeURIComponent(college.name)}`} className="text-sm font-semibold text-blue-600">View all</Link>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">{admissions.map((admission) => <AdmissionCard key={admission.id} admission={admission} />)}</div>
+            </div>
+          )}
 
           {/* Reviews */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">

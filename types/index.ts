@@ -80,6 +80,44 @@ export interface School {
   updated_at: string
 }
 
+export interface Admission {
+  id: string
+  title: string
+  slug: string
+  institution_type: 'school' | 'college' | 'university' | 'training_provider' | 'other'
+  institution_name: string
+  school_id: string | null
+  college_id: string | null
+  programs: string[]
+  education_level: string | null
+  admission_type: 'general' | 'entrance' | 'scholarship' | 'quota' | 'transfer' | 'other'
+  summary: string | null
+  details: string | null
+  eligibility: string | null
+  required_documents: string[]
+  application_open_at: string | null
+  application_deadline: string | null
+  entrance_exam_at: string | null
+  application_fee: number | null
+  available_seats: number | null
+  application_url: string | null
+  contact_phone: string | null
+  contact_email: string | null
+  source_name: string
+  source_url: string
+  verification_status: VerificationStatus
+  last_verified_at: string | null
+  status: 'draft' | 'published' | 'closed' | 'archived'
+  is_featured: boolean
+  is_sponsored: boolean
+  sponsor_label: string | null
+  published_at: string | null
+  created_at: string
+  updated_at: string
+  school?: Pick<School, 'id' | 'name' | 'slug' | 'district' | 'province'> | null
+  college?: Pick<College, 'id' | 'name' | 'slug' | 'location'> | null
+}
+
 export interface Program {
   id: string
   name: string

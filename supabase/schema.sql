@@ -168,6 +168,47 @@ CREATE TABLE IF NOT EXISTS data_corrections (
 );
 
 -- ============================================================
+-- ADMISSIONS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admissions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  institution_type TEXT NOT NULL CHECK (institution_type IN ('school', 'college', 'university', 'training_provider', 'other')),
+  institution_name TEXT NOT NULL,
+  school_id UUID REFERENCES schools(id) ON DELETE SET NULL,
+  college_id UUID REFERENCES colleges(id) ON DELETE SET NULL,
+  programs TEXT[] NOT NULL DEFAULT '{}',
+  education_level TEXT,
+  admission_type TEXT NOT NULL DEFAULT 'general' CHECK (admission_type IN ('general', 'entrance', 'scholarship', 'quota', 'transfer', 'other')),
+  summary TEXT,
+  details TEXT,
+  eligibility TEXT,
+  required_documents TEXT[] NOT NULL DEFAULT '{}',
+  application_open_at TIMESTAMPTZ,
+  application_deadline TIMESTAMPTZ,
+  entrance_exam_at TIMESTAMPTZ,
+  application_fee DECIMAL(12, 2) CHECK (application_fee >= 0),
+  available_seats INTEGER CHECK (available_seats >= 0),
+  application_url TEXT,
+  contact_phone TEXT,
+  contact_email TEXT,
+  source_name TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  verification_status TEXT NOT NULL DEFAULT 'source_verified' CHECK (verification_status IN ('unverified', 'source_verified', 'institution_verified')),
+  last_verified_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'closed', 'archived')),
+  is_featured BOOLEAN NOT NULL DEFAULT FALSE,
+  is_sponsored BOOLEAN NOT NULL DEFAULT FALSE,
+  sponsor_label TEXT,
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (school_id IS NULL OR college_id IS NULL),
+  CHECK (NOT is_sponsored OR sponsor_label IS NOT NULL)
+);
+
+-- ============================================================
 -- COLLEGE PROGRAMS (Junction Table)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS college_programs (
@@ -313,6 +354,11 @@ CREATE INDEX IF NOT EXISTS idx_schools_type ON schools(ownership_type, school_le
 CREATE INDEX IF NOT EXISTS idx_schools_verified ON schools(verification_status, last_verified_at DESC);
 CREATE INDEX IF NOT EXISTS idx_schools_name_search ON schools USING gin(to_tsvector('simple', name));
 CREATE INDEX IF NOT EXISTS idx_data_corrections_status ON data_corrections(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admissions_deadline ON admissions(status, application_deadline);
+CREATE INDEX IF NOT EXISTS idx_admissions_institution ON admissions(institution_type, institution_name);
+CREATE INDEX IF NOT EXISTS idx_admissions_school ON admissions(school_id) WHERE school_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_admissions_college ON admissions(college_id) WHERE college_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_admissions_search ON admissions USING gin(to_tsvector('simple', title || ' ' || institution_name));
 CREATE INDEX IF NOT EXISTS idx_programs_slug ON programs(slug);
 CREATE INDEX IF NOT EXISTS idx_programs_faculty ON programs(faculty);
 CREATE INDEX IF NOT EXISTS idx_results_university ON results(university_id);
@@ -332,6 +378,7 @@ CREATE INDEX IF NOT EXISTS idx_college_programs_program ON college_programs(prog
 ALTER TABLE colleges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
 ALTER TABLE data_corrections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE college_programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE universities ENABLE ROW LEVEL SECURITY;
@@ -362,3 +409,4 @@ CREATE POLICY "Public read entrance_exams" ON entrance_exams FOR SELECT TO anon 
 -- Allow insert for reviews (students can submit)
 CREATE POLICY "Anyone can submit review" ON reviews FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "Anyone can report corrections" ON data_corrections FOR INSERT TO anon WITH CHECK (status = 'pending');
+CREATE POLICY "Public read published admissions" ON admissions FOR SELECT TO anon USING (status = 'published');

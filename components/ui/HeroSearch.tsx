@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
 
 const TRENDING = [
+  { label: 'Admissions open', href: '/admissions' },
   { label: 'Schools near me', href: '/schools' },
   { label: 'TU Results',   href: '/results?university=TU' },
   { label: 'KU Notices',   href: '/notices?university=KU' },

@@ -268,6 +268,24 @@ CREATE TABLE IF NOT EXISTS news (
 );
 
 -- ============================================================
+-- CONTENT INGESTION / EDITORIAL QUEUE
+-- ============================================================
+CREATE TABLE IF NOT EXISTS content_sources (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), name TEXT NOT NULL UNIQUE,
+  base_url TEXT NOT NULL, source_type TEXT NOT NULL DEFAULT 'official',
+  is_active BOOLEAN NOT NULL DEFAULT TRUE, requires_review BOOLEAN NOT NULL DEFAULT TRUE,
+  last_checked_at TIMESTAMPTZ, last_success_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS content_ingestion_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), source_id UUID REFERENCES content_sources(id) ON DELETE SET NULL,
+  scraper_name TEXT NOT NULL, target_type TEXT NOT NULL, title TEXT NOT NULL, source_url TEXT NOT NULL,
+  source_published_at TIMESTAMPTZ, payload JSONB NOT NULL, fingerprint TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'pending', quality_flags TEXT[] NOT NULL DEFAULT '{}', reviewer_notes TEXT,
+  reviewed_by TEXT, reviewed_at TIMESTAMPTZ, published_record_id UUID, fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- REVIEWS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS reviews (

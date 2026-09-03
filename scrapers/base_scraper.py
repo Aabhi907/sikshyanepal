@@ -8,6 +8,8 @@ import os
 import re
 import unicodedata
 import logging
+import hashlib
+import json
 import requests
 import urllib3
 from datetime import datetime
@@ -118,6 +120,9 @@ class BaseScraper:
         Treats duplicate-key (23505 / 409) as a skip, not an error.
         Never raises — logs and continues.
         """
+        if table in {"news", "notices", "results"}:
+            return self.queue_record(table, data)
+
         slug = data.get("slug", "")
         if self.check_exists(table, slug):
             self.logger.debug(f"Skip (exists): {slug}")
@@ -138,6 +143,61 @@ class BaseScraper:
                 self.skipped += 1
                 return False
             self.logger.error(f"Insert failed for slug={slug}: {e}")
+            self.errors += 1
+            return False
+
+    def queue_record(self, table: str, data: dict) -> bool:
+        """Quarantine scraped content for human review instead of publishing it."""
+        target_type = "notice" if table == "notices" else "result" if table == "results" else "news"
+        source_url = data.get("notice_url") or data.get("result_url") or data.get("source_url") or ""
+        title = str(data.get("title", "")).strip()
+        if not title or not source_url.startswith(("http://", "https://")):
+            self.logger.warning("Queue skip: title and an absolute source URL are required")
+            self.errors += 1
+            return False
+        canonical = source_url.split("#", 1)[0].rstrip("/").lower()
+        parsed = urlparse(source_url)
+        fingerprint = hashlib.sha256(f"{target_type}|{title.lower()}|{canonical}".encode()).hexdigest()
+        flags = []
+        if len(title) < 12:
+            flags.append("short_title")
+        if not data.get("content"):
+            flags.append("missing_body")
+        source_id = None
+        try:
+            source = self.supabase.table("content_sources").upsert({
+                "name": self.name,
+                "base_url": f"{parsed.scheme}://{parsed.netloc}",
+                "source_type": "official",
+                "last_checked_at": datetime.now().isoformat(),
+            }, on_conflict="name").execute()
+            source_id = source.data[0]["id"] if source.data else None
+        except Exception as e:
+            self.logger.warning(f"Could not update source registry: {e}")
+        row = {
+            "source_id": source_id,
+            "scraper_name": self.name,
+            "target_type": target_type,
+            "title": title,
+            "source_url": source_url,
+            "source_published_at": data.get("published_date"),
+            "payload": json.loads(json.dumps(data, default=str)),
+            "fingerprint": fingerprint,
+            "quality_flags": flags,
+            "status": "pending",
+        }
+        try:
+            self.supabase.table("content_ingestion_items").insert(row).execute()
+            if source_id:
+                self.supabase.table("content_sources").update({"last_success_at": datetime.now().isoformat()}).eq("id", source_id).execute()
+            self.logger.info(f"Queued for editorial review: {title[:80]}")
+            self.inserted += 1
+            return True
+        except Exception as e:
+            if "23505" in str(e) or "duplicate" in str(e).lower() or "409" in str(e):
+                self.skipped += 1
+                return False
+            self.logger.error(f"Queue insert failed: {e}")
             self.errors += 1
             return False
 

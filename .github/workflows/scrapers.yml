@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r scrapers/requirements.txt
 
-      - name: Run all scrapers
+      - name: Collect content into editorial review queue
         id: scrape
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

@@ -1,6 +1,17 @@
 # SikshyaNepal Scrapers
 
-Automated scrapers that pull exam results and university notices
+Automated collectors for exam results and university notices.
+
+## Editorial safety model
+
+Collectors never publish scraped news, notices, or results directly. Every item is
+stored in `content_ingestion_items` with its original URL, normalized payload,
+quality flags, source registry entry, and a SHA-256 duplicate fingerprint. An editor
+must open `/admin/ingestion`, compare the item with the original source, and choose
+**Verify & publish** or **Reject**. Approval creates the public record and preserves
+the queue audit trail. Do not add a direct-publish mode to a collector.
+
+Before running collectors, apply `supabase/migrations/20260905_content_ingestion_queue.sql`.
 into the SikshyaNepal Supabase database every 6 hours via GitHub Actions.
 
 ## Scrapers

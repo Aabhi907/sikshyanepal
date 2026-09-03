@@ -8,6 +8,16 @@ import SubscribeButton from '@/components/notifications/SubscribeButton'
 
 const navLinks = [
   {
+    label: 'Schools',
+    href: '/schools',
+    sub: [
+      { label: 'All Schools',       href: '/schools' },
+      { label: 'Verified Schools',  href: '/schools?verified=true' },
+      { label: '+2 Schools',        href: '/schools?level=higher_secondary' },
+      { label: 'Community Schools', href: '/schools?ownership=community' },
+    ],
+  },
+  {
     label: 'Colleges',
     href: '/colleges',
     sub: [
@@ -163,11 +173,11 @@ export default function Header() {
             <div className="hidden lg:flex items-center gap-2">
               <SubscribeButton variant="header" />
               <Link
-                href="/colleges"
+                href="/schools"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors duration-150"
                 style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)' }}
               >
-                Find College
+                Find School
               </Link>
             </div>
 
@@ -246,11 +256,11 @@ export default function Header() {
             {/* Bottom CTAs */}
             <div className="p-4 border-t border-border space-y-2 flex-shrink-0">
               <Link
-                href="/colleges"
+                href="/schools"
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-600 transition-colors"
               >
-                Find My College
+                Find My School
               </Link>
               <Link
                 href="/results"

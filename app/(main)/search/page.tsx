@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Search, Building2, BookOpen, Newspaper, FileText, GraduationCap, Award } from 'lucide-react'
+import { Search, Building2, BookOpen, Newspaper, FileText, GraduationCap, Award, School } from 'lucide-react'
 
 interface SearchResults {
+  schools: { id: string; name: string; slug: string; district: string; province: string; verification_status: string }[]
   colleges: { id: string; name: string; slug: string; location: string; affiliation: string | null }[]
   programs: { id: string; name: string; faculty: string; duration: string }[]
   news: { id: string; title: string; slug: string; published_date: string | null }[]
@@ -21,7 +22,8 @@ const headers = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }
 
 async function fetchAll(q: string): Promise<SearchResults> {
   const enc = encodeURIComponent(q)
-  const [colleges, programs, news, notices, results, scholarships] = await Promise.all([
+  const [schools, colleges, programs, news, notices, results, scholarships] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/schools?name=ilike.*${enc}*&status=eq.active&select=id,name,slug,district,province,verification_status&limit=8`, { headers }).then(r => r.json()),
     fetch(`${SUPABASE_URL}/rest/v1/colleges?name=ilike.*${enc}*&select=id,name,slug,location,affiliation&limit=8`, { headers }).then(r => r.json()),
     fetch(`${SUPABASE_URL}/rest/v1/programs?name=ilike.*${enc}*&select=id,name,faculty,duration&limit=6`, { headers }).then(r => r.json()),
     fetch(`${SUPABASE_URL}/rest/v1/news?title=ilike.*${enc}*&select=id,title,slug,published_date&order=published_date.desc&limit=6`, { headers }).then(r => r.json()),
@@ -30,12 +32,13 @@ async function fetchAll(q: string): Promise<SearchResults> {
     fetch(`${SUPABASE_URL}/rest/v1/scholarships?title=ilike.*${enc}*&select=id,title,amount,deadline&limit=6`, { headers }).then(r => r.json()),
   ])
   return {
-    colleges: colleges || [],
-    programs: programs || [],
-    news: news || [],
-    notices: notices || [],
-    results: results || [],
-    scholarships: scholarships || [],
+    schools: Array.isArray(schools) ? schools : [],
+    colleges: Array.isArray(colleges) ? colleges : [],
+    programs: Array.isArray(programs) ? programs : [],
+    news: Array.isArray(news) ? news : [],
+    notices: Array.isArray(notices) ? notices : [],
+    results: Array.isArray(results) ? results : [],
+    scholarships: Array.isArray(scholarships) ? scholarships : [],
   }
 }
 
@@ -70,7 +73,7 @@ function SearchPageInner() {
   }
 
   const totalResults = data
-    ? data.colleges.length + data.programs.length + data.news.length +
+    ? data.schools.length + data.colleges.length + data.programs.length + data.news.length +
       data.notices.length + data.results.length + data.scholarships.length
     : 0
 
@@ -85,7 +88,7 @@ function SearchPageInner() {
             type="text"
             value={inputVal}
             onChange={e => setInputVal(e.target.value)}
-            placeholder="Search colleges, programs, news, scholarships..."
+            placeholder="Search schools, colleges, programs, news..."
             className="w-full pl-12 pr-28 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
           />
           <button
@@ -129,6 +132,28 @@ function SearchPageInner() {
       {/* Results */}
       {!loading && data && (
         <div className="space-y-8">
+          {/* Schools */}
+          {data.schools.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <School className="w-4 h-4 text-blue-600" />
+                <h2 className="font-semibold text-gray-800">Schools ({data.schools.length})</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {data.schools.map(s => (
+                  <Link key={s.id} href={`/schools/${s.slug}`}
+                    className="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all">
+                    <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0"><School className="w-4 h-4 text-blue-600" /></div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 text-sm line-clamp-1">{s.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{s.district}, {s.province}{s.verification_status !== 'unverified' ? ' • Verified' : ''}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Colleges */}
           {data.colleges.length > 0 && (
             <section>

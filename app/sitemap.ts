@@ -6,7 +6,12 @@ const BASE_URL = 'https://sikshyanepal.vercel.app'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createServerSupabaseClient()
 
-  const [colleges, results, notices, news, programs] = await Promise.all([
+  const [schools, colleges, results, notices, news, programs] = await Promise.all([
+    supabase
+      .from('schools')
+      .select('slug, updated_at')
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false }),
     supabase
       .from('colleges')
       .select('slug, created_at')
@@ -40,6 +45,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified:    now,
       changeFrequency: 'daily',
       priority:        1.0,
+    },
+    {
+      url:             `${BASE_URL}/schools`,
+      lastModified:    now,
+      changeFrequency: 'weekly',
+      priority:        0.9,
     },
     {
       url:             `${BASE_URL}/colleges`,
@@ -86,6 +97,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   // ── Dynamic routes ─────────────────────────────────────────────────────────
+  const schoolRoutes: MetadataRoute.Sitemap = (schools.data ?? []).map((s) => ({
+    url:             `${BASE_URL}/schools/${s.slug}`,
+    lastModified:    new Date(s.updated_at),
+    changeFrequency: 'monthly' as const,
+    priority:        0.8,
+  }))
+
   const collegeRoutes: MetadataRoute.Sitemap = (colleges.data ?? []).map((c) => ({
     url:             `${BASE_URL}/colleges/${c.slug}`,
     lastModified:    new Date(c.created_at),
@@ -123,6 +141,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
+    ...schoolRoutes,
     ...collegeRoutes,
     ...resultRoutes,
     ...noticeRoutes,

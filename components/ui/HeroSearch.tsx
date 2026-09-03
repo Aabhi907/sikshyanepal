@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
 
 const TRENDING = [
+  { label: 'Schools near me', href: '/schools' },
   { label: 'TU Results',   href: '/results?university=TU' },
   { label: 'KU Notices',   href: '/notices?university=KU' },
   { label: 'BCA Colleges', href: '/colleges?q=BCA' },
@@ -19,7 +20,7 @@ export default function HeroSearch() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
-      router.push(`/colleges?q=${encodeURIComponent(query.trim())}`)
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`)
     }
   }
 
@@ -36,7 +37,7 @@ export default function HeroSearch() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search colleges, programs, results..."
+              placeholder="Search schools, colleges, programs, results..."
               className="w-full h-14 pl-12 pr-4 text-sm text-ink placeholder:text-gray-400
                          bg-transparent focus:outline-none font-sans"
             />

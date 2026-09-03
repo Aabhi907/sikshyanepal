@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Mail, MapPin, ArrowUpRight, BookOpenCheck } from 'lucide-react'
 
 const exploreLinks = [
+  { label: 'All Schools',      href: '/schools' },
   { label: 'All Colleges',     href: '/colleges' },
   { label: 'Compare Colleges', href: '/compare' },
   { label: 'Scholarships',     href: '/scholarships' },
@@ -53,8 +54,8 @@ export default function Footer() {
             </Link>
 
             <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-xs">
-              Nepal&apos;s most complete education platform. Find colleges, check results,
-              and stay updated with university notices.
+              Nepal&apos;s verified education platform. Find schools and colleges, check
+              results, and stay updated with official notices.
             </p>
 
             <div className="space-y-2.5 mb-6">
@@ -141,12 +142,12 @@ export default function Footer() {
               delivered straight to your inbox.
             </p>
             <Link
-              href="/colleges"
+              href="/schools"
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
                          bg-[#1847c4] text-white text-sm font-semibold
                          hover:bg-[#1340b0] transition-colors"
             >
-              Find My College
+              Find a School
             </Link>
           </div>
         </div>

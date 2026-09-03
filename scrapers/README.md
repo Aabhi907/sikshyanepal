@@ -49,6 +49,21 @@ cd scrapers
 python run_all.py
 ```
 
+## Import the official school directory
+
+Apply `supabase/migrations/20260903_verified_school_directory.sql`, then download an
+official CEHRD/IEMIS school-detail CSV or XLSX export. Validate it without writing:
+
+```bash
+cd scrapers
+python import_schools.py ~/Downloads/SchoolDetails.xlsx \
+  --source-url "https://www.cehrd.gov.np/content/..."
+```
+
+If the detected columns and row count are correct, rerun with `--commit`. The importer
+upserts by IEMIS code, records the original dataset URL, and marks imported rows as
+`source_verified`. Never import a copied directory without an official source URL.
+
 ---
 
 ## GitHub Secrets required

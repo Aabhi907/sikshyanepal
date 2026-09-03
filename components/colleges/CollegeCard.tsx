@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Star, ArrowRight, Banknote } from 'lucide-react'
 import type { College } from '@/types'
+import VerificationBadge from '@/components/institutions/VerificationBadge'
 
 // Affiliation short name
 function affiliationShort(full: string | null): string | null {
@@ -100,6 +101,11 @@ export default function CollegeCard({ college }: CollegeCardProps) {
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-white shadow-sm">
                 Featured
               </span>
+            </div>
+          )}
+          {college.verification_status && !college.is_featured && (
+            <div className="absolute top-3 right-3">
+              <VerificationBadge status={college.verification_status} compact />
             </div>
           )}
         </div>

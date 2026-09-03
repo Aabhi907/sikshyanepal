@@ -50,9 +50,9 @@ export const dynamic   = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: "SikshyaNepal — Nepal's #1 Education Portal | Colleges, Results & Notices",
+  title: "SikshyaNepal — Schools, Colleges, Results & Notices in Nepal",
   description:
-    'Find colleges, university programs, exam results, notices, scholarships, and education news in Nepal. Complete guide for Nepali students.',
+    'Find verified schools, colleges, programs, exam results, notices and scholarships across Nepal.',
 }
 
 const UNIVERSITY_SHOWCASE = [
@@ -67,7 +67,7 @@ async function getHomeData() {
 
   const [
     resultsRes, noticesRes, collegesRes,
-    collegeCountRes, programCountRes,
+    schoolCountRes, collegeCountRes, programCountRes,
     tuCountRes, kuCountRes, puCountRes, purUCountRes,
   ] = await Promise.all([
     supabase
@@ -81,6 +81,7 @@ async function getHomeData() {
       .order('published_date', { ascending: false })
       .limit(6),
     supabase.from('colleges').select('*').eq('is_featured', true).or('status.eq.active,status.is.null').limit(6),
+    supabase.from('schools').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('colleges').select('id', { count: 'exact', head: true }),
     supabase.from('programs').select('id',  { count: 'exact', head: true }),
     supabase.from('colleges').select('id', { count: 'exact', head: true }).ilike('affiliation', '%Tribhuvan%'),
@@ -90,13 +91,14 @@ async function getHomeData() {
   ])
 
   const collegeCount = collegeCountRes.count ?? 0
+  const schoolCount = schoolCountRes.count ?? 0
   const programCount = programCountRes.count ?? 0
 
   const heroStats = [
+    { label: 'Schools',      value: schoolCount > 0 ? schoolCount.toLocaleString() : 'Growing' },
     { label: 'Colleges',     value: collegeCount > 0 ? `${collegeCount}+` : '500+' },
     { label: 'Programs',     value: programCount > 0 ? `${programCount}+` : '50+' },
     { label: 'Universities', value: '8+' },
-    { label: 'Scholarships', value: '200+' },
   ]
 
   const universityCounts: Record<string, number> = {
@@ -208,8 +210,8 @@ export default async function HomePage() {
 
               {/* Sub */}
               <p className="text-gray-500 text-xl leading-relaxed mb-8 max-w-lg">
-                Colleges, results, notices, reviews, scholarships —
-                Nepal&apos;s most complete education platform. Updated daily.
+                Verified schools, colleges, programs, results and scholarships —
+                with sources you can check.
               </p>
 
               {/* Search */}
@@ -523,18 +525,18 @@ export default async function HomePage() {
             </span>
           </div>
           <p className="font-display font-bold text-white text-4xl mb-2" style={{ letterSpacing: '-0.025em' }}>
-            10,000+ Students
+            One trusted education directory
           </p>
           <p className="text-slate-400 text-sm mb-8">
-            use SikshyaNepal to find colleges, results and notices every month
+            Find institutions across Nepal and see when their information was last checked.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              href="/colleges"
+              href="/schools"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
                          bg-[#1847c4] text-white text-sm font-semibold hover:bg-[#1340b0] transition-colors"
             >
-              Find Your College
+              Find Your School
             </Link>
             <Link
               href="/results"

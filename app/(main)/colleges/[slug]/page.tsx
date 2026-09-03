@@ -21,6 +21,8 @@ import ReviewForm from "@/components/colleges/ReviewForm";
 import ApplyNowButton from "@/components/colleges/ApplyNowButton";
 import AdUnit from "@/components/ads/AdUnit";
 import type { College, CollegeProgram, Review } from "@/types";
+import VerificationBadge from "@/components/institutions/VerificationBadge";
+import ReportCorrectionForm from "@/components/institutions/ReportCorrectionForm";
 
 // Affiliation → gradient config
 const AFFIL_COVER: Record<string, { gradient: string; pattern: string }> = {
@@ -265,6 +267,7 @@ export default async function CollegeProfilePage({
               {college.name}
             </h1>
             <div className="flex flex-wrap items-center gap-3 mt-2">
+              <VerificationBadge status={college.verification_status} />
               {college.affiliation && (
                 <Badge variant="blue">{college.affiliation}</Badge>
               )}
@@ -335,6 +338,33 @@ export default async function CollegeProfilePage({
               </p>
             </div>
           )}
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Source and verification</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  {college.source_name
+                    ? `Checked against ${college.source_name}.`
+                    : 'A primary source has not yet been documented for this profile.'}
+                </p>
+              </div>
+              <VerificationBadge status={college.verification_status} />
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-gray-100 pt-4 text-sm">
+              {college.last_verified_at && (
+                <span className="text-gray-500">
+                  Last verified {new Date(college.last_verified_at).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              )}
+              {college.source_url && (
+                <a href={college.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 font-semibold text-blue-600">
+                  Open source <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
+              <ReportCorrectionForm entityType="college" entityId={college.id} entityName={college.name} />
+            </div>
+          </div>
 
           {/* Programs */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">

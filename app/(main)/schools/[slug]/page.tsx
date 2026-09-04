@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 async function getSchool(slug: string) {
-  const { data } = await createServerSupabaseClient().from('schools').select('*').eq('slug', slug).eq('status', 'active').single()
+  const { data } = await createServerSupabaseClient().from('schools').select('*').eq('slug', slug).eq('status', 'active').or('grades_to.lte.10,grades_to.is.null').single()
   return data as School | null
 }
 

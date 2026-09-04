@@ -115,7 +115,7 @@ def school_level(highest_grade: int | None) -> str:
         return "basic"
     if highest_grade <= 10:
         return "secondary"
-    return "higher_secondary"
+    return "secondary"
 
 
 def transform(row: dict[str, Any], mapping: dict[str, str], source_url: str, source_name: str) -> dict[str, Any] | None:
@@ -128,7 +128,8 @@ def transform(row: dict[str, Any], mapping: dict[str, str], source_url: str, sou
     code = str(get("iemis_code") or "").strip().removesuffix(".0")
     if not name or not province_raw or not district:
         return None
-    grade_to = integer(get("grades_to"))
+    reported_grade_to = integer(get("grades_to"))
+    grade_to = min(reported_grade_to, 10) if reported_grade_to is not None else None
     province = PROVINCES.get(normalized(province_raw), province_raw.title())
     suffix = code or normalized(district)[:20]
     return {
@@ -204,4 +205,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

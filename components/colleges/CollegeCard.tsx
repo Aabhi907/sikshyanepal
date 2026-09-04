@@ -46,6 +46,7 @@ export default function CollegeCard({ college }: CollegeCardProps) {
     .slice(0, 4)
     .map((cp) => cp.program?.name)
     .filter(Boolean) as string[]
+  const levelLabels: Record<string, string> = { plus_two: '+2', bachelor: 'Bachelor', master: 'Master', mphil: 'MPhil', phd: 'PhD', diploma: 'Diploma', certificate: 'Certificate' }
 
   const hasFees  = college.fee_min != null && college.fee_max != null
   const feeLabel = hasFees
@@ -169,6 +170,9 @@ export default function CollegeCard({ college }: CollegeCardProps) {
             <p className="text-xs text-gray-500 mt-1 mb-2 line-clamp-1">
               {topPrograms.join(' • ')}
             </p>
+          )}
+          {college.education_levels && college.education_levels.length > 0 && (
+            <p className="mb-2 text-xs font-semibold text-blue-700">{college.education_levels.map(level => levelLabels[level]).filter(Boolean).join(' · ')}</p>
           )}
 
           {/* Fee */}

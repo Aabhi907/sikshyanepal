@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: 'All Colleges in Nepal | SikshyaNepal',
-  description: 'Browse all colleges in Nepal. Filter by location, affiliation, faculty, and more.',
+  title: '+2, Bachelor and Master Colleges in Nepal | SikshyaNepal',
+  description: 'Browse Nepal colleges for +2, Bachelor, Master, diploma and higher education. Filter by location, affiliation, faculty and level.',
 }
 
 // Extended type with server-computed fields the card needs
@@ -86,7 +86,9 @@ async function getColleges(sp: {
     )
   }
   if (sp.level) {
+    const storedLevel = sp.level === '+2' ? 'plus_two' : sp.level
     filtered = filtered.filter((c) =>
+      c.education_levels?.includes(storedLevel as NonNullable<College['education_levels']>[number]) ||
       (c.programs ?? []).some((cp) => cp.program?.degree_level === sp.level)
     )
   }
@@ -109,7 +111,7 @@ export default async function CollegesPage({
           <Building2 className="w-6 h-6 text-blue-600" />
           <h1 className="text-2xl font-bold text-gray-900">Colleges in Nepal</h1>
         </div>
-        <p className="text-gray-500 text-sm">Find and compare colleges across Nepal</p>
+        <p className="text-gray-500 text-sm">Post-SEE study: +2, Bachelor, Master, diploma and higher education</p>
       </div>
 
       {/* Search */}

@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS colleges (
   source_url TEXT,
   last_verified_at TIMESTAMPTZ,
   verified_by TEXT,
+  education_levels TEXT[] NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -113,9 +114,9 @@ CREATE TABLE IF NOT EXISTS schools (
   slug TEXT UNIQUE NOT NULL,
   description TEXT,
   ownership_type TEXT CHECK (ownership_type IN ('community', 'institutional', 'religious', 'public', 'private', 'other')),
-  school_level TEXT CHECK (school_level IN ('pre_primary', 'basic', 'secondary', 'higher_secondary', 'multiple')),
-  grades_from SMALLINT CHECK (grades_from BETWEEN 0 AND 12),
-  grades_to SMALLINT CHECK (grades_to BETWEEN 0 AND 12),
+  school_level TEXT CHECK (school_level IN ('pre_primary', 'basic', 'secondary', 'multiple')),
+  grades_from SMALLINT CHECK (grades_from BETWEEN 0 AND 10),
+  grades_to SMALLINT CHECK (grades_to BETWEEN 0 AND 10),
   province TEXT NOT NULL,
   district TEXT NOT NULL,
   local_level TEXT,

@@ -30,6 +30,7 @@ export interface College {
   source_url?: string | null
   last_verified_at?: string | null
   verified_by?: string | null
+  education_levels?: ('plus_two' | 'bachelor' | 'master' | 'mphil' | 'phd' | 'diploma' | 'certificate')[]
   created_at: string
   programs?: CollegeProgram[]
   reviews?: Review[]
@@ -45,7 +46,7 @@ export interface School {
   slug: string
   description: string | null
   ownership_type: 'community' | 'institutional' | 'religious' | 'public' | 'private' | 'other' | null
-  school_level: 'pre_primary' | 'basic' | 'secondary' | 'higher_secondary' | 'multiple' | null
+  school_level: 'pre_primary' | 'basic' | 'secondary' | 'multiple' | null
   grades_from: number | null
   grades_to: number | null
   province: string

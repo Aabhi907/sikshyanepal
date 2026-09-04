@@ -13,7 +13,7 @@ const navLinks = [
     sub: [
       { label: 'All Schools',       href: '/schools' },
       { label: 'Verified Schools',  href: '/schools?verified=true' },
-      { label: '+2 Schools',        href: '/schools?level=higher_secondary' },
+      { label: 'Secondary Schools', href: '/schools?level=secondary' },
       { label: 'Community Schools', href: '/schools?ownership=community' },
     ],
   },
@@ -23,6 +23,9 @@ const navLinks = [
     href: '/colleges',
     sub: [
       { label: 'All Colleges',     href: '/colleges' },
+      { label: '+2 Colleges',      href: '/colleges?level=%2B2' },
+      { label: 'Bachelor Colleges', href: '/colleges?level=bachelor' },
+      { label: 'Master Colleges',  href: '/colleges?level=master' },
       { label: 'Compare Colleges', href: '/compare' },
       { label: 'Reviews',          href: '/colleges?tab=reviews' },
       { label: 'Scholarships',     href: '/scholarships' },

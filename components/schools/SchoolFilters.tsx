@@ -66,10 +66,10 @@ export default function SchoolFilters({
           <span className="mb-1.5 block text-xs font-semibold text-gray-500">Level</span>
           <select name="level" defaultValue={searchParams.level || ''} className={field}>
             <option value="">All levels</option>
-            <option value="basic">Basic</option>
-            <option value="secondary">Secondary</option>
-            <option value="higher_secondary">+2 / Higher secondary</option>
-            <option value="multiple">Multiple levels</option>
+            <option value="pre_primary">ECD / Pre-primary</option>
+            <option value="basic">Basic (Grades 1–8)</option>
+            <option value="secondary">Secondary (Grades 9–10)</option>
+            <option value="multiple">Multiple levels (up to Grade 10)</option>
           </select>
         </label>
         <label className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-600">
@@ -83,4 +83,3 @@ export default function SchoolFilters({
     </aside>
   )
 }
-

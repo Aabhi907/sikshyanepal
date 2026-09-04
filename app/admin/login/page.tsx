@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { GraduationCap, Lock, Eye, EyeOff } from 'lucide-react'
+import { GraduationCap, Lock, Eye, EyeOff, Mail } from 'lucide-react'
 
 export default function AdminLoginPage() {
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
@@ -19,13 +20,14 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       })
       if (res.ok) {
         router.push('/admin')
         router.refresh()
       } else {
-        setError('Invalid password. Please try again.')
+        const data = await res.json()
+        setError(data.error || 'Sign in failed.')
       }
     } catch {
       setError('Something went wrong.')
@@ -48,6 +50,10 @@ export default function AdminLoginPage() {
         <div className="bg-gray-800 rounded-2xl border border-gray-700 p-8">
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+              <div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="editor@example.com" autoComplete="email" className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" required /></div>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -56,6 +62,7 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter admin password"
+                  autoComplete="current-password"
                   className="w-full pl-10 pr-10 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />

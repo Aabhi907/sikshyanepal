@@ -1,8 +1,8 @@
-import { cookies } from 'next/headers'
+import { isStaff, writeAudit } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 
-const authed = () => cookies().get('admin_session')?.value === 'authenticated'
+const authed = isStaff
 const fields: Record<string, string[]> = {
   news: ['title', 'slug', 'content', 'image_url', 'author', 'tags', 'published_date'],
   notice: ['title', 'slug', 'content', 'university_id', 'notice_url', 'published_date'],
@@ -11,7 +11,7 @@ const fields: Record<string, string[]> = {
 const tables = { news: 'news', notice: 'notices', result: 'results' } as const
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  if (!authed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await authed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await request.json()
   if (!['reviewing', 'approved', 'rejected'].includes(body.status)) return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   const db = createAdminSupabaseClient()
@@ -35,5 +35,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     reviewed_at: ['approved', 'rejected'].includes(body.status) ? new Date().toISOString() : null,
     reviewed_by: 'SikshyaNepal editor', published_record_id: publishedId,
   }).eq('id', params.id).select().single()
+  if (!error) await writeAudit(`ingestion.${body.status}`, 'content_ingestion', params.id, { title: item.title, target_type: item.target_type, published_record_id: publishedId })
   return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json(data)
 }

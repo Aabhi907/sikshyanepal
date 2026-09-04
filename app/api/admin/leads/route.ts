@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
+import { isStaff } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
+  if (!(await isStaff())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { searchParams } = new URL(request.url)
   const status     = searchParams.get('status')
   const college_id = searchParams.get('college_id')

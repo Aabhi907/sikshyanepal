@@ -1,12 +1,12 @@
-import { cookies } from 'next/headers'
+import { isStaff } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
-const authed = () => cookies().get('admin_session')?.value === 'authenticated'
+const authed = isStaff
 
 export async function GET(request: Request) {
-  if (!authed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await authed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const status = new URL(request.url).searchParams.get('status') || 'pending'
   const db = createAdminSupabaseClient()
   let query = db.from('content_ingestion_items').select('*').order('fetched_at', { ascending: false }).limit(500)

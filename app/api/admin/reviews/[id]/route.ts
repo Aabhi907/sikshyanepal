@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { cookies } from 'next/headers'
+import { isStaff } from '@/lib/auth'
 
-function isAuthed() {
-  return cookies().get('admin_session')?.value === 'authenticated'
-}
+const isAuthed = isStaff
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  if (!isAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAuthed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
   const supabase = createAdminSupabaseClient()
@@ -33,7 +31,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  if (!isAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAuthed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = createAdminSupabaseClient()
 

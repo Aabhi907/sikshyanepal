@@ -69,7 +69,7 @@ Repo: kasamthapa/sikshyanepal
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-ADMIN_PASSWORD=
+# Authentication uses Supabase Auth and the role stored in public.profiles.
 NEXT_PUBLIC_ONESIGNAL_APP_ID=
 RESEND_API_KEY=                        # from resend.com
 NOTIFICATION_SECRET=                   # random string, shared with scrapers

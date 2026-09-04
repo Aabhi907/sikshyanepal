@@ -287,6 +287,32 @@ CREATE TABLE IF NOT EXISTS content_ingestion_items (
 );
 
 -- ============================================================
+-- ACCOUNTS, INSTITUTION CLAIMS & AUDIT
+-- ============================================================
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, full_name TEXT,
+  role TEXT NOT NULL DEFAULT 'user', status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS institution_claims (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  entity_type TEXT NOT NULL, entity_id UUID NOT NULL, institution_name TEXT NOT NULL, claimant_name TEXT NOT NULL,
+  claimant_role TEXT NOT NULL, official_email TEXT NOT NULL, official_phone TEXT, evidence_url TEXT, evidence_notes TEXT,
+  status TEXT NOT NULL DEFAULT 'pending', reviewed_by UUID REFERENCES auth.users(id), reviewer_notes TEXT,
+  reviewed_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, entity_type, entity_id)
+);
+CREATE TABLE IF NOT EXISTS institution_memberships (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  entity_type TEXT NOT NULL, entity_id UUID NOT NULL, role TEXT NOT NULL DEFAULT 'representative',
+  granted_by UUID REFERENCES auth.users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), UNIQUE(user_id, entity_type, entity_id)
+);
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), actor_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  action TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT, metadata JSONB NOT NULL DEFAULT '{}', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- REVIEWS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS reviews (

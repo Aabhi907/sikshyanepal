@@ -18,6 +18,8 @@ import {
   Flag,
   CalendarCheck2,
   Inbox,
+  UserCheck,
+  ScrollText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +29,8 @@ const navItems = [
   { label: 'Data Corrections', href: '/admin/corrections',      icon: Flag, pending: true },
   { label: 'Admissions',       href: '/admin/admissions',       icon: CalendarCheck2, revenue: true },
   { label: 'Content Queue',    href: '/admin/ingestion',        icon: Inbox, pending: true },
+  { label: 'Profile Claims',   href: '/admin/claims',           icon: UserCheck, pending: true },
+  { label: 'Audit Log',        href: '/admin/audit',            icon: ScrollText },
   { label: 'Colleges',         href: '/admin/colleges',         icon: Building2 },
   { label: 'Pending Colleges', href: '/admin/colleges/pending', icon: Building2,  pending: true },
   { label: 'Applications',     href: '/admin/leads',            icon: Send,        revenue: true },

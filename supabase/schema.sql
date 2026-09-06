@@ -310,7 +310,10 @@ CREATE TABLE IF NOT EXISTS content_ingestion_items (
   scraper_name TEXT NOT NULL, target_type TEXT NOT NULL, title TEXT NOT NULL, source_url TEXT NOT NULL,
   source_published_at TIMESTAMPTZ, payload JSONB NOT NULL, fingerprint TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL DEFAULT 'pending', quality_flags TEXT[] NOT NULL DEFAULT '{}', reviewer_notes TEXT,
-  reviewed_by TEXT, reviewed_at TIMESTAMPTZ, published_record_id UUID, fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_by TEXT, reviewed_at TIMESTAMPTZ, published_record_id UUID, content_hash TEXT, raw_snapshot TEXT,
+  confidence_score SMALLINT NOT NULL DEFAULT 0 CHECK (confidence_score BETWEEN 0 AND 100),
+  verification_status TEXT NOT NULL DEFAULT 'pending' CHECK (verification_status IN ('pending', 'source_verified', 'editor_verified', 'rejected')),
+  last_source_check_at TIMESTAMPTZ, fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

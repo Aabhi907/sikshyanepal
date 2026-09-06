@@ -163,6 +163,18 @@ class BaseScraper:
             flags.append("short_title")
         if not data.get("content"):
             flags.append("missing_body")
+        snapshot = str(data.get("content") or "").strip()[:50000]
+        confidence = 80
+        if data.get("published_date"):
+            confidence += 8
+        if len(title) >= 24:
+            confidence += 4
+        if snapshot:
+            confidence += 8
+        if "short_title" in flags:
+            confidence -= 15
+        if "missing_body" in flags:
+            confidence -= 20
         source_id = None
         try:
             source = self.supabase.table("content_sources").upsert({
@@ -183,6 +195,11 @@ class BaseScraper:
             "source_published_at": data.get("published_date"),
             "payload": json.loads(json.dumps(data, default=str)),
             "fingerprint": fingerprint,
+            "content_hash": hashlib.sha256(snapshot.encode()).hexdigest() if snapshot else None,
+            "raw_snapshot": snapshot or None,
+            "confidence_score": max(0, min(100, confidence)),
+            "verification_status": "pending",
+            "last_source_check_at": datetime.now().isoformat(),
             "quality_flags": flags,
             "status": "pending",
         }

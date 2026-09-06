@@ -32,6 +32,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
   const { data, error } = await db.from('content_ingestion_items').update({
     status: body.status, reviewer_notes: String(body.reviewer_notes || '').slice(0, 2000) || null,
+    verification_status: body.status === 'approved' ? 'editor_verified' : body.status === 'rejected' ? 'rejected' : 'pending',
     reviewed_at: ['approved', 'rejected'].includes(body.status) ? new Date().toISOString() : null,
     reviewed_by: auth.user.email || auth.user.id, published_record_id: publishedId,
   }).eq('id', params.id).select().single()

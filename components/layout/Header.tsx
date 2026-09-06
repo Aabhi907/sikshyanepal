@@ -56,6 +56,7 @@ const navLinks = [
     ],
   },
   { label: 'Scholarships', href: '/scholarships' },
+  { label: 'नेपाली', href: '/ne' },
   { label: 'Claim Profile', href: '/account/claim' },
   { label: 'Saved', href: '/account/saved' },
 ]

@@ -164,6 +164,7 @@ class BaseScraper:
         if not data.get("content"):
             flags.append("missing_body")
         snapshot = str(data.get("content") or "").strip()[:50000]
+        content_material = snapshot or json.dumps(data, sort_keys=True, default=str)
         confidence = 80
         if data.get("published_date"):
             confidence += 8
@@ -195,7 +196,7 @@ class BaseScraper:
             "source_published_at": data.get("published_date"),
             "payload": json.loads(json.dumps(data, default=str)),
             "fingerprint": fingerprint,
-            "content_hash": hashlib.sha256(snapshot.encode()).hexdigest() if snapshot else None,
+            "content_hash": hashlib.sha256(content_material.encode()).hexdigest(),
             "raw_snapshot": snapshot or None,
             "confidence_score": max(0, min(100, confidence)),
             "verification_status": "pending",
@@ -204,6 +205,21 @@ class BaseScraper:
             "status": "pending",
         }
         try:
+            existing = self.supabase.table("content_ingestion_items").select("id,content_hash,status,published_record_id,quality_flags").eq("fingerprint", fingerprint).limit(1).execute()
+            if existing.data:
+                prior = existing.data[0]
+                if prior.get("content_hash") == row["content_hash"]:
+                    self.supabase.table("content_ingestion_items").update({"last_source_check_at": datetime.now().isoformat(), "fetched_at": datetime.now().isoformat()}).eq("id", prior["id"]).execute()
+                    self.skipped += 1
+                    return False
+                changed_flags = list(dict.fromkeys([*(prior.get("quality_flags") or []), *flags, "source_changed"]))
+                self.supabase.table("content_ingestion_items").update({
+                    **row, "quality_flags": changed_flags, "status": "pending", "reviewer_notes": None,
+                    "reviewed_by": None, "reviewed_at": None, "fetched_at": datetime.now().isoformat(),
+                }).eq("id", prior["id"]).execute()
+                self.logger.info(f"Source changed — returned to editorial review: {title[:80]}")
+                self.inserted += 1
+                return True
             self.supabase.table("content_ingestion_items").insert(row).execute()
             if source_id:
                 self.supabase.table("content_sources").update({"last_success_at": datetime.now().isoformat(), "consecutive_failures": 0, "last_error": None}).eq("id", source_id).execute()

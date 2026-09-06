@@ -26,7 +26,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (!allowed || !table) return NextResponse.json({ error: 'Unsupported content type' }, { status: 400 })
     const edited = { ...item.payload, ...(body.payload || {}) }
     const record = Object.fromEntries(allowed.filter((key) => edited[key] !== undefined).map((key) => [key, edited[key]]))
-    const { data, error } = await db.from(table).insert(record).select('id').single()
+    const { data, error } = item.published_record_id
+      ? await db.from(table).update(record).eq('id', item.published_record_id).select('id').single()
+      : await db.from(table).insert(record).select('id').single()
     if (error) return NextResponse.json({ error: `Publish failed: ${error.message}` }, { status: 500 })
     publishedId = data.id
   }

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ChevronDown, BookOpenCheck } from 'lucide-react'
+import { Menu, X, ChevronDown, BookOpenCheck, Search } from 'lucide-react'
 import SubscribeButton from '@/components/notifications/SubscribeButton'
 
 const navLinks = [
@@ -209,6 +209,7 @@ export default function Header() {
 
             {/* ── Desktop right actions ────────────────────── */}
             <div className="hidden lg:flex items-center gap-2">
+              <button onClick={() => window.dispatchEvent(new Event('open-site-search'))} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-500 hover:border-blue-200 hover:text-primary" aria-label="Search SikshyaNepal"><Search className="h-4 w-4" /><span className="hidden xl:inline">Search</span><kbd className="hidden xl:inline rounded border border-gray-200 px-1.5 py-0.5 text-[10px] text-gray-400">⌘K</kbd></button>
               <SubscribeButton variant="header" />
               <Link
                 href="/schools"

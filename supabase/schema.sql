@@ -366,6 +366,13 @@ CREATE TABLE IF NOT EXISTS reviews (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS review_responses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), review_id UUID NOT NULL UNIQUE REFERENCES reviews(id) ON DELETE CASCADE,
+  college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE, responder_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  response_text TEXT NOT NULL CHECK (char_length(response_text) BETWEEN 20 AND 3000), status TEXT NOT NULL DEFAULT 'pending',
+  reviewed_by UUID REFERENCES auth.users(id), reviewed_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS review_verifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   review_id UUID NOT NULL UNIQUE REFERENCES reviews(id) ON DELETE CASCADE,
@@ -485,6 +492,7 @@ ALTER TABLE notices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE review_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE review_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scholarships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE syllabus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE old_questions ENABLE ROW LEVEL SECURITY;
@@ -493,6 +501,7 @@ ALTER TABLE entrance_exams ENABLE ROW LEVEL SECURITY;
 -- Public read access for all tables
 CREATE POLICY "Public read colleges" ON colleges FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read admission deadline history" ON admission_deadline_history FOR SELECT TO anon USING (true);
+CREATE POLICY "Public read published review responses" ON review_responses FOR SELECT TO anon USING (status = 'published');
 CREATE POLICY "Public read active schools" ON schools FOR SELECT TO anon USING (status = 'active');
 CREATE POLICY "Public read programs" ON programs FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read college_programs" ON college_programs FOR SELECT TO anon USING (true);

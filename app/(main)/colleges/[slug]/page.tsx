@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import ReviewForm from "@/components/colleges/ReviewForm";
+import ReviewResponseForm from "@/components/colleges/ReviewResponseForm";
 import ApplyNowButton from "@/components/colleges/ApplyNowButton";
 import SaveCollegeButton from "@/components/colleges/SaveCollegeButton";
 import AdUnit from "@/components/ads/AdUnit";
@@ -83,7 +84,7 @@ async function getCollege(slug: string) {
       .eq("college_id", college.id),
     supabase
       .from("reviews")
-      .select("*")
+      .select("*, review_responses(*)")
       .eq("college_id", college.id)
       .eq("is_approved", true)
       .order("created_at", { ascending: false })
@@ -485,7 +486,9 @@ export default async function CollegeProfilePage({
                     <p className="text-sm text-gray-600">
                       {review.review_text}
                     </p>
+                    {(review as Review & { review_responses?: { id: string; response_text: string; status: string; created_at: string }[] }).review_responses?.filter(response => response.status === 'published').map(response => <div key={response.id} className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-sm text-blue-950"><p className="text-xs font-bold uppercase tracking-wide text-blue-700">Institution response</p><p className="mt-1 leading-6">{response.response_text}</p></div>)}
                     {Object.entries({ Teaching: review.teaching_rating, Facilities: review.facilities_rating, Administration: review.administration_rating, Value: review.value_rating, Placement: review.placement_rating }).some(([, value]) => value != null) && <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500">{Object.entries({ Teaching: review.teaching_rating, Facilities: review.facilities_rating, Administration: review.administration_rating, Value: review.value_rating, Placement: review.placement_rating }).filter(([, value]) => value != null).map(([label, value]) => <span key={label} className="rounded-full bg-gray-100 px-2 py-1">{label} {value}/5</span>)}</div>}
+                    <ReviewResponseForm reviewId={review.id} />
                   </div>
                 ))}
               </div>

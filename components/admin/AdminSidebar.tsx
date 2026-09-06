@@ -22,6 +22,7 @@ import {
   ScrollText,
   BookOpen,
   Activity,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -42,6 +43,7 @@ const navItems = [
   { label: 'Notices',          href: '/admin/notices',          icon: Bell },
   { label: 'Scholarships',     href: '/admin/scholarships',     icon: Award },
   { label: 'Reviews',          href: '/admin/reviews',          icon: Star },
+  { label: 'Review Responses', href: '/admin/review-responses', icon: MessageSquare, pending: true },
   { label: 'Subscribers',      href: '/admin/subscribers',      icon: Mail },
 ]
 

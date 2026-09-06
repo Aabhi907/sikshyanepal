@@ -7,6 +7,13 @@ on:
   workflow_dispatch:
     # Allows manual trigger from GitHub Actions tab
 
+permissions:
+  contents: read
+
+concurrency:
+  group: sikshyanepal-editorial-collectors
+  cancel-in-progress: false
+
 jobs:
   scrape:
     name: Run scrapers and update database
@@ -37,6 +44,8 @@ jobs:
           ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
           FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          SIKSHYANEPAL_URL: ${{ secrets.SIKSHYANEPAL_URL }}
+          NOTIFICATION_SECRET: ${{ secrets.NOTIFICATION_SECRET }}
         run: |
           cd scrapers
           python run_all.py

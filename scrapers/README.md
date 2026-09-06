@@ -22,17 +22,18 @@ website, current programs, affiliation, fees and admissions before changing its
 status to active and verification status to source/institution verified.
 into the SikshyaNepal Supabase database every 6 hours via GitHub Actions.
 
-## Scrapers
+## Collectors
 
-| File | Source | Table | What it extracts |
+| File | Source | Review target | What it extracts |
 |---|---|---|---|
-| `tu_results.py` | tuexam.edu.np | `results` | TU exam results with program, semester, result PDF URL |
-| `ku_results.py` | kuexam.edu.np | `results` | KU exam results with program, semester, result URL |
-| `tu_notices.py` | tribhuvan-university.edu.np | `notices` | TU official notices, admission notices, exam schedules |
-| `neb_notices.py` | neb.gov.np | `notices` | NEB exam notices, Grade 11/12 schedules, results |
+| `tu_results.py` | tuexam.edu.np | Editorial queue → results | TU exam results with program, semester, result PDF URL |
+| `ku_results.py` | kuexam.edu.np | Editorial queue → results | KU exam results with program, semester, result URL |
+| `tu_notices.py` | tribhuvan-university.edu.np | Editorial queue → notices | TU official notices, admission notices, exam schedules |
+| `neb_notices.py` | neb.gov.np | Editorial queue → notices | NEB exam notices, Grade 11/12 schedules, results |
 
-All scrapers:
-- Skip duplicate entries (checked by slug before inserting)
+All collectors:
+- Store candidates in the editorial queue; they never publish content by themselves
+- Skip duplicate entries using a source fingerprint and preserve the original source URL
 - Never crash the entire run if one record fails
 - Log exactly how many records were inserted vs skipped
 
@@ -94,6 +95,8 @@ Go to your repo → **Settings → Secrets and variables → Actions → New rep
 | `SUPABASE_URL` | Supabase dashboard → Settings → API → Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase dashboard → Settings → API → `service_role` key (keep secret!) |
 | `VERCEL_DEPLOY_HOOK_URL` | See below |
+| `SIKSHYANEPAL_URL` | Final production URL, for subscriber notifications |
+| `NOTIFICATION_SECRET` | Random secret matching the Vercel environment variable of the same name |
 
 ---
 

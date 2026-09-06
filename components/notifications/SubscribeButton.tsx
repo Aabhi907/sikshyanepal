@@ -133,7 +133,7 @@ export default function SubscribeButton({ variant }: Props) {
     <>
       <button
         onClick={() => setModalOpen(true)}
-        className="lg:hidden fixed bottom-6 right-5 z-50 flex items-center gap-2 px-4 py-3 bg-blue-600 text-white text-sm font-semibold rounded-full shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
+        className="lg:hidden fixed bottom-20 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-blue-600 text-white text-sm font-semibold rounded-full shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
         aria-label="Subscribe for result notifications"
       >
         <Sparkles className="w-4 h-4" />

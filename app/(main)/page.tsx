@@ -15,6 +15,7 @@ import {
   School,
   FileText,
   Bell,
+  CalendarCheck2,
   Newspaper,
   Award,
   ArrowRight,
@@ -243,6 +244,20 @@ export default async function HomePage() {
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-gray-200 bg-[#f7f9ff]">
+        <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-2"><div><p className="text-xs font-bold uppercase tracking-widest text-primary">Quick access</p><h2 className="mt-1 font-display text-xl font-bold text-ink">What do you need today?</h2></div><Link href="/search" className="text-sm font-bold text-primary hover:underline">Search everything →</Link></div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{[
+            { href: '/results', label: 'Check results', text: 'TU, KU, NEB & more', Icon: FileText, tone: 'bg-blue-50 text-blue-700' },
+            { href: '/admissions/status', label: 'Admissions', text: 'Open & upcoming', Icon: CalendarCheck2, tone: 'bg-emerald-50 text-emerald-700' },
+            { href: '/tools/school-finder', label: 'Find a school', text: 'ECD to Grade 10', Icon: School, tone: 'bg-sky-50 text-sky-700' },
+            { href: '/tools/college-finder', label: 'Find a college', text: '+2 and higher', Icon: GraduationCap, tone: 'bg-indigo-50 text-indigo-700' },
+            { href: '/scholarships', label: 'Scholarships', text: 'Funding options', Icon: Award, tone: 'bg-amber-50 text-amber-700' },
+            { href: '/notices', label: 'Latest notices', text: 'Official updates', Icon: Bell, tone: 'bg-orange-50 text-orange-700' },
+          ].map(({ href, label, text, Icon, tone }) => <Link key={href} href={href} className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"><span className={`flex h-9 w-9 items-center justify-center rounded-xl ${tone}`}><Icon className="h-4.5 w-4.5" /></span><p className="mt-3 text-sm font-bold text-ink">{label}</p><p className="mt-1 text-xs text-gray-500">{text}</p></Link>)} </div>
         </div>
       </section>
 

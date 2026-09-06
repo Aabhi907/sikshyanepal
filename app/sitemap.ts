@@ -14,12 +14,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order('updated_at', { ascending: false }),
     supabase
       .from('schools')
-      .select('slug, updated_at, district, local_level')
+      .select('slug, updated_at, district, local_level, province')
       .eq('status', 'active')
       .order('updated_at', { ascending: false }),
     supabase
       .from('colleges')
-      .select('slug, created_at, district')
+      .select('slug, created_at, district, province')
       .order('created_at', { ascending: false }),
     supabase
       .from('results')
@@ -184,6 +184,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const locationRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/colleges/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
   const schoolDistrictRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/schools/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
   const municipalityRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.local_level).filter(Boolean))).map(municipality => ({ url: `${BASE_URL}/schools/municipality/${String(municipality).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.65 }))
+  const schoolProvinceRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.province).filter(Boolean))).map(province => ({ url: `${BASE_URL}/schools/province/${String(province).toLowerCase()}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
+  const collegeProvinceRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.province).filter(Boolean))).map(province => ({ url: `${BASE_URL}/colleges/province/${String(province).toLowerCase()}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
 
   return [
     ...staticRoutes,
@@ -198,5 +200,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...locationRoutes,
     ...schoolDistrictRoutes,
     ...municipalityRoutes,
+    ...schoolProvinceRoutes,
+    ...collegeProvinceRoutes,
   ]
 }

@@ -30,6 +30,12 @@ async function getColleges(sp: {
   affiliation?: string
   faculty?:     string
   level?:       string
+  province?: string
+  district?: string
+  maxFee?: string
+  scholarship?: string
+  verified?: string
+  program?: string
 }): Promise<{ all: RichCollege[]; filtered: RichCollege[] }> {
   const supabase = createServerSupabaseClient()
 
@@ -40,7 +46,7 @@ async function getColleges(sp: {
       programs:college_programs(
         fee,
         scholarship_available,
-        program:programs(id, name, faculty, degree_level)
+        program:programs(id, name, slug, faculty, degree_level)
       ),
       reviews(rating, is_approved)
     `)
@@ -52,7 +58,10 @@ async function getColleges(sp: {
 
   if (sp.q)           query = query.ilike('name',        `%${sp.q}%`)
   if (sp.location)    query = query.ilike('location',    `%${sp.location}%`)
+  if (sp.province)    query = query.eq('province', sp.province)
+  if (sp.district)    query = query.ilike('district', `%${sp.district}%`)
   if (sp.affiliation) query = query.ilike('affiliation', `%${sp.affiliation}%`)
+  if (sp.verified === 'true') query = query.in('verification_status', ['source_verified', 'institution_verified'])
 
   const { data } = await query
   const raw = (data ?? []) as (College & { programs?: CollegeProgram[]; reviews?: Review[] })[]
@@ -92,6 +101,10 @@ async function getColleges(sp: {
       (c.programs ?? []).some((cp) => cp.program?.degree_level === sp.level)
     )
   }
+  if (sp.program) filtered = filtered.filter(c => (c.programs ?? []).some(cp => cp.program?.slug === sp.program))
+  if (sp.scholarship === 'true') filtered = filtered.filter(c => (c.programs ?? []).some(cp => cp.scholarship_available))
+  const maxFee = Number(sp.maxFee)
+  if (Number.isFinite(maxFee) && maxFee > 0) filtered = filtered.filter(c => (c.programs ?? []).some(cp => cp.fee != null && cp.fee <= maxFee))
 
   return { all, filtered }
 }
@@ -99,7 +112,7 @@ async function getColleges(sp: {
 export default async function CollegesPage({
   searchParams,
 }: {
-  searchParams: { q?: string; location?: string; affiliation?: string; faculty?: string; level?: string }
+  searchParams: { q?: string; location?: string; affiliation?: string; faculty?: string; level?: string; province?: string; district?: string; maxFee?: string; scholarship?: string; verified?: string; program?: string }
 }) {
   const { all, filtered } = await getColleges(searchParams)
 
@@ -118,6 +131,7 @@ export default async function CollegesPage({
       <div className="mb-5">
         <SearchBar placeholder="Search college by name..." redirectTo="/colleges" />
       </div>
+      <div className="mb-5 flex flex-wrap gap-2 text-xs"><span className="font-semibold text-gray-500">Popular:</span>{['Kathmandu','Pokhara','Chitwan','Lalitpur','Bhaktapur'].map(place=><Link key={place} href={`/colleges/in/${place.toLowerCase()}`} className="font-semibold text-blue-700 hover:underline">Colleges in {place}</Link>)}</div>
 
       {/* Filters — handles mobile drawer + desktop inline panel + result counts */}
       <CollegeFilters

@@ -36,8 +36,12 @@ CREATE TABLE IF NOT EXISTS programs (
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   duration TEXT NOT NULL,
-  degree_level TEXT NOT NULL CHECK (degree_level IN ('bachelor', 'master', 'mphil', 'phd', 'diploma', 'certificate')),
+  degree_level TEXT NOT NULL CHECK (degree_level IN ('+2', 'bachelor', 'master', 'mphil', 'phd', 'diploma', 'certificate')),
   faculty TEXT NOT NULL,
+  overview TEXT, eligibility TEXT, entrance_requirements TEXT,
+  curriculum_highlights TEXT[] NOT NULL DEFAULT '{}', career_paths TEXT[] NOT NULL DEFAULT '{}',
+  average_fee_min DECIMAL(12,2), average_fee_max DECIMAL(12,2), source_url TEXT,
+  last_verified_at TIMESTAMPTZ, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -100,6 +104,7 @@ CREATE TABLE IF NOT EXISTS colleges (
   last_verified_at TIMESTAMPTZ,
   verified_by TEXT,
   education_levels TEXT[] NOT NULL DEFAULT '{}',
+  facilities TEXT[] NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -221,6 +226,12 @@ CREATE TABLE IF NOT EXISTS college_programs (
   scholarship_available BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(college_id, program_id)
+);
+
+CREATE TABLE IF NOT EXISTS saved_colleges (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, college_id)
 );
 
 -- ============================================================

@@ -46,6 +46,7 @@ const navLinks = [
   { label: 'News',         href: '/news' },
   { label: 'Scholarships', href: '/scholarships' },
   { label: 'Claim Profile', href: '/account/claim' },
+  { label: 'Saved', href: '/account/saved' },
 ]
 
 export default function Header() {

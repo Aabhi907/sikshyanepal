@@ -19,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order('updated_at', { ascending: false }),
     supabase
       .from('colleges')
-      .select('slug, created_at')
+      .select('slug, created_at, district')
       .order('created_at', { ascending: false }),
     supabase
       .from('results')
@@ -156,6 +156,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'monthly' as const,
     priority:        0.6,
   }))
+  const programCollegeRoutes: MetadataRoute.Sitemap = (programs.data ?? []).map((p) => ({ url: `${BASE_URL}/colleges/program/${p.slug}`, lastModified: new Date(p.created_at), changeFrequency: 'weekly' as const, priority: 0.75 }))
+  const locationRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/colleges/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
 
   return [
     ...staticRoutes,
@@ -166,5 +168,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...noticeRoutes,
     ...newsRoutes,
     ...programRoutes,
+    ...programCollegeRoutes,
+    ...locationRoutes,
   ]
 }

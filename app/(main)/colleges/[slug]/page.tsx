@@ -19,6 +19,7 @@ import {
 import Badge from "@/components/ui/Badge";
 import ReviewForm from "@/components/colleges/ReviewForm";
 import ApplyNowButton from "@/components/colleges/ApplyNowButton";
+import SaveCollegeButton from "@/components/colleges/SaveCollegeButton";
 import AdUnit from "@/components/ads/AdUnit";
 import type { College, CollegeProgram, Review } from "@/types";
 import VerificationBadge from "@/components/institutions/VerificationBadge";
@@ -276,6 +277,7 @@ export default async function CollegeProfilePage({
             <h1 className="text-2xl font-bold text-ink leading-tight">
               {college.name}
             </h1>
+            <div className="mt-3"><SaveCollegeButton collegeId={college.id} /></div>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <VerificationBadge status={college.verification_status} />
               {college.affiliation && (

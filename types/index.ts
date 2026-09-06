@@ -126,10 +126,21 @@ export interface Program {
   duration: string
   degree_level: '+2' | 'bachelor' | 'master' | 'mphil' | 'phd' | 'diploma' | 'certificate'
   faculty: string
+  overview?: string | null
+  eligibility?: string | null
+  entrance_requirements?: string | null
+  curriculum_highlights?: string[]
+  career_paths?: string[]
+  average_fee_min?: number | null
+  average_fee_max?: number | null
+  source_url?: string | null
+  last_verified_at?: string | null
+  updated_at?: string
   created_at: string
 }
 
 export interface CollegeProgram {
+  id?: string
   college_id: string
   program_id: string
   fee: number | null

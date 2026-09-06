@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Filter, X, SlidersHorizontal } from 'lucide-react'
 
 const LOCATIONS = ['Kathmandu', 'Pokhara', 'Chitwan', 'Biratnagar', 'Butwal', 'Other']
+const PROVINCES = ['Koshi', 'Madhesh', 'Bagmati', 'Gandaki', 'Lumbini', 'Karnali', 'Sudurpashchim']
 
 const AFFILIATIONS = [
   { label: 'TU',      value: 'Tribhuvan University',  hint: null },
@@ -33,6 +34,12 @@ export type CollegeSearchParams = {
   affiliation?: string
   faculty?:    string
   level?:      string
+  province?: string
+  district?: string
+  maxFee?: string
+  scholarship?: string
+  verified?: string
+  program?: string
 }
 
 function buildUrl(current: CollegeSearchParams, key: string, value: string): string {
@@ -42,6 +49,12 @@ function buildUrl(current: CollegeSearchParams, key: string, value: string): str
   if (current.affiliation) p.set('affiliation', current.affiliation)
   if (current.faculty)     p.set('faculty',     current.faculty)
   if (current.level)       p.set('level',       current.level)
+  if (current.province) p.set('province', current.province)
+  if (current.district) p.set('district', current.district)
+  if (current.maxFee) p.set('maxFee', current.maxFee)
+  if (current.scholarship) p.set('scholarship', current.scholarship)
+  if (current.verified) p.set('verified', current.verified)
+  if (current.program) p.set('program', current.program)
   // toggle: clicking an active filter removes it
   if (p.get(key) === value) p.delete(key)
   else p.set(key, value)
@@ -62,8 +75,8 @@ interface Props {
 export default function CollegeFilters({ searchParams, totalCount, filteredCount }: Props) {
   const [open, setOpen] = useState(false)
 
-  const hasFilters  = !!(searchParams.location || searchParams.affiliation || searchParams.faculty || searchParams.level)
-  const activeCount = [searchParams.location, searchParams.affiliation, searchParams.faculty, searchParams.level].filter(Boolean).length
+  const hasFilters  = !!(searchParams.location || searchParams.province || searchParams.district || searchParams.affiliation || searchParams.faculty || searchParams.level || searchParams.maxFee || searchParams.scholarship || searchParams.verified || searchParams.program)
+  const activeCount = [searchParams.location, searchParams.province, searchParams.district, searchParams.affiliation, searchParams.faculty, searchParams.level, searchParams.maxFee, searchParams.scholarship, searchParams.verified, searchParams.program].filter(Boolean).length
 
   const pill = (isActive: boolean) =>
     `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -75,6 +88,9 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
   function FilterContent() {
     return (
       <div className="space-y-5">
+        <div><p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Province</p><div className="flex flex-wrap gap-2">{PROVINCES.map(value => <Link key={value} href={buildUrl(searchParams, 'province', value)} onClick={() => setOpen(false)} className={pill(searchParams.province === value)}>{value}</Link>)}</div></div>
+        <form action="/colleges" className="grid gap-2 sm:grid-cols-2">{Object.entries(searchParams).filter(([key, value]) => value && key !== 'district' && key !== 'maxFee').map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}<input name="district" defaultValue={searchParams.district} placeholder="District" className="rounded-lg border border-gray-200 px-3 py-2 text-sm"/><select name="maxFee" defaultValue={searchParams.maxFee || ''} className="rounded-lg border border-gray-200 px-3 py-2 text-sm"><option value="">Any annual fee</option><option value="100000">Under NPR 1 lakh</option><option value="250000">Under NPR 2.5 lakh</option><option value="500000">Under NPR 5 lakh</option><option value="1000000">Under NPR 10 lakh</option></select><button className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2">Apply district & fee</button></form>
+        <div><p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Trust & support</p><div className="flex flex-wrap gap-2"><Link href={buildUrl(searchParams,'scholarship','true')} className={pill(searchParams.scholarship==='true')}>Scholarship available</Link><Link href={buildUrl(searchParams,'verified','true')} className={pill(searchParams.verified==='true')}>Verified colleges</Link></div></div>
         {/* Location */}
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Location</p>

@@ -150,7 +150,7 @@ export default function Header() {
             </Link>
 
             {/* ── Desktop nav ──────────────────────────────── */}
-            <nav className="hidden lg:flex items-center gap-0.5">
+            <nav className="hidden xl:flex items-center gap-0.5">
               {navLinks.map((link) => (
                 <div
                   key={link.label}
@@ -208,7 +208,7 @@ export default function Header() {
             </nav>
 
             {/* ── Desktop right actions ────────────────────── */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden xl:flex items-center gap-2">
               <button onClick={() => window.dispatchEvent(new Event('open-site-search'))} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-500 hover:border-blue-200 hover:text-primary" aria-label="Search SikshyaNepal"><Search className="h-4 w-4" /><span className="hidden xl:inline">Search</span><kbd className="hidden xl:inline rounded border border-gray-200 px-1.5 py-0.5 text-[10px] text-gray-400">⌘K</kbd></button>
               <SubscribeButton variant="header" />
               <Link
@@ -223,7 +223,7 @@ export default function Header() {
             {/* ── Mobile ───────────────────────────────────── */}
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 text-ink-secondary hover:bg-gray-100 rounded-lg"
+              className="xl:hidden p-2 text-ink-secondary hover:bg-gray-100 rounded-lg"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -233,7 +233,7 @@ export default function Header() {
 
       {/* ── Mobile slide-over ────────────────────────────────────── */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
+        <div className="fixed inset-0 z-[60] xl:hidden">
           <div
             className="absolute inset-0 bg-black/40 animate-fade-in"
             onClick={() => setMobileOpen(false)}

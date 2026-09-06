@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { Sora, DM_Sans, DM_Mono } from 'next/font/google'
+import { Noto_Serif, DM_Sans, DM_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 
-const sora = Sora({
+const notoSerif = Noto_Serif({
   subsets: ['latin'],
   variable: '--font-sora',
   display: 'swap',
@@ -93,7 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} font-sans antialiased`}>
+      <body className={`${notoSerif.variable} ${dmSans.variable} ${dmMono.variable} font-sans antialiased`}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@graph': [{ '@type': 'WebSite', '@id': `${BASE_URL}/#website`, url: BASE_URL, name: 'SikshyaNepal', description: 'Verified education information for Nepal.', inLanguage: ['en', 'ne'], potentialAction: { '@type': 'SearchAction', target: `${BASE_URL}/search?q={search_term_string}`, 'query-input': 'required name=search_term_string' } }, { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal', url: BASE_URL, logo: `${BASE_URL}/og-image.png`, email: 'info@sikshyanepal.com', areaServed: { '@type': 'Country', name: 'Nepal' } }] }).replace(/</g, '\\u003c') }} />
         {children}
 

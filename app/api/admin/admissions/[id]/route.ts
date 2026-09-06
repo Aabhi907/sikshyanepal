@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { isStaff, writeAudit } from '@/lib/auth'
+import { getAuthContext, isStaff, writeAudit } from '@/lib/auth'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 
 const isAuthed = isStaff
@@ -11,9 +11,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   if (!body.title?.trim() || !body.institution_name?.trim() || !body.source_name?.trim() || !/^https?:\/\//.test(body.source_url || '')) return NextResponse.json({ error: 'Title, institution and a valid source are required.' }, { status: 400 })
   if (!validLevel(body)) return NextResponse.json({ error: 'Schools may only use ECD/Grade 1–10 or SEE. +2 and higher admissions belong to colleges.' }, { status: 400 })
   if (body.is_sponsored && !body.sponsor_label?.trim()) return NextResponse.json({ error: 'Sponsored admissions require a visible sponsor label.' }, { status: 400 })
+  const db = createAdminSupabaseClient()
+  const { data: existing, error: existingError } = await db.from('admissions').select('application_deadline,source_url').eq('id', params.id).single()
+  if (existingError || !existing) return NextResponse.json({ error: 'Admission not found.' }, { status: 404 })
   const update = { ...body, school_id: body.school_id || null, college_id: body.college_id || null, updated_at: new Date().toISOString(), published_at: body.status === 'published' ? body.published_at || new Date().toISOString() : body.published_at || null, last_verified_at: body.verification_status === 'unverified' ? null : new Date().toISOString() }
-  const { data, error } = await createAdminSupabaseClient().from('admissions').update(update).eq('id', params.id).select().single()
+  const { data, error } = await db.from('admissions').update(update).eq('id', params.id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if ((existing.application_deadline || null) !== (data.application_deadline || null)) {
+    const auth = await getAuthContext()
+    await db.from('admission_deadline_history').insert({ admission_id: params.id, previous_deadline: existing.application_deadline, new_deadline: data.application_deadline, source_url: data.source_url || existing.source_url, changed_by: auth?.user.id || null })
+  }
   await writeAudit('admission.update', 'admission', params.id, { title: data.title, status: data.status })
   return NextResponse.json(data)
 }

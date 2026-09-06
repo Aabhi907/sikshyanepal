@@ -214,6 +214,17 @@ CREATE TABLE IF NOT EXISTS admissions (
   CHECK (NOT is_sponsored OR sponsor_label IS NOT NULL)
 );
 
+CREATE TABLE IF NOT EXISTS admission_deadline_history (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  admission_id UUID NOT NULL REFERENCES admissions(id) ON DELETE CASCADE,
+  previous_deadline TIMESTAMPTZ,
+  new_deadline TIMESTAMPTZ,
+  reason TEXT,
+  source_url TEXT,
+  changed_by UUID REFERENCES auth.users(id),
+  changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ============================================================
 -- COLLEGE PROGRAMS (Junction Table)
 -- ============================================================
@@ -436,6 +447,7 @@ CREATE INDEX IF NOT EXISTS idx_schools_verified ON schools(verification_status, 
 CREATE INDEX IF NOT EXISTS idx_schools_name_search ON schools USING gin(to_tsvector('simple', name));
 CREATE INDEX IF NOT EXISTS idx_data_corrections_status ON data_corrections(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admissions_deadline ON admissions(status, application_deadline);
+CREATE INDEX IF NOT EXISTS idx_admission_deadline_history_admission ON admission_deadline_history(admission_id, changed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admissions_institution ON admissions(institution_type, institution_name);
 CREATE INDEX IF NOT EXISTS idx_admissions_school ON admissions(school_id) WHERE school_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_admissions_college ON admissions(college_id) WHERE college_id IS NOT NULL;
@@ -461,6 +473,7 @@ ALTER TABLE colleges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
 ALTER TABLE data_corrections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admission_deadline_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE college_programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE universities ENABLE ROW LEVEL SECURITY;
@@ -476,6 +489,7 @@ ALTER TABLE entrance_exams ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for all tables
 CREATE POLICY "Public read colleges" ON colleges FOR SELECT TO anon USING (true);
+CREATE POLICY "Public read admission deadline history" ON admission_deadline_history FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read active schools" ON schools FOR SELECT TO anon USING (status = 'active');
 CREATE POLICY "Public read programs" ON programs FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read college_programs" ON college_programs FOR SELECT TO anon USING (true);

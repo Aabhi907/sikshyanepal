@@ -12,6 +12,14 @@ must open `/admin/ingestion`, compare the item with the original source, and cho
 the queue audit trail. Do not add a direct-publish mode to a collector.
 
 Before running collectors, apply `supabase/migrations/20260905_content_ingestion_queue.sql`.
+
+## Importing the 50-college research pack
+
+Use `import_research_colleges.py` with the supplied JSON pack. It validates the
+records and defaults to a dry run. With `--commit`, new records are inserted as
+`pending_review`, never directly into the public directory. Review each record's
+website, current programs, affiliation, fees and admissions before changing its
+status to active and verification status to source/institution verified.
 into the SikshyaNepal Supabase database every 6 hours via GitHub Actions.
 
 ## Scrapers

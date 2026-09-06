@@ -245,6 +245,12 @@ CREATE TABLE IF NOT EXISTS saved_colleges (
   UNIQUE(user_id, college_id)
 );
 
+CREATE TABLE IF NOT EXISTS saved_schools (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, school_id)
+);
+
 -- ============================================================
 -- RESULTS
 -- ============================================================
@@ -497,6 +503,7 @@ ALTER TABLE scholarships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE syllabus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE old_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE entrance_exams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saved_schools ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for all tables
 CREATE POLICY "Public read colleges" ON colleges FOR SELECT TO anon USING (true);
@@ -514,6 +521,7 @@ CREATE POLICY "Public read scholarships" ON scholarships FOR SELECT TO anon USIN
 CREATE POLICY "Public read syllabus" ON syllabus FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read old_questions" ON old_questions FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read entrance_exams" ON entrance_exams FOR SELECT TO anon USING (true);
+CREATE POLICY "Users manage own saved schools" ON saved_schools FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 
 -- Allow insert for reviews (students can submit)
 CREATE POLICY "Anyone can submit review" ON reviews FOR INSERT TO anon WITH CHECK (true);

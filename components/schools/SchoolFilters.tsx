@@ -7,6 +7,8 @@ export type SchoolSearchParams = {
   district?: string
   ownership?: string
   level?: string
+  medium?: string
+  grade?: string
   verified?: string
 }
 
@@ -70,6 +72,23 @@ export default function SchoolFilters({
             <option value="basic">Basic (Grades 1–8)</option>
             <option value="secondary">Secondary (Grades 9–10)</option>
             <option value="multiple">Multiple levels (up to Grade 10)</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-semibold text-gray-500">Entry grade</span>
+          <select name="grade" defaultValue={searchParams.grade || ''} className={field}>
+            <option value="">Any grade range</option>
+            <option value="0">ECD / pre-primary</option>
+            {Array.from({ length: 10 }, (_, index) => index + 1).map((grade) => <option key={grade} value={grade}>Grade {grade}</option>)}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-semibold text-gray-500">Medium of instruction</span>
+          <select name="medium" defaultValue={searchParams.medium || ''} className={field}>
+            <option value="">Any medium</option>
+            <option value="English">English</option>
+            <option value="Nepali">Nepali</option>
+            <option value="Both">English and Nepali</option>
           </select>
         </label>
         <label className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-600">

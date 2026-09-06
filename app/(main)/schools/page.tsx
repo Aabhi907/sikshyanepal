@@ -23,6 +23,11 @@ async function getSchools(sp: SchoolSearchParams) {
   if (sp.district) query = query.eq('district', sp.district)
   if (sp.ownership) query = query.eq('ownership_type', sp.ownership)
   if (sp.level) query = query.eq('school_level', sp.level)
+  if (sp.medium) query = query.contains('medium_of_instruction', [sp.medium])
+  const grade = Number(sp.grade)
+  if (sp.grade !== undefined && Number.isInteger(grade) && grade >= 0 && grade <= 10) {
+    query = query.or(`grades_from.lte.${grade},grades_from.is.null`).or(`grades_to.gte.${grade},grades_to.is.null`)
+  }
   if (sp.verified === 'true') query = query.in('verification_status', ['source_verified', 'institution_verified'])
   const { data, error } = await query
   if (error) console.error('[schools] query failed:', error.message)

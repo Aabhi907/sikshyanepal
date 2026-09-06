@@ -43,9 +43,10 @@ const navLinks = [
     ],
   },
   {
-    label: 'Programs',
+    label: 'Explore',
     href: '/programs',
     sub: [
+      { label: 'Programs', href: '/programs' },
       { label: 'IT & Computing', href: '/programs?faculty=it' },
       { label: 'Engineering',    href: '/programs?faculty=engineering' },
       { label: 'Management',     href: '/programs?faculty=management' },
@@ -53,37 +54,23 @@ const navLinks = [
       { label: 'Career Explorer', href: '/careers' },
       { label: 'Skills & Opportunities', href: '/opportunities' },
       { label: 'Student Wellbeing', href: '/wellbeing' },
-    ],
-  },
-  { label: 'Results',      href: '/results' },
-  { label: 'Notices',      href: '/notices' },
-  { label: 'News',         href: '/news' },
-  {
-    label: 'Tools',
-    href: '/tools/gpa-calculator',
-    sub: [
+      { label: 'Results', href: '/results' },
+      { label: 'Notices', href: '/notices' },
+      { label: 'Education News', href: '/news' },
+      { label: 'Scholarships', href: '/scholarships' },
       { label: 'SEE & NEB GPA Calculator', href: '/tools/gpa-calculator' },
       { label: 'College Cost Calculator', href: '/tools/college-cost-calculator' },
       { label: 'College Finder', href: '/tools/college-finder' },
       { label: 'Admission Checklist', href: '/tools/admission-checklist' },
       { label: 'Program Finder Quiz', href: '/tools/program-finder' },
-    ],
-  },
-  { label: 'Scholarships', href: '/scholarships' },
-  { label: 'नेपाली', href: '/ne' },
-  { label: 'Claim Profile', href: '/account/claim', sub: [
-    { label: 'Claim an Institution', href: '/account/claim' },
-    { label: 'My Institutions', href: '/account/institutions' },
-  ] },
-  {
-    label: 'Saved',
-    href: '/account/saved',
-    sub: [
       { label: 'My Path', href: '/my-path' },
       { label: 'Saved colleges', href: '/account/saved' },
       { label: 'Saved schools', href: '/account/saved-schools' },
+      { label: 'Claim an Institution', href: '/account/claim' },
+      { label: 'My Institutions', href: '/account/institutions' },
     ],
   },
+  { label: 'नेपाली', href: '/ne' },
 ]
 
 export default function Header() {
@@ -194,13 +181,13 @@ export default function Header() {
                       {/* Invisible bridge: fills the gap between trigger bottom and
                           dropdown top so the mouse never "misses" while moving down */}
                       <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent" />
-                      <div className="mt-1.5 w-52 bg-white border border-border rounded-xl shadow-card-lg py-1.5 animate-slide-down">
+                      <div className="mt-1.5 w-64 bg-white border border-border rounded-xl shadow-card-lg py-1.5 animate-slide-down">
                         {link.sub.map((s) => (
                           <Link
                             key={s.label}
                             href={s.href}
                             onClick={() => setOpenDrop(null)}
-                            className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
+                            className="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary transition-colors duration-150"
                           >
                             {s.label}
                           </Link>

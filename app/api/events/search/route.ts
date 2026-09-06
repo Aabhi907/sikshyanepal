@@ -1,0 +1,5 @@
+import { NextResponse } from 'next/server'
+import { createAdminSupabaseClient } from '@/lib/supabase'
+
+function sanitise(value: unknown) { const text = typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').slice(0, 120) : ''; return /@|\d{7,}/.test(text) ? '' : text }
+export async function POST(request: Request) { try { const body = await request.json(); const query = sanitise(body.query); const count = Number(body.result_count); if (query.length < 2 || !Number.isInteger(count) || count < 0 || count > 999) return NextResponse.json({ error: 'Invalid event.' }, { status: 400 }); const event_type = count === 0 ? 'zero_result' : 'search'; const { error } = await createAdminSupabaseClient().from('search_events').insert({ event_type, query, result_count: count }); return error ? NextResponse.json({ error: 'Could not record event.' }, { status: 500 }) : NextResponse.json({ ok: true }, { status: 201 }) } catch { return NextResponse.json({ error: 'Invalid request.' }, { status: 400 }) } }

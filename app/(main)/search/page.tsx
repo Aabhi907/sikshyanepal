@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense, useMemo } from 'react'
+import { useState, useEffect, useCallback, Suspense, useMemo, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search, Building2, BookOpen, Newspaper, FileText, GraduationCap, Award, School, CalendarCheck2 } from 'lucide-react'
@@ -70,6 +70,7 @@ function SearchPageInner() {
   const [inputVal, setInputVal] = useState(initialQ)
   const [data, setData] = useState<SearchResults | null>(null)
   const [loading, setLoading] = useState(false)
+  const tracked = useRef('')
   const smart = useMemo(() => smartCollegeSearch(query), [query])
 
   const runSearch = useCallback(async (q: string) => {
@@ -96,6 +97,7 @@ function SearchPageInner() {
     ? data.admissions.length + data.schools.length + data.colleges.length + data.programs.length + data.news.length +
       data.notices.length + data.results.length + data.scholarships.length
     : 0
+  useEffect(() => { if (!loading && query && data && tracked.current !== query) { tracked.current = query; void fetch('/api/events/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, result_count: totalResults }) }) } }, [data, loading, query, totalResults])
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

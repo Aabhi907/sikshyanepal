@@ -6,6 +6,7 @@ const checks = [
   ['schools', 'School directory'], ['admissions', 'Admissions engine'], ['content_sources', 'Source registry'],
   ['content_ingestion_items', 'Editorial ingestion queue'], ['profiles', 'Role-based accounts'], ['programs', 'Program discovery'],
   ['institution_claims', 'Institution claims'], ['review_verifications', 'Verified reviews'], ['admission_deadline_history', 'Deadline history'], ['review_responses', 'Institution review responses'],
+  ['search_events', 'Search insights'],
 ] as const
 
 export async function GET() {

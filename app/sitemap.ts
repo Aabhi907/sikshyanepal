@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase'
+import { careers } from '@/lib/careers'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sikshyanepal.vercel.app'
 
@@ -118,6 +119,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority:        0.8,
     },
     {
+      url:             `${BASE_URL}/careers`,
+      lastModified:    now,
+      changeFrequency: 'monthly',
+      priority:        0.8,
+    },
+    {
       url:             `${BASE_URL}/compare`,
       lastModified:    now,
       changeFrequency: 'weekly',
@@ -180,6 +187,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'monthly' as const,
     priority:        0.6,
   }))
+
+  const careerRoutes: MetadataRoute.Sitemap = careers.map((career) => ({
+    url: `${BASE_URL}/careers/${career.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }))
   const programCollegeRoutes: MetadataRoute.Sitemap = (programs.data ?? []).map((p) => ({ url: `${BASE_URL}/colleges/program/${p.slug}`, lastModified: new Date(p.created_at), changeFrequency: 'weekly' as const, priority: 0.75 }))
   const locationRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/colleges/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
   const schoolDistrictRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/schools/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
@@ -196,6 +210,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...noticeRoutes,
     ...newsRoutes,
     ...programRoutes,
+    ...careerRoutes,
     ...programCollegeRoutes,
     ...locationRoutes,
     ...schoolDistrictRoutes,

@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order('updated_at', { ascending: false }),
     supabase
       .from('schools')
-      .select('slug, updated_at')
+      .select('slug, updated_at, district')
       .eq('status', 'active')
       .order('updated_at', { ascending: false }),
     supabase
@@ -158,6 +158,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
   const programCollegeRoutes: MetadataRoute.Sitemap = (programs.data ?? []).map((p) => ({ url: `${BASE_URL}/colleges/program/${p.slug}`, lastModified: new Date(p.created_at), changeFrequency: 'weekly' as const, priority: 0.75 }))
   const locationRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/colleges/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
+  const schoolDistrictRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/schools/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
 
   return [
     ...staticRoutes,
@@ -170,5 +171,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...programRoutes,
     ...programCollegeRoutes,
     ...locationRoutes,
+    ...schoolDistrictRoutes,
   ]
 }

@@ -50,6 +50,7 @@ const navLinks = [
     sub: [
       { label: 'SEE & NEB GPA Calculator', href: '/tools/gpa-calculator' },
       { label: 'College Cost Calculator', href: '/tools/college-cost-calculator' },
+      { label: 'College Finder', href: '/tools/college-finder' },
     ],
   },
   { label: 'Scholarships', href: '/scholarships' },

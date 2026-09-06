@@ -52,6 +52,7 @@ const navLinks = [
       { label: 'College Cost Calculator', href: '/tools/college-cost-calculator' },
       { label: 'College Finder', href: '/tools/college-finder' },
       { label: 'Admission Checklist', href: '/tools/admission-checklist' },
+      { label: 'Program Finder Quiz', href: '/tools/program-finder' },
     ],
   },
   { label: 'Scholarships', href: '/scholarships' },

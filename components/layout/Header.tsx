@@ -24,6 +24,7 @@ const navLinks = [
   { label: 'Admissions', href: '/admissions', sub: [
     { label: 'All Admissions', href: '/admissions' },
     { label: 'Admission Status', href: '/admissions/status' },
+    { label: 'Admission Planner', href: '/admissions/planner' },
     { label: 'School Admissions', href: '/admissions?institution=school' },
     { label: 'College Admissions', href: '/admissions?institution=college' },
   ] },

@@ -15,6 +15,7 @@ const navLinks = [
       { label: 'Verified Schools',  href: '/schools?verified=true' },
       { label: 'Secondary Schools', href: '/schools?level=secondary' },
       { label: 'Community Schools', href: '/schools?ownership=community' },
+      { label: 'Schools Near Me', href: '/schools/nearby' },
     ],
   },
   { label: 'Admissions',   href: '/admissions' },

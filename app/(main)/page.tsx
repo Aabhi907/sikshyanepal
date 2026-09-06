@@ -12,6 +12,7 @@ import type { Admission } from '@/types'
 import AdmissionCard from '@/components/admissions/AdmissionCard'
 import {
   Building2,
+  School,
   FileText,
   Bell,
   Newspaper,
@@ -226,6 +227,11 @@ export default async function HomePage() {
 
               {/* Search */}
               <HeroSearch />
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <Link href="/tools/school-finder" className="group rounded-2xl border border-blue-100 bg-blue-50 p-4 transition hover:border-primary hover:bg-blue-100"><div className="flex items-start gap-3"><div className="rounded-xl bg-white p-2 shadow-sm"><School className="h-5 w-5 text-primary" /></div><div><p className="font-bold text-ink">Finding a school?</p><p className="mt-1 text-xs leading-5 text-gray-600">ECD to Grade 10 for parents and guardians.</p><span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary">Use School Finder <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" /></span></div></div></Link>
+                <Link href="/tools/college-finder" className="group rounded-2xl border border-indigo-100 bg-indigo-50 p-4 transition hover:border-primary hover:bg-indigo-100"><div className="flex items-start gap-3"><div className="rounded-xl bg-white p-2 shadow-sm"><GraduationCap className="h-5 w-5 text-indigo-700" /></div><div><p className="font-bold text-ink">Finding a college?</p><p className="mt-1 text-xs leading-5 text-gray-600">+2, Bachelor, Master, diploma and higher.</p><span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary">Use College Finder <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" /></span></div></div></Link>
+              </div>
             </div>
 
             {/* ── Right column (40%) — live updates card ─ */}

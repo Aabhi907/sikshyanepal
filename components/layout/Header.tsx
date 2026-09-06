@@ -75,6 +75,7 @@ const navLinks = [
     label: 'Saved',
     href: '/account/saved',
     sub: [
+      { label: 'My Path', href: '/my-path' },
       { label: 'Saved colleges', href: '/account/saved' },
       { label: 'Saved schools', href: '/account/saved-schools' },
     ],

@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 
 const shortcuts = [
   ['Find a school', '/tools/school-finder'], ['Find a college', '/tools/college-finder'], ['Admissions open', '/admissions/status'],
-  ['Check results', '/results'], ['Scholarships', '/scholarships'], ['Latest notices', '/notices'],
+  ['My Path', '/my-path'], ['Check results', '/results'], ['Scholarships', '/scholarships'], ['Latest notices', '/notices'],
 ]
 
 export default function GlobalSearch() {

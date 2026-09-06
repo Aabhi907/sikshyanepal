@@ -10,7 +10,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   const body = await request.json()
   if (!body.title?.trim() || !body.institution_name?.trim() || !body.source_name?.trim() || !/^https?:\/\//.test(body.source_url || '')) return NextResponse.json({ error: 'Title, institution and a valid source are required.' }, { status: 400 })
   if (!validLevel(body)) return NextResponse.json({ error: 'Schools may only use ECD/Grade 1–10 or SEE. +2 and higher admissions belong to colleges.' }, { status: 400 })
-  if (body.is_sponsored && !body.sponsor_label?.trim()) return NextResponse.json({ error: 'Sponsored admissions require a visible sponsor label.' }, { status: 400 })
+  if (body.is_sponsored && (!body.sponsor_label?.trim() || !/(sponsored|paid)/i.test(body.sponsor_label))) return NextResponse.json({ error: 'Paid placements require a visible label containing “Sponsored” or “Paid”.' }, { status: 400 })
   const db = createAdminSupabaseClient()
   const { data: existing, error: existingError } = await db.from('admissions').select('application_deadline,source_url').eq('id', params.id).single()
   if (existingError || !existing) return NextResponse.json({ error: 'Admission not found.' }, { status: 404 })

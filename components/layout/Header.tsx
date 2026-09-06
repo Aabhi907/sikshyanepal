@@ -27,6 +27,7 @@ const navLinks = [
       { label: 'Bachelor Colleges', href: '/colleges?level=bachelor' },
       { label: 'Master Colleges',  href: '/colleges?level=master' },
       { label: 'Compare Colleges', href: '/compare' },
+      { label: 'Colleges Near Me', href: '/colleges/nearby' },
       { label: 'Reviews',          href: '/colleges?tab=reviews' },
       { label: 'Scholarships',     href: '/scholarships' },
     ],

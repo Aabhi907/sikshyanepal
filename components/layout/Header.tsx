@@ -21,7 +21,12 @@ const navLinks = [
       { label: 'Schools Near Me', href: '/schools/nearby' },
     ],
   },
-  { label: 'Admissions',   href: '/admissions' },
+  { label: 'Admissions', href: '/admissions', sub: [
+    { label: 'All Admissions', href: '/admissions' },
+    { label: 'Admission Status', href: '/admissions/status' },
+    { label: 'School Admissions', href: '/admissions?institution=school' },
+    { label: 'College Admissions', href: '/admissions?institution=college' },
+  ] },
   {
     label: 'Colleges',
     href: '/colleges',

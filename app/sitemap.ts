@@ -58,6 +58,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority:        0.9,
     },
     {
+      url:             `${BASE_URL}/admissions/status`,
+      lastModified:    now,
+      changeFrequency: 'daily',
+      priority:        0.8,
+    },
+    {
       url:             `${BASE_URL}/schools/compare`,
       lastModified:    now,
       changeFrequency: 'weekly',

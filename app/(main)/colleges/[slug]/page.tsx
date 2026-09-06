@@ -27,6 +27,7 @@ import type { College, CollegeProgram, Review } from "@/types";
 import VerificationBadge from "@/components/institutions/VerificationBadge";
 import ReportCorrectionForm from "@/components/institutions/ReportCorrectionForm";
 import AdmissionCard from "@/components/admissions/AdmissionCard";
+import ShareButton from "@/components/ui/ShareButton";
 import type { Admission } from "@/types";
 
 // Affiliation → gradient config
@@ -279,7 +280,7 @@ export default async function CollegeProfilePage({
             <h1 className="text-2xl font-bold text-ink leading-tight">
               {college.name}
             </h1>
-            <div className="mt-3"><SaveCollegeButton collegeId={college.id} /></div>
+            <div className="mt-3 flex flex-wrap gap-2"><SaveCollegeButton collegeId={college.id} /><ShareButton title={`${college.name} | SikshyaNepal`} /></div>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <VerificationBadge status={college.verification_status} />
               {college.affiliation && (

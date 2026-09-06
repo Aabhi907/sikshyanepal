@@ -9,6 +9,7 @@ import type { School } from '@/types'
 import type { Admission } from '@/types'
 import AdmissionCard from '@/components/admissions/AdmissionCard'
 import SaveSchoolButton from '@/components/schools/SaveSchoolButton'
+import ShareButton from '@/components/ui/ShareButton'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -89,7 +90,7 @@ export default async function SchoolProfilePage({ params }: { params: { slug: st
         </main>
 
         <aside className="space-y-5">
-          <SaveSchoolButton schoolId={school.id} />
+          <div className="flex flex-wrap gap-2"><SaveSchoolButton schoolId={school.id} /><ShareButton title={`${school.name} | SikshyaNepal`} /></div>
           <Link href={`/schools/compare?school1=${school.slug}`} className="flex items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-bold text-primary hover:bg-blue-100">Compare this school</Link>
           <section className="rounded-2xl border border-gray-200 bg-white p-5"><h2 className="font-bold text-ink">Quick information</h2><dl className="mt-4 space-y-4 text-sm">{school.iemis_code && <div><dt className="text-xs text-gray-400">IEMIS code</dt><dd className="mt-1 font-mono font-semibold text-ink">{school.iemis_code}</dd></div>}<div><dt className="text-xs text-gray-400">Location</dt><dd className="mt-1 font-semibold text-ink">{address}</dd></div>{school.principal_name && <div><dt className="text-xs text-gray-400">Principal</dt><dd className="mt-1 font-semibold text-ink">{school.principal_name}</dd></div>}{school.medium_of_instruction?.length ? <div><dt className="text-xs text-gray-400">Medium</dt><dd className="mt-1 font-semibold text-ink">{school.medium_of_instruction.join(', ')}</dd></div> : null}</dl></section>
           <section className="rounded-2xl border border-gray-200 bg-white p-5"><h2 className="font-bold text-ink">Contact school</h2><div className="mt-4 space-y-2">{school.phone && <a href={`tel:${school.phone}`} className="flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white"><Phone className="h-4 w-4" />{school.phone}</a>}{school.email && <a href={`mailto:${school.email}`} className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-ink"><Mail className="h-4 w-4 text-primary" />Email school</a>}{school.website && <a href={school.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-ink"><ExternalLink className="h-4 w-4 text-primary" />Official website</a>}</div>{!school.phone && !school.email && !school.website && <p className="mt-3 text-sm leading-relaxed text-gray-500">Verified contact details have not been added yet. You can report official details using the correction form.</p>}</section>

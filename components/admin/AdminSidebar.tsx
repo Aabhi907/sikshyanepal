@@ -25,6 +25,7 @@ import {
   MessageSquare,
   Database,
   BarChart3,
+  Megaphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -32,6 +33,7 @@ const navItems = [
   { label: 'Dashboard',        href: '/admin',                  icon: LayoutDashboard },
   { label: 'System Status',    href: '/admin/system-status',    icon: Database },
   { label: 'Search Insights',  href: '/admin/search-insights',  icon: BarChart3 },
+  { label: 'Announcements',    href: '/admin/announcements',    icon: Megaphone },
   { label: 'Schools',          href: '/admin/schools',          icon: School },
   { label: 'Data Corrections', href: '/admin/corrections',      icon: Flag, pending: true },
   { label: 'Admissions',       href: '/admin/admissions',       icon: CalendarCheck2, revenue: true },

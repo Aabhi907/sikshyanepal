@@ -3,11 +3,13 @@ import Footer from '@/components/layout/Footer'
 import SubscribeButton from '@/components/notifications/SubscribeButton'
 import MobileQuickNav from '@/components/layout/MobileQuickNav'
 import GlobalSearch from '@/components/layout/GlobalSearch'
+import SiteAnnouncement from '@/components/layout/SiteAnnouncement'
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
+      <SiteAnnouncement />
       <main className="min-h-screen bg-gray-50 pb-16 lg:pb-0">{children}</main>
       <Footer />
       <MobileQuickNav />

@@ -215,6 +215,11 @@ export interface Review {
   administration_rating?: number | null
   value_rating?: number | null
   placement_rating?: number | null
+  attendance_rating?: number | null
+  safety_rating?: number | null
+  internship_support_rating?: number | null
+  hidden_costs_reported?: boolean
+  hostel_transport_note?: string | null
   verification_status?: 'unverified' | 'submitted' | 'verified' | 'rejected'
   created_at: string
   college?: College

@@ -24,6 +24,11 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
     administration_rating: 0,
     value_rating: 0,
     placement_rating: 0,
+    attendance_rating: 0,
+    safety_rating: 0,
+    internship_support_rating: 0,
+    hidden_costs_reported: false,
+    hostel_transport_note: '',
     evidence_url: '',
   })
   const [hoverRating, setHoverRating] = useState(0)
@@ -164,6 +169,15 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
             ['teaching_rating', 'Teaching'], ['facilities_rating', 'Facilities'], ['administration_rating', 'Administration'], ['value_rating', 'Value for money'], ['placement_rating', 'Career / placement support'],
           ].map(([field, label]) => <div key={field} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2"><span className="text-xs font-medium text-gray-600">{label}</span><div className="flex">{[1, 2, 3, 4, 5].map(star => <button key={star} type="button" onClick={() => set(field, star)} aria-label={`${label}: ${star} stars`}><Star className={`h-4 w-4 ${star <= (form[field as keyof typeof form] as number) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} /></button>)}</div></div>)}
         </div>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 p-4">
+        <p className="text-sm font-semibold text-gray-700">Student reality <span className="font-normal text-gray-400">(optional, reviewed before publishing)</span></p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">{[
+          ['attendance_rating', 'Attendance support'], ['safety_rating', 'Campus safety'], ['internship_support_rating', 'Internship support'],
+        ].map(([field, label]) => <label key={field} className="text-xs font-medium text-gray-600">{label}<select value={form[field as keyof typeof form] as number} onChange={(event) => set(field, Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"><option value="0">Not sure</option>{[1,2,3,4,5].map(value => <option key={value} value={value}>{value}/5</option>)}</select></label>)}</div>
+        <label className="mt-3 flex items-start gap-2 text-xs leading-5 text-gray-600"><input type="checkbox" checked={form.hidden_costs_reported} onChange={(event) => set('hidden_costs_reported', event.target.checked ? 1 : 0)} className="mt-1"/>I experienced costs that were not clear before joining.</label>
+        <textarea value={form.hostel_transport_note} onChange={(event) => set('hostel_transport_note', event.target.value)} rows={2} maxLength={300} placeholder="Optional: share a practical hostel, transport or accessibility note. Do not name private individuals." className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
       </div>
 
       <div>

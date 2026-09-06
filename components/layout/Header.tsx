@@ -44,6 +44,7 @@ const navLinks = [
   { label: 'Results',      href: '/results' },
   { label: 'Notices',      href: '/notices' },
   { label: 'News',         href: '/news' },
+  { label: 'GPA Calculator', href: '/tools/gpa-calculator' },
   { label: 'Scholarships', href: '/scholarships' },
   { label: 'Claim Profile', href: '/account/claim' },
   { label: 'Saved', href: '/account/saved' },

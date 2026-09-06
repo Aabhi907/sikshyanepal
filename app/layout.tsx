@@ -22,12 +22,12 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
-const BASE_URL = 'https://sikshyanepal.vercel.app'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sikshyanepal.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "SikshyaNepal - Nepal's #1 Education Portal",
+    default: 'SikshyaNepal – Nepal Education Information Platform',
     template: '%s | SikshyaNepal',
   },
   description:
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     locale: 'en_NP',
     url: BASE_URL,
     siteName: 'SikshyaNepal',
-    title: "SikshyaNepal - Nepal's #1 Education Portal",
+    title: 'SikshyaNepal – Nepal Education Information Platform',
     description:
       'Find colleges, university programs, exam results, notices, scholarships, and education news in Nepal.',
     images: [
@@ -82,9 +82,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'add-your-google-verification-here',
-  },
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } : undefined,
   alternates: {
     canonical: BASE_URL,
   },
@@ -96,6 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} font-sans antialiased`}>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@graph': [{ '@type': 'WebSite', '@id': `${BASE_URL}/#website`, url: BASE_URL, name: 'SikshyaNepal', description: 'Verified education information for Nepal.', inLanguage: ['en', 'ne'], potentialAction: { '@type': 'SearchAction', target: `${BASE_URL}/search?q={search_term_string}`, 'query-input': 'required name=search_term_string' } }, { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal', url: BASE_URL, logo: `${BASE_URL}/og-image.png`, email: 'info@sikshyanepal.com', areaServed: { '@type': 'Country', name: 'Nepal' } }] }).replace(/</g, '\\u003c') }} />
         {children}
 
         {/* ── Google AdSense ─────────────────────────────── */}

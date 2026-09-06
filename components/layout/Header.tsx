@@ -52,6 +52,7 @@ const navLinks = [
       { label: 'Medical',        href: '/programs?faculty=medical' },
       { label: 'Career Explorer', href: '/careers' },
       { label: 'Skills & Opportunities', href: '/opportunities' },
+      { label: 'Student Wellbeing', href: '/wellbeing' },
     ],
   },
   { label: 'Results',      href: '/results' },

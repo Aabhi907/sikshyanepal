@@ -16,6 +16,7 @@ const navLinks = [
       { label: 'Secondary Schools', href: '/schools?level=secondary' },
       { label: 'Community Schools', href: '/schools?ownership=community' },
       { label: 'School Finder', href: '/tools/school-finder' },
+      { label: 'Add a School', href: '/submit-school' },
       { label: 'Compare Schools', href: '/schools/compare' },
       { label: 'Schools Near Me', href: '/schools/nearby' },
     ],

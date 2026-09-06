@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search, Building2, BookOpen, Newspaper, FileText, GraduationCap, Award, School, CalendarCheck2 } from 'lucide-react'
@@ -45,6 +45,22 @@ async function fetchAll(q: string): Promise<SearchResults> {
   }
 }
 
+function smartCollegeSearch(query: string) {
+  const text = query.toLowerCase()
+  const params = new URLSearchParams()
+  const matched: string[] = []
+  const programs: Record<string, string> = { 'bsc csit': 'bsc-csit', csit: 'bsc-csit', bca: 'bca', bba: 'bba', bbs: 'bbs', bit: 'bit', mbbs: 'mbbs' }
+  for (const [phrase, slug] of Object.entries(programs)) if (text.includes(phrase)) { params.set('program', slug); matched.push(phrase.toUpperCase()); break }
+  const faculty: Record<string, string> = { 'it': 'IT', 'engineering': 'Engineering', 'management': 'Management', 'medical': 'Medical', 'nursing': 'Nursing', 'law': 'Law', 'science': 'Science' }
+  for (const [phrase, value] of Object.entries(faculty)) if (new RegExp(`\\b${phrase}\\b`).test(text)) { params.set('faculty', value); matched.push(value); break }
+  if (text.includes('master')) { params.set('level', 'master'); matched.push('Master') } else if (text.includes('bachelor') || text.includes('undergraduate')) { params.set('level', 'bachelor'); matched.push('Bachelor') } else if (text.includes('+2') || text.includes('plus two')) { params.set('level', '+2'); matched.push('+2') }
+  for (const location of ['kathmandu', 'lalitpur', 'bhaktapur', 'pokhara', 'chitwan', 'biratnagar', 'butwal']) if (text.includes(location)) { params.set('location', location.charAt(0).toUpperCase() + location.slice(1)); matched.push(location.charAt(0).toUpperCase() + location.slice(1)); break }
+  const budget = text.match(/(?:under|below|less than)\s*(?:npr\s*)?(\d+(?:\.\d+)?)\s*(lakh|lakhs|crore|crores)/)
+  if (budget) { const amount = Number(budget[1]) * (budget[2].startsWith('crore') ? 10_000_000 : 100_000); params.set('maxFee', String(amount)); matched.push(`under NPR ${amount.toLocaleString('en-NP')}`) }
+  if (text.includes('scholarship')) { params.set('scholarship', 'true'); matched.push('scholarship available') }
+  return matched.length ? { href: `/colleges?${params.toString()}`, matched } : null
+}
+
 function SearchPageInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -54,6 +70,7 @@ function SearchPageInner() {
   const [inputVal, setInputVal] = useState(initialQ)
   const [data, setData] = useState<SearchResults | null>(null)
   const [loading, setLoading] = useState(false)
+  const smart = useMemo(() => smartCollegeSearch(query), [query])
 
   const runSearch = useCallback(async (q: string) => {
     if (!q.trim()) { setData(null); return }
@@ -102,6 +119,8 @@ function SearchPageInner() {
           </button>
         </form>
       </div>
+
+      {smart && <Link href={smart.href} className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 transition hover:border-primary"><div><p className="text-sm font-bold text-blue-950">Use smart college filters</p><p className="mt-1 text-sm text-blue-800">Recognised: {smart.matched.join(' · ')}. Open the directory with these filters applied.</p></div><span className="rounded-lg bg-primary px-3 py-2 text-sm font-bold text-white">Explore colleges</span></Link>}
 
       {/* Status */}
       {loading && (

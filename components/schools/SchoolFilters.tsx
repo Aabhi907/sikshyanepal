@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import { Filter, Search, X } from 'lucide-react'
+import { useState } from 'react'
 
 export type SchoolSearchParams = {
   q?: string
@@ -23,16 +26,17 @@ export default function SchoolFilters({
   districts: string[]
   resultCount: number
 }) {
+  const [mobileOpen, setMobileOpen] = useState(false)
   const hasFilters = Object.values(searchParams).some(Boolean)
   const field = 'h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10'
 
   return (
     <aside className="rounded-2xl border border-gray-200 bg-white p-5 lg:sticky lg:top-24">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="flex items-center justify-between lg:mb-5">
         <div className="flex items-center gap-2"><Filter className="h-4 w-4 text-primary" /><h2 className="text-sm font-bold text-ink">Find a school</h2></div>
-        {hasFilters && <Link href="/schools" className="flex items-center gap-1 text-xs font-semibold text-red-500"><X className="h-3 w-3" />Clear</Link>}
+        <div className="flex items-center gap-3">{hasFilters && <Link href="/schools" className="flex items-center gap-1 text-xs font-semibold text-red-500"><X className="h-3 w-3" />Clear</Link>}<button type="button" onClick={() => setMobileOpen(value => !value)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-primary lg:hidden">{mobileOpen ? 'Hide filters' : 'Filters'}</button></div>
       </div>
-      <form action="/schools" method="get" className="space-y-4">
+      <form action="/schools" method="get" className={`mt-5 space-y-4 ${mobileOpen ? 'block' : 'hidden'} lg:block lg:mt-0`}>
         <label className="block">
           <span className="mb-1.5 block text-xs font-semibold text-gray-500">School name</span>
           <span className="relative block">

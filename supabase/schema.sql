@@ -286,7 +286,13 @@ CREATE TABLE IF NOT EXISTS content_sources (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), name TEXT NOT NULL UNIQUE,
   base_url TEXT NOT NULL, source_type TEXT NOT NULL DEFAULT 'official',
   is_active BOOLEAN NOT NULL DEFAULT TRUE, requires_review BOOLEAN NOT NULL DEFAULT TRUE,
-  last_checked_at TIMESTAMPTZ, last_success_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  last_checked_at TIMESTAMPTZ, last_success_at TIMESTAMPTZ, organization TEXT,
+  trust_level SMALLINT NOT NULL DEFAULT 80 CHECK (trust_level BETWEEN 0 AND 100),
+  permitted_targets TEXT[] NOT NULL DEFAULT ARRAY['news', 'notice', 'result'],
+  fetch_frequency_minutes INTEGER, parsing_config JSONB NOT NULL DEFAULT '{}'::jsonb,
+  robots_reviewed_at TIMESTAMPTZ, terms_reviewed_at TIMESTAMPTZ,
+  consecutive_failures INTEGER NOT NULL DEFAULT 0 CHECK (consecutive_failures >= 0),
+  last_failure_at TIMESTAMPTZ, last_error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE TABLE IF NOT EXISTS content_ingestion_items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), source_id UUID REFERENCES content_sources(id) ON DELETE SET NULL,

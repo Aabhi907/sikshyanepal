@@ -189,7 +189,7 @@ class BaseScraper:
         try:
             self.supabase.table("content_ingestion_items").insert(row).execute()
             if source_id:
-                self.supabase.table("content_sources").update({"last_success_at": datetime.now().isoformat()}).eq("id", source_id).execute()
+                self.supabase.table("content_sources").update({"last_success_at": datetime.now().isoformat(), "consecutive_failures": 0, "last_error": None}).eq("id", source_id).execute()
             self.logger.info(f"Queued for editorial review: {title[:80]}")
             self.inserted += 1
             return True
@@ -277,7 +277,28 @@ class BaseScraper:
             return BeautifulSoup(resp.text, "lxml")
         except Exception as e:
             self.logger.warning(f"fetch_page failed [{url}]: {e}")
+            self._mark_source_failure(url, str(e))
             return None
+
+    def _mark_source_failure(self, url: str, error: str) -> None:
+        """Record source health without allowing an observability failure to stop a scraper."""
+        try:
+            parsed = urlparse(url)
+            source = self.supabase.table("content_sources").upsert({
+                "name": self.name,
+                "base_url": f"{parsed.scheme}://{parsed.netloc}",
+                "source_type": "official",
+                "last_checked_at": datetime.now().isoformat(),
+            }, on_conflict="name").execute()
+            if source.data:
+                row = source.data[0]
+                self.supabase.table("content_sources").update({
+                    "consecutive_failures": int(row.get("consecutive_failures") or 0) + 1,
+                    "last_failure_at": datetime.now().isoformat(),
+                    "last_error": error[:1000],
+                }).eq("id", row["id"]).execute()
+        except Exception as health_error:
+            self.logger.debug(f"Could not record source failure: {health_error}")
 
     # ------------------------------------------------------------------
     # Helpers

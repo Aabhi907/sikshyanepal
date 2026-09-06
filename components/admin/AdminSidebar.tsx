@@ -21,6 +21,7 @@ import {
   UserCheck,
   ScrollText,
   BookOpen,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +31,7 @@ const navItems = [
   { label: 'Data Corrections', href: '/admin/corrections',      icon: Flag, pending: true },
   { label: 'Admissions',       href: '/admin/admissions',       icon: CalendarCheck2, revenue: true },
   { label: 'Content Queue',    href: '/admin/ingestion',        icon: Inbox, pending: true },
+  { label: 'Source Health',    href: '/admin/sources',          icon: Activity },
   { label: 'Profile Claims',   href: '/admin/claims',           icon: UserCheck, pending: true },
   { label: 'Audit Log',        href: '/admin/audit',            icon: ScrollText },
   { label: 'Colleges',         href: '/admin/colleges',         icon: Building2 },

@@ -53,6 +53,11 @@
     }
   }
 
+  /* Keep the information hierarchy usable when a browser requests lower data use. */
+  @media (prefers-reduced-data: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
   ::selection {
     background: #1e429f;
     color: #ffffff;

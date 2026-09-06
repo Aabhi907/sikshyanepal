@@ -335,7 +335,26 @@ CREATE TABLE IF NOT EXISTS reviews (
   program TEXT,
   year INTEGER,
   is_approved BOOLEAN DEFAULT FALSE,
+  teaching_rating SMALLINT CHECK (teaching_rating BETWEEN 1 AND 5),
+  facilities_rating SMALLINT CHECK (facilities_rating BETWEEN 1 AND 5),
+  administration_rating SMALLINT CHECK (administration_rating BETWEEN 1 AND 5),
+  value_rating SMALLINT CHECK (value_rating BETWEEN 1 AND 5),
+  placement_rating SMALLINT CHECK (placement_rating BETWEEN 1 AND 5),
+  verification_status TEXT NOT NULL DEFAULT 'unverified' CHECK (verification_status IN ('unverified', 'submitted', 'verified', 'rejected')),
+  moderated_at TIMESTAMPTZ,
+  moderated_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS review_verifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  review_id UUID NOT NULL UNIQUE REFERENCES reviews(id) ON DELETE CASCADE,
+  evidence_url TEXT,
+  evidence_notes TEXT,
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by UUID REFERENCES auth.users(id),
+  reviewer_notes TEXT
 );
 
 -- ============================================================
@@ -424,6 +443,7 @@ CREATE INDEX IF NOT EXISTS idx_notices_published ON notices(published_date DESC)
 CREATE INDEX IF NOT EXISTS idx_news_published ON news(published_date DESC);
 CREATE INDEX IF NOT EXISTS idx_reviews_college ON reviews(college_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_approved ON reviews(is_approved);
+CREATE INDEX IF NOT EXISTS idx_reviews_verification_status ON reviews(verification_status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_scholarships_college ON scholarships(college_id);
 CREATE INDEX IF NOT EXISTS idx_college_programs_college ON college_programs(college_id);
 CREATE INDEX IF NOT EXISTS idx_college_programs_program ON college_programs(program_id);
@@ -442,6 +462,7 @@ ALTER TABLE results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE review_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scholarships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE syllabus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE old_questions ENABLE ROW LEVEL SECURITY;

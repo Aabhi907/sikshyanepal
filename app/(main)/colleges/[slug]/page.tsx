@@ -15,6 +15,7 @@ import {
   Calendar,
   GraduationCap,
   ExternalLink,
+  BadgeCheck,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import ReviewForm from "@/components/colleges/ReviewForm";
@@ -464,7 +465,7 @@ export default async function CollegeProfilePage({
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
                         <p className="font-medium text-gray-800 text-sm">
-                          {review.student_name}
+                          <span className="inline-flex items-center gap-1">{review.student_name}{review.verification_status === 'verified' && <><BadgeCheck className="h-3.5 w-3.5 text-blue-600" /><span className="text-[10px] font-bold uppercase tracking-wide text-blue-700">Verified student</span></>}</span>
                         </p>
                         {review.program && (
                           <p className="text-xs text-gray-500">
@@ -484,6 +485,7 @@ export default async function CollegeProfilePage({
                     <p className="text-sm text-gray-600">
                       {review.review_text}
                     </p>
+                    {Object.entries({ Teaching: review.teaching_rating, Facilities: review.facilities_rating, Administration: review.administration_rating, Value: review.value_rating, Placement: review.placement_rating }).some(([, value]) => value != null) && <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500">{Object.entries({ Teaching: review.teaching_rating, Facilities: review.facilities_rating, Administration: review.administration_rating, Value: review.value_rating, Placement: review.placement_rating }).filter(([, value]) => value != null).map(([label, value]) => <span key={label} className="rounded-full bg-gray-100 px-2 py-1">{label} {value}/5</span>)}</div>}
                   </div>
                 ))}
               </div>

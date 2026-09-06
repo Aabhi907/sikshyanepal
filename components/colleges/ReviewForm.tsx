@@ -19,6 +19,12 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
     year:         '',
     rating:       0,
     review_text:  '',
+    teaching_rating: 0,
+    facilities_rating: 0,
+    administration_rating: 0,
+    value_rating: 0,
+    placement_rating: 0,
+    evidence_url: '',
   })
   const [hoverRating, setHoverRating] = useState(0)
   const [submitting,  setSubmitting]  = useState(false)
@@ -58,10 +64,10 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
       const res = await fetch('/api/reviews', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
+      body:    JSON.stringify({
           ...form,
           college_id: collegeId,
-          year: form.year ? parseInt(form.year, 10) : null,
+        year: form.year ? parseInt(form.year, 10) : null,
         }),
       })
 
@@ -111,6 +117,7 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
           </div>
         </div>
       </div>
+
     )
   }
 
@@ -148,6 +155,21 @@ export default function ReviewForm({ collegeId, collegeName }: ReviewFormProps) 
             </span>
           )}
         </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-medium text-gray-700 mb-2">Rate specific areas <span className="font-normal text-gray-400">(optional)</span></p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            ['teaching_rating', 'Teaching'], ['facilities_rating', 'Facilities'], ['administration_rating', 'Administration'], ['value_rating', 'Value for money'], ['placement_rating', 'Career / placement support'],
+          ].map(([field, label]) => <div key={field} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2"><span className="text-xs font-medium text-gray-600">{label}</span><div className="flex">{[1, 2, 3, 4, 5].map(star => <button key={star} type="button" onClick={() => set(field, star)} aria-label={`${label}: ${star} stars`}><Star className={`h-4 w-4 ${star <= (form[field as keyof typeof form] as number) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} /></button>)}</div></div>)}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Optional student-status evidence URL</label>
+        <input type="url" value={form.evidence_url} onChange={(e) => set('evidence_url', e.target.value)} placeholder="A private drive link, student portal image, or official record" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <p className="mt-1 text-xs leading-5 text-gray-400">Only moderators can view this. It is never displayed on your public review. Do not include passwords, citizenship numbers, or other sensitive information.</p>
       </div>
 
       {/* Name + Program */}

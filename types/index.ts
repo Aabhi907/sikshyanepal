@@ -210,6 +210,12 @@ export interface Review {
   program: string | null
   year: number | null
   is_approved: boolean
+  teaching_rating?: number | null
+  facilities_rating?: number | null
+  administration_rating?: number | null
+  value_rating?: number | null
+  placement_rating?: number | null
+  verification_status?: 'unverified' | 'submitted' | 'verified' | 'rejected'
   created_at: string
   college?: College
 }

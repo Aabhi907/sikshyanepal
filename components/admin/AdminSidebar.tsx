@@ -39,6 +39,7 @@ const navItems = [
   { label: 'Data Corrections', href: '/admin/corrections',      icon: Flag, pending: true },
   { label: 'Admissions',       href: '/admin/admissions',       icon: CalendarCheck2, revenue: true },
   { label: 'Entrance Exams',   href: '/admin/entrance-exams',   icon: CalendarClock },
+  { label: 'Opportunities',    href: '/admin/opportunities',    icon: Send },
   { label: 'Content Queue',    href: '/admin/ingestion',        icon: Inbox, pending: true },
   { label: 'Source Health',    href: '/admin/sources',          icon: Activity },
   { label: 'Profile Claims',   href: '/admin/claims',           icon: UserCheck, pending: true },

@@ -44,14 +44,14 @@ export default function AdminLoginPage() {
             <GraduationCap className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">SikshyaNepal Admin</h1>
-          <p className="text-gray-400 mt-1">Sign in to manage content</p>
+          <p className="text-gray-400 mt-1">Private access for the site owner</p>
         </div>
 
         <div className="bg-gray-800 rounded-2xl border border-gray-700 p-8">
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-              <div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="editor@example.com" autoComplete="email" className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" required /></div>
+              <div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Owner email" autoComplete="email" className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" required /></div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>

@@ -5,6 +5,11 @@ import { createAdminSupabaseClient } from '@/lib/supabase'
 export type UserRole = 'user' | 'representative' | 'reviewer' | 'editor' | 'owner'
 export const STAFF_ROLES: UserRole[] = ['reviewer', 'editor', 'owner']
 
+export function isAdminEmail(email: string | null | undefined) {
+  const configuredEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase()
+  return Boolean(configuredEmail && email?.trim().toLowerCase() === configuredEmail)
+}
+
 export function createAuthClient() {
   const store = cookies()
   return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder', {
@@ -22,7 +27,7 @@ export async function getAuthContext() {
 
 export async function isStaff(roles: UserRole[] = STAFF_ROLES) {
   const auth = await getAuthContext()
-  return Boolean(auth && roles.includes(auth.profile.role))
+  return Boolean(auth && isAdminEmail(auth.user.email) && auth.profile.role === 'owner' && roles.includes(auth.profile.role))
 }
 
 export async function writeAudit(action: string, entityType: string, entityId?: string, metadata: Record<string, unknown> = {}) {

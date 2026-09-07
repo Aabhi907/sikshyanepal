@@ -12,7 +12,8 @@ export async function middleware(request: NextRequest) {
     let allowed = Boolean(user)
     if (allowed && pathname.startsWith('/admin')) {
       const { data: profile } = await client.from('profiles').select('role,status').eq('id', user!.id).single()
-      allowed = profile?.status === 'active' && ['reviewer', 'editor', 'owner'].includes(profile.role)
+      const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase()
+      allowed = Boolean(adminEmail && user?.email?.trim().toLowerCase() === adminEmail && profile?.status === 'active' && profile.role === 'owner')
     }
     if (!allowed) {
       return NextResponse.redirect(new URL(pathname.startsWith('/admin') ? '/admin/login' : '/account/login', request.url))

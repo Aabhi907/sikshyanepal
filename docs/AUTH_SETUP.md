@@ -3,7 +3,7 @@
 Apply `20260907_role_auth_and_claims.sql` after the earlier migrations.
 
 1. In Supabase Authentication, enable Email/password. For production, keep email confirmation enabled.
-2. Register the first account at `/account/register`.
+2. Create the owner account in Supabase Authentication or register it at `/account/register`.
 3. In Supabase SQL Editor, promote only the trusted owner account:
 
 ```sql
@@ -12,9 +12,10 @@ set role = 'owner', updated_at = now()
 where id = (select id from auth.users where email = 'OWNER_EMAIL_HERE');
 ```
 
-4. The owner signs in at `/admin/login` using email and password.
-5. Representatives register, sign in, and submit a request at `/account/claim`.
-6. An editor or owner verifies the requester through official contact details before approving `/admin/claims`.
+4. Set `ADMIN_EMAIL` to that same email in `.env.local` and in the Vercel project environment variables. Only this email with the `owner` role can use admin pages or APIs.
+5. The owner signs in at `/admin/login` using email and password.
+6. Representatives register, sign in, and submit a request at `/account/claim`.
+7. The owner verifies the requester through official contact details before approving `/admin/claims`.
 
 ## Google sign-in
 

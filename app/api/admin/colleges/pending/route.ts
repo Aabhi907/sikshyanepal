@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { cookies } from 'next/headers'
+import { isStaff } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-function isAuthed() {
-  return cookies().get('admin_session')?.value === 'authenticated'
-}
+const isAuthed = isStaff
 
 export async function GET() {
-  if (!isAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAuthed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const supabase = createAdminSupabaseClient()
   const { data, error } = await supabase
     .from('colleges')

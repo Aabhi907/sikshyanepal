@@ -1,19 +1,43 @@
 # SikshyaNepal Scrapers
 
-Automated scrapers that pull exam results and university notices
-into the SikshyaNepal Supabase database every 6 hours via GitHub Actions.
+Automated collectors for exam results and university notices.
 
-## Scrapers
+## Editorial safety model
 
-| File | Source | Table | What it extracts |
+Collectors never publish scraped news, notices, or results directly. Every item is
+stored in `content_ingestion_items` with its original URL, normalized payload,
+quality flags, source registry entry, and a SHA-256 duplicate fingerprint. An editor
+must open `/admin/ingestion`, compare the item with the original source, and choose
+**Verify & publish** or **Reject**. Approval creates the public record and preserves
+the queue audit trail. Do not add a direct-publish mode to a collector.
+
+Before running collectors, apply `supabase/migrations/20260905_content_ingestion_queue.sql`.
+
+## Importing the 50-college research pack
+
+Use `import_research_colleges.py` with the supplied JSON pack. It validates the
+records and defaults to a dry run. With `--commit`, new records are inserted as
+`pending_review`, never directly into the public directory. Review each record's
+website, current programs, affiliation, fees and admissions before changing its
+status to active and verification status to source/institution verified.
+
+For the reviewed 50-college pack used by this project, apply
+`supabase/migrations/20260923_research_college_profiles.sql`. It upserts the
+static, source-reviewed profiles as active directory entries and deliberately
+omits dynamic fees, deadlines, eligibility and scholarship amounts.
+
+## Collectors
+
+| File | Source | Review target | What it extracts |
 |---|---|---|---|
-| `tu_results.py` | tuexam.edu.np | `results` | TU exam results with program, semester, result PDF URL |
-| `ku_results.py` | kuexam.edu.np | `results` | KU exam results with program, semester, result URL |
-| `tu_notices.py` | tribhuvan-university.edu.np | `notices` | TU official notices, admission notices, exam schedules |
-| `neb_notices.py` | neb.gov.np | `notices` | NEB exam notices, Grade 11/12 schedules, results |
+| `tu_results.py` | tuexam.edu.np | Editorial queue → results | TU exam results with program, semester, result PDF URL |
+| `ku_results.py` | kuexam.edu.np | Editorial queue → results | KU exam results with program, semester, result URL |
+| `tu_notices.py` | tribhuvan-university.edu.np | Editorial queue → notices | TU official notices, admission notices, exam schedules |
+| `neb_notices.py` | neb.gov.np | Editorial queue → notices | NEB exam notices, Grade 11/12 schedules, results |
 
-All scrapers:
-- Skip duplicate entries (checked by slug before inserting)
+All collectors:
+- Store candidates in the editorial queue; they never publish content by themselves
+- Skip duplicate entries using a source fingerprint and preserve the original source URL
 - Never crash the entire run if one record fails
 - Log exactly how many records were inserted vs skipped
 
@@ -75,6 +99,8 @@ Go to your repo → **Settings → Secrets and variables → Actions → New rep
 | `SUPABASE_URL` | Supabase dashboard → Settings → API → Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase dashboard → Settings → API → `service_role` key (keep secret!) |
 | `VERCEL_DEPLOY_HOOK_URL` | See below |
+| `SIKSHYANEPAL_URL` | Final production URL, for subscriber notifications |
+| `NOTIFICATION_SECRET` | Random secret matching the Vercel environment variable of the same name |
 
 ---
 

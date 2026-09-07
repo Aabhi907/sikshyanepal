@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { GitCompare, X, Plus, MapPin, Star, Building2, Search, Award, BookOpen, Check } from 'lucide-react'
+import { GitCompare, X, Plus, MapPin, Star, Building2, Search, Award, BookOpen, Check, GraduationCap } from 'lucide-react'
 
 interface College {
   id: string
@@ -16,6 +16,9 @@ interface College {
   review_count?: number
   program_count?: number
   scholarship_count?: number
+  education_levels?: string[]
+  facilities?: string[]
+  verification_status?: string
 }
 
 const MAX = 3
@@ -28,6 +31,10 @@ const ROW_LABELS = [
   { key: 'avg_rating', label: 'Avg Rating', icon: Star },
   { key: 'review_count', label: 'Reviews', icon: null },
   { key: 'scholarship_count', label: 'Scholarships', icon: Award },
+  { key: 'fee_range', label: 'Annual Fee Range', icon: null },
+  { key: 'education_levels', label: 'Levels', icon: GraduationCap },
+  { key: 'facilities', label: 'Facilities', icon: null },
+  { key: 'verification_status', label: 'Verification', icon: Check },
 ]
 
 
@@ -37,13 +44,13 @@ export default function ComparePage() {
   const [results, setResults] = useState<College[]>([])
   const [searching, setSearching] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
-  const [detailData, setDetailData] = useState<Record<string, { programs: number; reviews: { rating: number }[]; scholarships: number }>>({})
+  const [detailData, setDetailData] = useState<Record<string, { programs: { fee: number | null }[]; reviews: { rating: number }[]; scholarships: number }>>({})
 
   const searchColleges = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); return }
     setSearching(true)
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?name=ilike.*${encodeURIComponent(q)}*&select=id,name,slug,location,affiliation,established_year,is_featured&limit=10`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?name=ilike.*${encodeURIComponent(q)}*&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status&limit=10`,
       { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}` } }
     )
     const data = await res.json()
@@ -59,7 +66,7 @@ export default function ComparePage() {
   const loadDetail = useCallback(async (college: College) => {
     if (detailData[college.id]) return
     const [programsRes, reviewsRes, scholarshipsRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/college_programs?college_id=eq.${college.id}&select=id`, {
+      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/college_programs?college_id=eq.${college.id}&select=id,fee`, {
         headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}` },
       }),
       fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/reviews?college_id=eq.${college.id}&is_approved=eq.true&select=rating`, {
@@ -90,10 +97,14 @@ export default function ComparePage() {
       case 'location': return college.location || '—'
       case 'affiliation': return college.affiliation || '—'
       case 'established_year': return college.established_year?.toString() || '—'
-      case 'program_count': return d ? d.programs.toString() : '...'
+      case 'program_count': return d ? d.programs.length.toString() : '...'
       case 'avg_rating': return d && d.reviews.length > 0 ? (d.reviews.reduce((a, r) => a + r.rating, 0) / d.reviews.length).toFixed(1) : '—'
       case 'review_count': return d ? d.reviews.length.toString() : '...'
       case 'scholarship_count': return d ? d.scholarships.toString() : '...'
+      case 'fee_range': { const fees=d?.programs.map(p=>p.fee).filter((fee):fee is number=>fee!=null)||[]; return fees.length?`NPR ${Math.min(...fees).toLocaleString()} – ${Math.max(...fees).toLocaleString()}`:'—' }
+      case 'education_levels': return college.education_levels?.map(x=>x==='plus_two'?'+2':x.charAt(0).toUpperCase()+x.slice(1)).join(', ')||'—'
+      case 'facilities': return college.facilities?.slice(0,5).join(', ')||'—'
+      case 'verification_status': return college.verification_status==='institution_verified'?'Institution verified':college.verification_status==='source_verified'?'Source verified':'Unverified'
       default: return '—'
     }
   }

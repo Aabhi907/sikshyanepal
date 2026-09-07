@@ -1,0 +1,5 @@
+import { NextResponse } from 'next/server'
+import { isStaff } from '@/lib/auth'
+import { createAdminSupabaseClient } from '@/lib/supabase'
+
+export async function GET() { if (!(await isStaff(['editor', 'owner']))) return NextResponse.json({ error: 'Editor access required' }, { status: 403 }); const { data, error } = await createAdminSupabaseClient().from('search_events').select('event_type,query,result_count,created_at').gte('created_at', new Date(Date.now() - 30 * 86_400_000).toISOString()).order('created_at', { ascending: false }).limit(5000); if (error) return NextResponse.json({ error: error.message }, { status: 500 }); const rows = data || []; const top = (filter: (row: typeof rows[number]) => boolean) => Object.entries(rows.filter(filter).reduce<Record<string, number>>((all, row) => { all[row.query] = (all[row.query] || 0) + 1; return all }, {})).sort((a, b) => b[1] - a[1]).slice(0, 20).map(([query, count]) => ({ query, count })); return NextResponse.json({ searches: rows.length, zeroResults: rows.filter(row => row.event_type === 'zero_result').length, topSearches: top(() => true), unmetDemand: top(row => row.event_type === 'zero_result') }) }

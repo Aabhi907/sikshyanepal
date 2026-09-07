@@ -1,0 +1,86 @@
+'use client'
+
+import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowRight, BookOpenCheck, CalendarDays, CheckCircle2, Circle, GraduationCap, HeartHandshake, Landmark, ListChecks, School, Sparkles } from 'lucide-react'
+
+type Stage = 'grade_10' | 'plus_two' | 'bachelor' | 'graduate' | 'parent'
+type Task = { id?: string; task_key: string; title: string; is_completed: boolean }
+type PathData = { name: string; stage: Stage | null; tasks: Task[]; savedColleges: { college: { id: string; name: string; slug: string; location: string | null } | null }[]; savedSchools: { school: { id: string; name: string; slug: string; district: string | null; province: string | null } | null }[]; admissions: { id: string; title: string; slug: string; application_deadline: string | null; institution_name: string | null; education_level: string | null }[]; scholarships: { id: string; title: string; deadline: string | null; amount: string | null }[] }
+
+const stageOptions: { value: Stage; label: string; description: string; icon: typeof School }[] = [
+  { value: 'grade_10', label: 'Grade 10 / SEE', description: 'Choose your +2 or diploma route.', icon: School },
+  { value: 'plus_two', label: '+2 student', description: 'Plan a Bachelor, entrance or scholarship.', icon: BookOpenCheck },
+  { value: 'bachelor', label: 'Bachelor student', description: 'Build skills, experience and your next step.', icon: GraduationCap },
+  { value: 'graduate', label: 'Graduate', description: 'Explore work, skills and further study.', icon: Landmark },
+  { value: 'parent', label: 'Parent / guardian', description: 'Plan choices and costs with your student.', icon: HeartHandshake },
+]
+
+const taskTemplates: Record<Stage, { key: string; title: string }[]> = {
+  grade_10: [{ key: 'compare-plus-two', title: 'Shortlist +2, diploma or technical options' }, { key: 'check-see-results', title: 'Keep SEE result and certificate details ready' }, { key: 'review-cost', title: 'Discuss fees, travel and scholarship options at home' }],
+  plus_two: [{ key: 'choose-program', title: 'Compare programs that match your interests' }, { key: 'check-entrance', title: 'Check entrance requirements and deadlines' }, { key: 'save-scholarships', title: 'Save scholarships before their closing dates' }],
+  bachelor: [{ key: 'build-portfolio', title: 'Start one project, portfolio or practical skill' }, { key: 'find-experience', title: 'Look for an internship, volunteer role or competition' }, { key: 'review-next-step', title: 'Review career or further-study options' }],
+  graduate: [{ key: 'clarify-goal', title: 'Choose your next focus: work, skills or further study' }, { key: 'prepare-profile', title: 'Prepare a simple CV and a work sample' }, { key: 'find-opportunity', title: 'Find a verified opportunity or skills programme' }],
+  parent: [{ key: 'talk-goals', title: 'Have a goals and interests conversation with your student' }, { key: 'compare-options', title: 'Compare at least two realistic institutions or routes' }, { key: 'plan-budget', title: 'Use the cost planner before making a decision' }],
+}
+
+const stageLinks: Record<Stage, { href: string; label: string }[]> = {
+  grade_10: [{ href: '/colleges?level=%2B2', label: 'Explore +2 colleges' }, { href: '/tools/school-finder', label: 'Find a school' }, { href: '/tools/gpa-calculator', label: 'Calculate GPA' }],
+  plus_two: [{ href: '/tools/college-finder', label: 'Find a college' }, { href: '/admissions/status', label: 'Track admissions' }, { href: '/scholarships', label: 'Find scholarships' }],
+  bachelor: [{ href: '/programs', label: 'Explore career paths' }, { href: '/scholarships', label: 'Find scholarships' }, { href: '/tools/college-cost-calculator', label: 'Plan study costs' }],
+  graduate: [{ href: '/programs', label: 'Explore further study' }, { href: '/scholarships', label: 'Find scholarships' }, { href: '/news', label: 'Read education news' }],
+  parent: [{ href: '/tools/school-finder', label: 'Find a school' }, { href: '/tools/college-finder', label: 'Find a college' }, { href: '/tools/college-cost-calculator', label: 'Plan costs together' }],
+}
+
+const date = (value: string | null) => value ? new Intl.DateTimeFormat('en-NP', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : 'Date to be announced'
+
+export default function MyPathPage() {
+  const [data, setData] = useState<PathData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [needsLogin, setNeedsLogin] = useState(false)
+  const [setupRequired, setSetupRequired] = useState(false)
+
+  const load = async () => {
+    const response = await fetch('/api/my-path')
+    const result = await response.json()
+    setNeedsLogin(response.status === 401)
+    setSetupRequired(Boolean(result.setupRequired))
+    if (response.ok) setData(result)
+    setLoading(false)
+  }
+
+  useEffect(() => { void load() }, [])
+  const tasks = useMemo(() => {
+    const templates = data?.stage ? taskTemplates[data.stage] : []
+    return templates.map((template) => ({ ...template, is_completed: data?.tasks.find((task) => task.task_key === template.key)?.is_completed || false }))
+  }, [data?.stage, data?.tasks])
+  const savedPlaces = useMemo(() => [
+    ...((data?.savedColleges || []).flatMap((item) => item.college ? [{ type: 'college', id: item.college.id, name: item.college.name, slug: item.college.slug, place: item.college.location }] : [])),
+    ...((data?.savedSchools || []).flatMap((item) => item.school ? [{ type: 'school', id: item.school.id, name: item.school.name, slug: item.school.slug, place: [item.school.district, item.school.province].filter(Boolean).join(', ') }] : [])),
+  ], [data?.savedColleges, data?.savedSchools])
+
+  const chooseStage = async (stage: Stage) => {
+    const response = await fetch('/api/my-path', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stage }) })
+    if (response.ok) await load()
+  }
+
+  const toggleTask = async (task: { key: string; title: string; is_completed: boolean }) => {
+    setData((current) => current ? { ...current, tasks: [...current.tasks.filter((item) => item.task_key !== task.key), { task_key: task.key, title: task.title, is_completed: !task.is_completed }] } : current)
+    await fetch('/api/my-path', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task: { key: task.key, title: task.title, completed: !task.is_completed } }) })
+  }
+
+  if (loading) return <main className="mx-auto max-w-6xl px-4 py-16"><div className="h-8 w-48 animate-pulse rounded bg-slate-200" /><div className="mt-5 h-44 animate-pulse rounded-2xl bg-slate-100" /></main>
+  if (needsLogin) return <main className="mx-auto max-w-xl px-4 py-20 text-center"><div className="rounded-2xl border border-[#e6e4df] bg-white p-8 shadow-sm"><Sparkles className="mx-auto h-9 w-9 text-primary" /><h1 className="mt-4 font-display text-3xl font-bold">Build your education path</h1><p className="mt-3 text-slate-600">Sign in to save a private roadmap, institution shortlist and application tasks.</p><Link href="/account/login" className="mt-6 inline-flex rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white">Sign in to continue</Link></div></main>
+  if (setupRequired) return <main className="mx-auto max-w-xl px-4 py-20 text-center"><div className="rounded-2xl border border-amber-200 bg-amber-50 p-8"><h1 className="font-display text-2xl font-bold">My Path is nearly ready</h1><p className="mt-3 text-sm leading-6 text-amber-950">The student-planning database setup still needs to be applied. Your account and existing saved items are safe.</p></div></main>
+
+  return <main className="min-h-screen bg-[#f8f7f3] pb-16"><section className="border-b border-[#e6e4df] bg-[#fcfbf8]"><div className="mx-auto max-w-6xl px-4 py-12 sm:px-6"><p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#9a302c]"><span className="h-px w-7 bg-[#c93b37]" />Your personal plan</p><h1 className="mt-3 font-display text-4xl font-bold text-ink sm:text-5xl">My Path{data?.name ? `, ${data.name}` : ''}</h1><p className="mt-3 max-w-2xl text-lg leading-8 text-slate-600">A calm place to decide what matters next—without losing deadlines, shortlists or practical tasks.</p></div></section>
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      {!data?.stage ? <section className="rounded-2xl border border-[#e6e4df] bg-white p-5 sm:p-7"><h2 className="font-display text-2xl font-bold">Where are you right now?</h2><p className="mt-2 text-sm text-slate-600">Choose one. You can change it any time.</p><div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{stageOptions.map(({ value, label, description, icon: Icon }) => <button key={value} onClick={() => void chooseStage(value)} className="group rounded-xl border border-[#e6e4df] p-4 text-left hover:border-primary hover:bg-primary-50"><Icon className="h-5 w-5 text-primary" /><p className="mt-4 font-bold text-ink">{label}</p><p className="mt-1 text-xs leading-5 text-slate-600">{description}</p></button>)}</div></section> : <>
+        <div className="grid gap-6 lg:grid-cols-[1.45fr_0.9fr]"><section className="rounded-2xl bg-[#16233f] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-200">Your next three actions</p><div className="mt-5 space-y-3">{tasks.map((task) => <button key={task.key} onClick={() => void toggleTask(task)} className="flex w-full items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10"><span className="mt-0.5">{task.is_completed ? <CheckCircle2 className="h-5 w-5 text-emerald-300" /> : <Circle className="h-5 w-5 text-blue-200" />}</span><span className={task.is_completed ? 'text-blue-100 line-through' : 'text-white'}>{task.title}</span></button>)}</div><div className="mt-6 flex flex-wrap gap-2">{stageLinks[data.stage].map((link) => <Link key={link.href} href={link.href} className="rounded-lg bg-white px-3 py-2 text-sm font-bold text-[#16233f]">{link.label}</Link>)}</div></section>
+          <section className="rounded-2xl border border-[#e6e4df] bg-white p-6"><div className="flex items-center gap-2"><ListChecks className="h-5 w-5 text-[#c93b37]" /><h2 className="font-display text-xl font-bold">Plan details</h2></div><p className="mt-3 text-sm leading-6 text-slate-600">Your plan is private to your account. We only save your chosen stage and checklist completion—not documents or marks.</p><button onClick={() => setData((current) => current ? { ...current, stage: null } : current)} className="mt-6 text-sm font-bold text-primary hover:underline">Change my stage</button></section></div>
+        <div className="mt-6 grid gap-6 lg:grid-cols-2"><section className="rounded-2xl border border-[#e6e4df] bg-white p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-[#9a302c]">Keep moving</p><h2 className="mt-1 font-display text-2xl font-bold">Upcoming admissions</h2></div><CalendarDays className="h-6 w-6 text-primary" /></div><div className="mt-4 divide-y divide-[#e6e4df]">{data.admissions.map((admission) => <Link key={admission.id} href={`/admissions/${admission.slug}`} className="block py-3 hover:text-primary"><p className="font-semibold">{admission.title}</p><p className="mt-1 text-xs text-slate-500">{admission.institution_name || admission.education_level || 'Admission'} · Deadline {date(admission.application_deadline)}</p></Link>)}{!data.admissions.length && <p className="py-5 text-sm text-slate-500">No confirmed upcoming admissions yet. Check the admissions page for all updates.</p>}</div><Link href="/admissions/status" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary">View admission calendar <ArrowRight className="h-4 w-4" /></Link></section>
+          <section className="rounded-2xl border border-[#e6e4df] bg-white p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-[#9a302c]">Your shortlist</p><h2 className="mt-1 font-display text-2xl font-bold">Saved places</h2></div><HeartHandshake className="h-6 w-6 text-primary" /></div><div className="mt-4 divide-y divide-[#e6e4df]">{savedPlaces.slice(0, 4).map((item) => <Link key={`${item.type}-${item.id}`} href={`/${item.type === 'school' ? 'schools' : 'colleges'}/${item.slug}`} className="block py-3 hover:text-primary"><p className="font-semibold">{item.name}</p><p className="mt-1 text-xs text-slate-500">{item.place}</p></Link>)}{!savedPlaces.length && <p className="py-5 text-sm text-slate-500">Save schools or colleges as you browse to keep them together here.</p>}</div><Link href="/account/saved" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary">Manage saved colleges <ArrowRight className="h-4 w-4" /></Link></section></div>
+      </>}
+    </div>
+  </main>
+}

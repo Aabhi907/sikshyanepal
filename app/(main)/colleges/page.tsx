@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: 'All Colleges in Nepal | SikshyaNepal',
-  description: 'Browse all colleges in Nepal. Filter by location, affiliation, faculty, and more.',
+  title: '+2, Bachelor and Master Colleges in Nepal | SikshyaNepal',
+  description: 'Browse Nepal colleges for +2, Bachelor, Master, diploma and higher education. Filter by location, affiliation, faculty and level.',
 }
 
 // Extended type with server-computed fields the card needs
@@ -30,6 +30,12 @@ async function getColleges(sp: {
   affiliation?: string
   faculty?:     string
   level?:       string
+  province?: string
+  district?: string
+  maxFee?: string
+  scholarship?: string
+  verified?: string
+  program?: string
 }): Promise<{ all: RichCollege[]; filtered: RichCollege[] }> {
   const supabase = createServerSupabaseClient()
 
@@ -40,7 +46,7 @@ async function getColleges(sp: {
       programs:college_programs(
         fee,
         scholarship_available,
-        program:programs(id, name, faculty, degree_level)
+        program:programs(id, name, slug, faculty, degree_level)
       ),
       reviews(rating, is_approved)
     `)
@@ -52,7 +58,10 @@ async function getColleges(sp: {
 
   if (sp.q)           query = query.ilike('name',        `%${sp.q}%`)
   if (sp.location)    query = query.ilike('location',    `%${sp.location}%`)
+  if (sp.province)    query = query.eq('province', sp.province)
+  if (sp.district)    query = query.ilike('district', `%${sp.district}%`)
   if (sp.affiliation) query = query.ilike('affiliation', `%${sp.affiliation}%`)
+  if (sp.verified === 'true') query = query.in('verification_status', ['source_verified', 'institution_verified'])
 
   const { data } = await query
   const raw = (data ?? []) as (College & { programs?: CollegeProgram[]; reviews?: Review[] })[]
@@ -86,10 +95,16 @@ async function getColleges(sp: {
     )
   }
   if (sp.level) {
+    const storedLevel = sp.level === '+2' ? 'plus_two' : sp.level
     filtered = filtered.filter((c) =>
+      c.education_levels?.includes(storedLevel as NonNullable<College['education_levels']>[number]) ||
       (c.programs ?? []).some((cp) => cp.program?.degree_level === sp.level)
     )
   }
+  if (sp.program) filtered = filtered.filter(c => (c.programs ?? []).some(cp => cp.program?.slug === sp.program))
+  if (sp.scholarship === 'true') filtered = filtered.filter(c => (c.programs ?? []).some(cp => cp.scholarship_available))
+  const maxFee = Number(sp.maxFee)
+  if (Number.isFinite(maxFee) && maxFee > 0) filtered = filtered.filter(c => (c.programs ?? []).some(cp => cp.fee != null && cp.fee <= maxFee))
 
   return { all, filtered }
 }
@@ -97,7 +112,7 @@ async function getColleges(sp: {
 export default async function CollegesPage({
   searchParams,
 }: {
-  searchParams: { q?: string; location?: string; affiliation?: string; faculty?: string; level?: string }
+  searchParams: { q?: string; location?: string; affiliation?: string; faculty?: string; level?: string; province?: string; district?: string; maxFee?: string; scholarship?: string; verified?: string; program?: string }
 }) {
   const { all, filtered } = await getColleges(searchParams)
 
@@ -109,13 +124,14 @@ export default async function CollegesPage({
           <Building2 className="w-6 h-6 text-blue-600" />
           <h1 className="text-2xl font-bold text-gray-900">Colleges in Nepal</h1>
         </div>
-        <p className="text-gray-500 text-sm">Find and compare colleges across Nepal</p>
+        <p className="text-gray-500 text-sm">Post-SEE study: +2, Bachelor, Master, diploma and higher education</p>
       </div>
 
       {/* Search */}
       <div className="mb-5">
         <SearchBar placeholder="Search college by name..." redirectTo="/colleges" />
       </div>
+      <div className="mb-5 flex flex-wrap gap-2 text-xs"><span className="font-semibold text-gray-500">Popular:</span>{['Kathmandu','Pokhara','Chitwan','Lalitpur','Bhaktapur'].map(place=><Link key={place} href={`/colleges/in/${place.toLowerCase()}`} className="font-semibold text-blue-700 hover:underline">Colleges in {place}</Link>)}</div>
 
       {/* Filters — handles mobile drawer + desktop inline panel + result counts */}
       <CollegeFilters

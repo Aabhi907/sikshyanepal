@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS site_announcements (id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), title TEXT NOT NULL, message TEXT NOT NULL, image_url TEXT, link_url TEXT, link_label TEXT, placement TEXT NOT NULL DEFAULT 'banner' CHECK (placement IN ('banner','popup')), is_active BOOLEAN NOT NULL DEFAULT FALSE, starts_at TIMESTAMPTZ, ends_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+ALTER TABLE site_announcements ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read active announcements" ON site_announcements FOR SELECT TO anon USING (is_active = true AND (starts_at IS NULL OR starts_at <= NOW()) AND (ends_at IS NULL OR ends_at > NOW()));

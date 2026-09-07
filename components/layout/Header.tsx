@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ChevronDown, BookOpenCheck } from 'lucide-react'
+import { Menu, X, ChevronDown, BookOpenCheck, Search } from 'lucide-react'
 import SubscribeButton from '@/components/notifications/SubscribeButton'
 
 const navLinks = [
@@ -13,35 +13,64 @@ const navLinks = [
     sub: [
       { label: 'All Schools',       href: '/schools' },
       { label: 'Verified Schools',  href: '/schools?verified=true' },
-      { label: '+2 Schools',        href: '/schools?level=higher_secondary' },
+      { label: 'Secondary Schools', href: '/schools?level=secondary' },
       { label: 'Community Schools', href: '/schools?ownership=community' },
+      { label: 'School Finder', href: '/tools/school-finder' },
+      { label: 'Add a School', href: '/submit-school' },
+      { label: 'Compare Schools', href: '/schools/compare' },
+      { label: 'Schools Near Me', href: '/schools/nearby' },
     ],
   },
-  { label: 'Admissions',   href: '/admissions' },
+  { label: 'Admissions', href: '/admissions', sub: [
+    { label: 'All Admissions', href: '/admissions' },
+    { label: 'Admission Status', href: '/admissions/status' },
+    { label: 'Admission Planner', href: '/admissions/planner' },
+    { label: 'School Admissions', href: '/admissions?institution=school' },
+    { label: 'College Admissions', href: '/admissions?institution=college' },
+  ] },
   {
     label: 'Colleges',
     href: '/colleges',
     sub: [
       { label: 'All Colleges',     href: '/colleges' },
+      { label: '+2 Colleges',      href: '/colleges?level=%2B2' },
+      { label: 'Bachelor Colleges', href: '/colleges?level=bachelor' },
+      { label: 'Master Colleges',  href: '/colleges?level=master' },
       { label: 'Compare Colleges', href: '/compare' },
+      { label: 'Colleges Near Me', href: '/colleges/nearby' },
       { label: 'Reviews',          href: '/colleges?tab=reviews' },
       { label: 'Scholarships',     href: '/scholarships' },
     ],
   },
   {
-    label: 'Programs',
+    label: 'Explore',
     href: '/programs',
     sub: [
+      { label: 'Programs', href: '/programs' },
       { label: 'IT & Computing', href: '/programs?faculty=it' },
       { label: 'Engineering',    href: '/programs?faculty=engineering' },
       { label: 'Management',     href: '/programs?faculty=management' },
       { label: 'Medical',        href: '/programs?faculty=medical' },
+      { label: 'Career Explorer', href: '/careers' },
+      { label: 'Skills & Opportunities', href: '/opportunities' },
+      { label: 'Student Wellbeing', href: '/wellbeing' },
+      { label: 'Results', href: '/results' },
+      { label: 'Notices', href: '/notices' },
+      { label: 'Education News', href: '/news' },
+      { label: 'Scholarships', href: '/scholarships' },
+      { label: 'SEE & NEB GPA Calculator', href: '/tools/gpa-calculator' },
+      { label: 'College Cost Calculator', href: '/tools/college-cost-calculator' },
+      { label: 'College Finder', href: '/tools/college-finder' },
+      { label: 'Admission Checklist', href: '/tools/admission-checklist' },
+      { label: 'Program Finder Quiz', href: '/tools/program-finder' },
+      { label: 'My Path', href: '/my-path' },
+      { label: 'Saved colleges', href: '/account/saved' },
+      { label: 'Saved schools', href: '/account/saved-schools' },
+      { label: 'Claim an Institution', href: '/account/claim' },
+      { label: 'My Institutions', href: '/account/institutions' },
     ],
   },
-  { label: 'Results',      href: '/results' },
-  { label: 'Notices',      href: '/notices' },
-  { label: 'News',         href: '/news' },
-  { label: 'Scholarships', href: '/scholarships' },
+  { label: 'नेपाली', href: '/ne' },
 ]
 
 export default function Header() {
@@ -113,7 +142,7 @@ export default function Header() {
             </Link>
 
             {/* ── Desktop nav ──────────────────────────────── */}
-            <nav className="hidden lg:flex items-center gap-0.5">
+            <nav className="hidden xl:flex items-center gap-0.5">
               {navLinks.map((link) => (
                 <div
                   key={link.label}
@@ -152,13 +181,13 @@ export default function Header() {
                       {/* Invisible bridge: fills the gap between trigger bottom and
                           dropdown top so the mouse never "misses" while moving down */}
                       <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent" />
-                      <div className="mt-1.5 w-52 bg-white border border-border rounded-xl shadow-card-lg py-1.5 animate-slide-down">
+                      <div className="mt-1.5 w-64 bg-white border border-border rounded-xl shadow-card-lg py-1.5 animate-slide-down">
                         {link.sub.map((s) => (
                           <Link
                             key={s.label}
                             href={s.href}
                             onClick={() => setOpenDrop(null)}
-                            className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
+                            className="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary transition-colors duration-150"
                           >
                             {s.label}
                           </Link>
@@ -171,7 +200,8 @@ export default function Header() {
             </nav>
 
             {/* ── Desktop right actions ────────────────────── */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden xl:flex items-center gap-2">
+              <button onClick={() => window.dispatchEvent(new Event('open-site-search'))} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-500 hover:border-blue-200 hover:text-primary" aria-label="Search SikshyaNepal"><Search className="h-4 w-4" /><span className="hidden xl:inline">Search</span><kbd className="hidden xl:inline rounded border border-gray-200 px-1.5 py-0.5 text-[10px] text-gray-400">⌘K</kbd></button>
               <SubscribeButton variant="header" />
               <Link
                 href="/schools"
@@ -185,7 +215,7 @@ export default function Header() {
             {/* ── Mobile ───────────────────────────────────── */}
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 text-ink-secondary hover:bg-gray-100 rounded-lg"
+              className="xl:hidden p-2 text-ink-secondary hover:bg-gray-100 rounded-lg"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -195,7 +225,7 @@ export default function Header() {
 
       {/* ── Mobile slide-over ────────────────────────────────────── */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
+        <div className="fixed inset-0 z-[60] xl:hidden">
           <div
             className="absolute inset-0 bg-black/40 animate-fade-in"
             onClick={() => setMobileOpen(false)}

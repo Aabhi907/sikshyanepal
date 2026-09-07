@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server'; import { createServerSupabaseClient } from '@/lib/supabase'
+export async function GET(){const{data,error}=await createServerSupabaseClient().from('site_announcements').select('id,title,message,image_url,link_url,link_label,placement').eq('is_active',true).or(`starts_at.is.null,starts_at.lte.${new Date().toISOString()}`).or(`ends_at.is.null,ends_at.gt.${new Date().toISOString()}`).order('created_at',{ascending:false}).limit(1);return error?NextResponse.json([]):NextResponse.json(data||[])}

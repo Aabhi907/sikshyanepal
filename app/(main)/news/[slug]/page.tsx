@@ -8,6 +8,8 @@ import { formatDate } from '@/lib/utils'
 import type { News } from '@/types'
 import PdfViewer from '@/components/results/PdfViewer'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sikshyanepal.vercel.app'
+
 async function getNews(slug: string) {
   const supabase = createServerSupabaseClient()
   const { data } = await supabase.from('news').select('*').eq('slug', slug).single()
@@ -21,6 +23,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title:       `${news.title} | SikshyaNepal`,
     description: news.content?.slice(0, 160),
     openGraph:   { images: news.image_url ? [news.image_url] : [] },
+    alternates: { canonical: `/news/${news.slug}` },
   }
 }
 
@@ -29,9 +32,11 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
   if (!news) notFound()
 
   const hasPdf = news.content_type === 'pdf' && !!news.news_pdf_url
+  const jsonLd = { '@context': 'https://schema.org', '@type': 'NewsArticle', headline: news.title, description: news.content?.slice(0, 300) || undefined, datePublished: news.published_date || undefined, dateModified: news.published_date || undefined, mainEntityOfPage: `${BASE_URL}/news/${news.slug}`, image: news.image_url ? [news.image_url] : undefined, author: { '@type': 'Organization', name: 'SikshyaNepal Editorial' }, publisher: { '@type': 'Organization', name: 'SikshyaNepal', logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png` } } }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <Link
         href="/news"
         className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 mb-6 transition-colors"

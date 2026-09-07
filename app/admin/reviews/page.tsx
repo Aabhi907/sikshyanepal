@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Star, Check, X, Trash2 } from 'lucide-react'
+import { Star, Check, X, Trash2, BadgeCheck } from 'lucide-react'
 import { formatDateShort } from '@/lib/utils'
 import ConfirmDialog, { ConfirmState, CONFIRM_CLOSED } from '@/components/ui/ConfirmDialog'
 import { ToastList, useToast } from '@/components/ui/Toast'
@@ -14,6 +14,7 @@ interface Review {
   program: string | null
   year: number | null
   is_approved: boolean
+  verification_status?: 'unverified' | 'submitted' | 'verified' | 'rejected'
   created_at: string
   college?: { name: string; slug: string } | null
 }
@@ -41,20 +42,20 @@ export default function AdminReviewsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadReviews() }, [])
 
-  const updateReview = async (id: string, is_approved: boolean) => {
+  const updateReview = async (id: string, is_approved: boolean, verification_status?: Review['verification_status']) => {
     setUpdating(id)
     try {
       const res = await fetch(`/api/admin/reviews/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_approved }),
+        body: JSON.stringify({ is_approved, ...(verification_status ? { verification_status } : {}) }),
       })
       if (!res.ok) {
         const err = await res.json()
         toast.error(err.error || `Server error ${res.status}`)
         return
       }
-      setReviews((prev) => prev.map((r) => r.id === id ? { ...r, is_approved } : r))
+      setReviews((prev) => prev.map((r) => r.id === id ? { ...r, is_approved, ...(verification_status ? { verification_status } : {}) } : r))
       toast.success(is_approved ? 'Review approved — now visible on college profile' : 'Review unapproved')
     } catch {
       toast.error('Network error — review not updated')
@@ -160,6 +161,8 @@ export default function AdminReviewsPage() {
                           {review.year && ` • ${review.year}`}
                         </p>
                       </div>
+                      {review.verification_status === 'submitted' && <span className="rounded bg-amber-900/50 px-2 py-1 text-[10px] font-bold uppercase text-amber-300">Evidence submitted</span>}
+                      {review.verification_status === 'verified' && <span className="inline-flex items-center gap-1 rounded bg-blue-900/50 px-2 py-1 text-[10px] font-bold uppercase text-blue-300"><BadgeCheck className="h-3 w-3" />Verified student</span>}
                       <div className="flex items-center gap-0.5 ml-auto">
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star
@@ -197,6 +200,7 @@ export default function AdminReviewsPage() {
                         {updating === review.id ? '…' : 'Unapprove'}
                       </button>
                     )}
+                    {review.verification_status === 'submitted' && <button onClick={() => updateReview(review.id, review.is_approved, 'verified')} disabled={updating === review.id} className="flex items-center gap-1 px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"><BadgeCheck className="w-3 h-3" />Verify</button>}
                     <button
                       onClick={() => handleDelete(review.id)}
                       disabled={updating === review.id}

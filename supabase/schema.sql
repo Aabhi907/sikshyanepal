@@ -36,8 +36,12 @@ CREATE TABLE IF NOT EXISTS programs (
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   duration TEXT NOT NULL,
-  degree_level TEXT NOT NULL CHECK (degree_level IN ('bachelor', 'master', 'mphil', 'phd', 'diploma', 'certificate')),
+  degree_level TEXT NOT NULL CHECK (degree_level IN ('+2', 'bachelor', 'master', 'mphil', 'phd', 'diploma', 'certificate')),
   faculty TEXT NOT NULL,
+  overview TEXT, eligibility TEXT, entrance_requirements TEXT,
+  curriculum_highlights TEXT[] NOT NULL DEFAULT '{}', career_paths TEXT[] NOT NULL DEFAULT '{}',
+  average_fee_min DECIMAL(12,2), average_fee_max DECIMAL(12,2), source_url TEXT,
+  last_verified_at TIMESTAMPTZ, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -99,6 +103,8 @@ CREATE TABLE IF NOT EXISTS colleges (
   source_url TEXT,
   last_verified_at TIMESTAMPTZ,
   verified_by TEXT,
+  education_levels TEXT[] NOT NULL DEFAULT '{}',
+  facilities TEXT[] NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -113,9 +119,9 @@ CREATE TABLE IF NOT EXISTS schools (
   slug TEXT UNIQUE NOT NULL,
   description TEXT,
   ownership_type TEXT CHECK (ownership_type IN ('community', 'institutional', 'religious', 'public', 'private', 'other')),
-  school_level TEXT CHECK (school_level IN ('pre_primary', 'basic', 'secondary', 'higher_secondary', 'multiple')),
-  grades_from SMALLINT CHECK (grades_from BETWEEN 0 AND 12),
-  grades_to SMALLINT CHECK (grades_to BETWEEN 0 AND 12),
+  school_level TEXT CHECK (school_level IN ('pre_primary', 'basic', 'secondary', 'multiple')),
+  grades_from SMALLINT CHECK (grades_from BETWEEN 0 AND 10),
+  grades_to SMALLINT CHECK (grades_to BETWEEN 0 AND 10),
   province TEXT NOT NULL,
   district TEXT NOT NULL,
   local_level TEXT,
@@ -143,6 +149,9 @@ CREATE TABLE IF NOT EXISTS schools (
   source_published_at TIMESTAMPTZ,
   last_verified_at TIMESTAMPTZ,
   verified_by TEXT,
+  submitted_by TEXT,
+  submitter_role TEXT,
+  submitter_contact TEXT,
   is_featured BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -208,6 +217,17 @@ CREATE TABLE IF NOT EXISTS admissions (
   CHECK (NOT is_sponsored OR sponsor_label IS NOT NULL)
 );
 
+CREATE TABLE IF NOT EXISTS admission_deadline_history (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  admission_id UUID NOT NULL REFERENCES admissions(id) ON DELETE CASCADE,
+  previous_deadline TIMESTAMPTZ,
+  new_deadline TIMESTAMPTZ,
+  reason TEXT,
+  source_url TEXT,
+  changed_by UUID REFERENCES auth.users(id),
+  changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ============================================================
 -- COLLEGE PROGRAMS (Junction Table)
 -- ============================================================
@@ -220,6 +240,18 @@ CREATE TABLE IF NOT EXISTS college_programs (
   scholarship_available BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(college_id, program_id)
+);
+
+CREATE TABLE IF NOT EXISTS saved_colleges (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, college_id)
+);
+
+CREATE TABLE IF NOT EXISTS saved_schools (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, school_id)
 );
 
 -- ============================================================
@@ -268,6 +300,59 @@ CREATE TABLE IF NOT EXISTS news (
 );
 
 -- ============================================================
+-- CONTENT INGESTION / EDITORIAL QUEUE
+-- ============================================================
+CREATE TABLE IF NOT EXISTS content_sources (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), name TEXT NOT NULL UNIQUE,
+  base_url TEXT NOT NULL, source_type TEXT NOT NULL DEFAULT 'official',
+  is_active BOOLEAN NOT NULL DEFAULT TRUE, requires_review BOOLEAN NOT NULL DEFAULT TRUE,
+  last_checked_at TIMESTAMPTZ, last_success_at TIMESTAMPTZ, organization TEXT,
+  trust_level SMALLINT NOT NULL DEFAULT 80 CHECK (trust_level BETWEEN 0 AND 100),
+  permitted_targets TEXT[] NOT NULL DEFAULT ARRAY['news', 'notice', 'result'],
+  fetch_frequency_minutes INTEGER, parsing_config JSONB NOT NULL DEFAULT '{}'::jsonb,
+  robots_reviewed_at TIMESTAMPTZ, terms_reviewed_at TIMESTAMPTZ,
+  consecutive_failures INTEGER NOT NULL DEFAULT 0 CHECK (consecutive_failures >= 0),
+  last_failure_at TIMESTAMPTZ, last_error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS content_ingestion_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), source_id UUID REFERENCES content_sources(id) ON DELETE SET NULL,
+  scraper_name TEXT NOT NULL, target_type TEXT NOT NULL, title TEXT NOT NULL, source_url TEXT NOT NULL,
+  source_published_at TIMESTAMPTZ, payload JSONB NOT NULL, fingerprint TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'pending', quality_flags TEXT[] NOT NULL DEFAULT '{}', reviewer_notes TEXT,
+  reviewed_by TEXT, reviewed_at TIMESTAMPTZ, published_record_id UUID, content_hash TEXT, raw_snapshot TEXT,
+  confidence_score SMALLINT NOT NULL DEFAULT 0 CHECK (confidence_score BETWEEN 0 AND 100),
+  verification_status TEXT NOT NULL DEFAULT 'pending' CHECK (verification_status IN ('pending', 'source_verified', 'editor_verified', 'rejected')),
+  last_source_check_at TIMESTAMPTZ, fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- ACCOUNTS, INSTITUTION CLAIMS & AUDIT
+-- ============================================================
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, full_name TEXT,
+  role TEXT NOT NULL DEFAULT 'user', status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS institution_claims (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  entity_type TEXT NOT NULL, entity_id UUID NOT NULL, institution_name TEXT NOT NULL, claimant_name TEXT NOT NULL,
+  claimant_role TEXT NOT NULL, official_email TEXT NOT NULL, official_phone TEXT, evidence_url TEXT, evidence_notes TEXT,
+  status TEXT NOT NULL DEFAULT 'pending', reviewed_by UUID REFERENCES auth.users(id), reviewer_notes TEXT,
+  reviewed_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, entity_type, entity_id)
+);
+CREATE TABLE IF NOT EXISTS institution_memberships (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  entity_type TEXT NOT NULL, entity_id UUID NOT NULL, role TEXT NOT NULL DEFAULT 'representative',
+  granted_by UUID REFERENCES auth.users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), UNIQUE(user_id, entity_type, entity_id)
+);
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), actor_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  action TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT, metadata JSONB NOT NULL DEFAULT '{}', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- REVIEWS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS reviews (
@@ -279,7 +364,33 @@ CREATE TABLE IF NOT EXISTS reviews (
   program TEXT,
   year INTEGER,
   is_approved BOOLEAN DEFAULT FALSE,
+  teaching_rating SMALLINT CHECK (teaching_rating BETWEEN 1 AND 5),
+  facilities_rating SMALLINT CHECK (facilities_rating BETWEEN 1 AND 5),
+  administration_rating SMALLINT CHECK (administration_rating BETWEEN 1 AND 5),
+  value_rating SMALLINT CHECK (value_rating BETWEEN 1 AND 5),
+  placement_rating SMALLINT CHECK (placement_rating BETWEEN 1 AND 5),
+  verification_status TEXT NOT NULL DEFAULT 'unverified' CHECK (verification_status IN ('unverified', 'submitted', 'verified', 'rejected')),
+  moderated_at TIMESTAMPTZ,
+  moderated_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS review_responses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), review_id UUID NOT NULL UNIQUE REFERENCES reviews(id) ON DELETE CASCADE,
+  college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE, responder_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  response_text TEXT NOT NULL CHECK (char_length(response_text) BETWEEN 20 AND 3000), status TEXT NOT NULL DEFAULT 'pending',
+  reviewed_by UUID REFERENCES auth.users(id), reviewed_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS review_verifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  review_id UUID NOT NULL UNIQUE REFERENCES reviews(id) ON DELETE CASCADE,
+  evidence_url TEXT,
+  evidence_notes TEXT,
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by UUID REFERENCES auth.users(id),
+  reviewer_notes TEXT
 );
 
 -- ============================================================
@@ -355,6 +466,7 @@ CREATE INDEX IF NOT EXISTS idx_schools_verified ON schools(verification_status, 
 CREATE INDEX IF NOT EXISTS idx_schools_name_search ON schools USING gin(to_tsvector('simple', name));
 CREATE INDEX IF NOT EXISTS idx_data_corrections_status ON data_corrections(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admissions_deadline ON admissions(status, application_deadline);
+CREATE INDEX IF NOT EXISTS idx_admission_deadline_history_admission ON admission_deadline_history(admission_id, changed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admissions_institution ON admissions(institution_type, institution_name);
 CREATE INDEX IF NOT EXISTS idx_admissions_school ON admissions(school_id) WHERE school_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_admissions_college ON admissions(college_id) WHERE college_id IS NOT NULL;
@@ -368,6 +480,7 @@ CREATE INDEX IF NOT EXISTS idx_notices_published ON notices(published_date DESC)
 CREATE INDEX IF NOT EXISTS idx_news_published ON news(published_date DESC);
 CREATE INDEX IF NOT EXISTS idx_reviews_college ON reviews(college_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_approved ON reviews(is_approved);
+CREATE INDEX IF NOT EXISTS idx_reviews_verification_status ON reviews(verification_status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_scholarships_college ON scholarships(college_id);
 CREATE INDEX IF NOT EXISTS idx_college_programs_college ON college_programs(college_id);
 CREATE INDEX IF NOT EXISTS idx_college_programs_program ON college_programs(program_id);
@@ -379,6 +492,7 @@ ALTER TABLE colleges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
 ALTER TABLE data_corrections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admission_deadline_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE college_programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE universities ENABLE ROW LEVEL SECURITY;
@@ -386,13 +500,18 @@ ALTER TABLE results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE review_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE review_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scholarships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE syllabus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE old_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE entrance_exams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saved_schools ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for all tables
 CREATE POLICY "Public read colleges" ON colleges FOR SELECT TO anon USING (true);
+CREATE POLICY "Public read admission deadline history" ON admission_deadline_history FOR SELECT TO anon USING (true);
+CREATE POLICY "Public read published review responses" ON review_responses FOR SELECT TO anon USING (status = 'published');
 CREATE POLICY "Public read active schools" ON schools FOR SELECT TO anon USING (status = 'active');
 CREATE POLICY "Public read programs" ON programs FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read college_programs" ON college_programs FOR SELECT TO anon USING (true);
@@ -405,6 +524,7 @@ CREATE POLICY "Public read scholarships" ON scholarships FOR SELECT TO anon USIN
 CREATE POLICY "Public read syllabus" ON syllabus FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read old_questions" ON old_questions FOR SELECT TO anon USING (true);
 CREATE POLICY "Public read entrance_exams" ON entrance_exams FOR SELECT TO anon USING (true);
+CREATE POLICY "Users manage own saved schools" ON saved_schools FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 
 -- Allow insert for reviews (students can submit)
 CREATE POLICY "Anyone can submit review" ON reviews FOR INSERT TO anon WITH CHECK (true);

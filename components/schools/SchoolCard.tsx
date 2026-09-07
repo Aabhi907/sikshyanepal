@@ -20,8 +20,7 @@ function gradeLabel(school: School) {
     pre_primary: 'Pre-primary',
     basic: 'Basic level',
     secondary: 'Secondary level',
-    higher_secondary: '+2 / Higher secondary',
-    multiple: 'Multiple levels',
+    multiple: 'Multiple levels (up to Grade 10)',
   }
   return school.school_level ? labels[school.school_level] : null
 }
@@ -74,4 +73,3 @@ export default function SchoolCard({ school }: { school: School }) {
     </Link>
   )
 }
-

@@ -19,12 +19,13 @@ interface CollegeFormData {
   logo_url: string
   cover_url: string
   is_featured: boolean
+  education_levels: string[]
 }
 
 const EMPTY: CollegeFormData = {
   name: '', slug: '', description: '', location: '', address: '',
   phone: '', email: '', website: '', affiliation: '', established_year: '',
-  logo_url: '', cover_url: '', is_featured: false,
+  logo_url: '', cover_url: '', is_featured: false, education_levels: [],
 }
 
 interface Props {
@@ -43,6 +44,7 @@ export default function CollegeForm({ initialData, collegeId, isEdit = false }: 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const toggleLevel = (level: string) => setForm(prev => ({ ...prev, education_levels: prev.education_levels.includes(level) ? prev.education_levels.filter(x => x !== level) : [...prev.education_levels, level] }))
 
   const set = (field: keyof CollegeFormData, value: string | boolean) => {
     setForm((prev) => {
@@ -54,6 +56,10 @@ export default function CollegeForm({ initialData, collegeId, isEdit = false }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.education_levels.length) {
+      setError('Select at least one post-SEE level: +2, Bachelor, Master or another college level.')
+      return
+    }
     setSaving(true)
     setError('')
 
@@ -152,6 +158,11 @@ export default function CollegeForm({ initialData, collegeId, isEdit = false }: 
                 placeholder="Brief description of the college..."
                 className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
               />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Education levels offered *</label>
+              <div className="flex flex-wrap gap-3">{[['plus_two', '+2'], ['bachelor', 'Bachelor'], ['master', 'Master'], ['mphil', 'MPhil'], ['phd', 'PhD'], ['diploma', 'Diploma'], ['certificate', 'Certificate']].map(([value, label]) => <label key={value} className="flex items-center gap-2 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm"><input type="checkbox" checked={form.education_levels.includes(value)} onChange={() => toggleLevel(value)} />{label}</label>)}</div>
+              <p className="mt-2 text-xs text-gray-500">Colleges cover post-SEE education only. Grade 10 and below belongs in Schools.</p>
             </div>
           </div>
         </div>

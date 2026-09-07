@@ -12,8 +12,10 @@ import type { Admission } from '@/types'
 import AdmissionCard from '@/components/admissions/AdmissionCard'
 import {
   Building2,
+  School,
   FileText,
   Bell,
+  CalendarCheck2,
   Newspaper,
   Award,
   ArrowRight,
@@ -197,16 +199,17 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════
           HERO — two-column, light background
       ════════════════════════════════════════════════════════ */}
-      <section className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-20 pb-16 sm:pb-20">
+      <section className="border-b border-[#e6e4df] bg-[#fcfbf8]">
+        <div className="max-w-7xl mx-auto px-4 pb-16 pt-14 sm:px-6 md:pb-20 md:pt-20 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16 items-center">
 
             {/* ── Left column (60%) ────────────────────── */}
             <div className="lg:col-span-3">
 
               {/* Eyebrow */}
-              <p className="text-sm text-gray-400 font-medium mb-4">
-                Trusted by students across Nepal
+              <p className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#9a302c]">
+                <span className="h-px w-7 bg-[#c93b37]" />
+                An independent education guide for Nepal
               </p>
 
               {/* Headline */}
@@ -214,18 +217,22 @@ export default async function HomePage() {
                 className="font-display font-extrabold text-ink leading-[1.1] mb-5 text-balance"
                 style={{ fontSize: 'clamp(2.6rem, 5.5vw, 3.75rem)', letterSpacing: '-0.03em' }}
               >
-                Everything about<br />
-                <span className="text-[#1847c4]">Education in Nepal.</span>
+                Make your next<br />
+                <span className="text-[#1e429f]">education choice clearer.</span>
               </h1>
 
               {/* Sub */}
-              <p className="text-gray-500 text-xl leading-relaxed mb-8 max-w-lg">
-                Verified schools, colleges, programs, results and scholarships —
-                with sources you can check.
+              <p className="mb-8 max-w-xl text-lg leading-8 text-slate-600 md:text-xl">
+                Compare schools and colleges, follow admissions, and check results from sources worth trusting.
               </p>
 
               {/* Search */}
               <HeroSearch />
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <Link href="/tools/school-finder" className="group border-l-2 border-[#c93b37] bg-white p-4 shadow-sm transition hover:shadow-md"><div className="flex items-start gap-3"><div className="rounded-lg bg-[#fff5f3] p-2"><School className="h-5 w-5 text-[#c93b37]" /></div><div><p className="font-bold text-ink">Looking for a school?</p><p className="mt-1 text-xs leading-5 text-gray-600">ECD to Grade 10, for parents and guardians.</p><span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary">Find a school <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" /></span></div></div></Link>
+                <Link href="/tools/college-finder" className="group border-l-2 border-[#1e429f] bg-white p-4 shadow-sm transition hover:shadow-md"><div className="flex items-start gap-3"><div className="rounded-lg bg-primary-50 p-2"><GraduationCap className="h-5 w-5 text-primary" /></div><div><p className="font-bold text-ink">Planning after SEE or +2?</p><p className="mt-1 text-xs leading-5 text-gray-600">Explore +2, Bachelor, Master and diploma options.</p><span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary">Find a college <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" /></span></div></div></Link>
+              </div>
             </div>
 
             {/* ── Right column (40%) — live updates card ─ */}
@@ -237,6 +244,20 @@ export default async function HomePage() {
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#e6e4df] bg-[#f5f3ee]">
+        <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-2"><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#9a302c]">Start here</p><h2 className="mt-1 font-display text-xl font-bold text-ink">What can we help you with?</h2></div><Link href="/search" className="text-sm font-bold text-primary hover:underline">Search everything →</Link></div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{[
+            { href: '/results', label: 'Check results', text: 'TU, KU, NEB & more', Icon: FileText, tone: 'bg-blue-50 text-blue-700' },
+            { href: '/admissions/status', label: 'Admissions', text: 'Open & upcoming', Icon: CalendarCheck2, tone: 'bg-emerald-50 text-emerald-700' },
+            { href: '/tools/school-finder', label: 'Find a school', text: 'ECD to Grade 10', Icon: School, tone: 'bg-sky-50 text-sky-700' },
+            { href: '/tools/college-finder', label: 'Find a college', text: '+2 and higher', Icon: GraduationCap, tone: 'bg-indigo-50 text-indigo-700' },
+            { href: '/scholarships', label: 'Scholarships', text: 'Funding options', Icon: Award, tone: 'bg-amber-50 text-amber-700' },
+            { href: '/notices', label: 'Latest notices', text: 'Official updates', Icon: Bell, tone: 'bg-orange-50 text-orange-700' },
+          ].map(({ href, label, text, Icon, tone }) => <Link key={href} href={href} className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"><span className={`flex h-9 w-9 items-center justify-center rounded-xl ${tone}`}><Icon className="h-4.5 w-4.5" /></span><p className="mt-3 text-sm font-bold text-ink">{label}</p><p className="mt-1 text-xs text-gray-500">{text}</p></Link>)} </div>
         </div>
       </section>
 

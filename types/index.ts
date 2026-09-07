@@ -30,6 +30,7 @@ export interface College {
   source_url?: string | null
   last_verified_at?: string | null
   verified_by?: string | null
+  education_levels?: ('plus_two' | 'bachelor' | 'master' | 'mphil' | 'phd' | 'diploma' | 'certificate')[]
   created_at: string
   programs?: CollegeProgram[]
   reviews?: Review[]
@@ -45,7 +46,7 @@ export interface School {
   slug: string
   description: string | null
   ownership_type: 'community' | 'institutional' | 'religious' | 'public' | 'private' | 'other' | null
-  school_level: 'pre_primary' | 'basic' | 'secondary' | 'higher_secondary' | 'multiple' | null
+  school_level: 'pre_primary' | 'basic' | 'secondary' | 'multiple' | null
   grades_from: number | null
   grades_to: number | null
   province: string
@@ -125,10 +126,21 @@ export interface Program {
   duration: string
   degree_level: '+2' | 'bachelor' | 'master' | 'mphil' | 'phd' | 'diploma' | 'certificate'
   faculty: string
+  overview?: string | null
+  eligibility?: string | null
+  entrance_requirements?: string | null
+  curriculum_highlights?: string[]
+  career_paths?: string[]
+  average_fee_min?: number | null
+  average_fee_max?: number | null
+  source_url?: string | null
+  last_verified_at?: string | null
+  updated_at?: string
   created_at: string
 }
 
 export interface CollegeProgram {
+  id?: string
   college_id: string
   program_id: string
   fee: number | null
@@ -198,6 +210,17 @@ export interface Review {
   program: string | null
   year: number | null
   is_approved: boolean
+  teaching_rating?: number | null
+  facilities_rating?: number | null
+  administration_rating?: number | null
+  value_rating?: number | null
+  placement_rating?: number | null
+  attendance_rating?: number | null
+  safety_rating?: number | null
+  internship_support_rating?: number | null
+  hidden_costs_reported?: boolean
+  hostel_transport_note?: string | null
+  verification_status?: 'unverified' | 'submitted' | 'verified' | 'rejected'
   created_at: string
   college?: College
 }

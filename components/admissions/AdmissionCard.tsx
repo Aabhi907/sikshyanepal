@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, Building2, CalendarDays, MapPin } from 'lucide-react'
-import DeadlineBadge from './DeadlineBadge'
+import AdmissionStatusBadge from './AdmissionStatusBadge'
 import VerificationBadge from '@/components/institutions/VerificationBadge'
 import { admissionLocation } from '@/lib/admissions'
 import type { Admission } from '@/types'
@@ -8,7 +8,7 @@ import type { Admission } from '@/types'
 export default function AdmissionCard({ admission }: { admission: Admission }) {
   const location = admissionLocation(admission)
   return <Link href={`/admissions/${admission.slug}`} className="group block h-full"><article className={`flex h-full flex-col rounded-2xl border bg-white p-5 transition-all hover:-translate-y-1 hover:shadow-lg ${admission.is_sponsored ? 'border-amber-300' : 'border-gray-200 hover:border-primary'}`}>
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><DeadlineBadge deadline={admission.application_deadline} />{admission.is_sponsored ? <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">{admission.sponsor_label || 'Sponsored'}</span> : <VerificationBadge status={admission.verification_status} compact />}</div>
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><AdmissionStatusBadge admission={admission} />{admission.is_sponsored ? <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">{admission.sponsor_label || 'Sponsored'}</span> : <VerificationBadge status={admission.verification_status} compact />}</div>
     <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-primary">{admission.admission_type.replaceAll('_', ' ')} admission</p>
     <h2 className="font-display text-lg font-bold leading-snug text-ink transition-colors group-hover:text-primary">{admission.title}</h2>
     <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-gray-600"><Building2 className="h-4 w-4 text-gray-400" />{admission.institution_name}</p>
@@ -18,4 +18,3 @@ export default function AdmissionCard({ admission }: { admission: Admission }) {
     <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-4 text-xs"><span className="flex items-center gap-1 text-gray-500"><CalendarDays className="h-3.5 w-3.5" />{admission.application_deadline ? new Date(admission.application_deadline).toLocaleDateString('en-NP', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date pending'}</span><span className="flex items-center gap-1 font-bold text-primary">View details <ArrowRight className="h-3.5 w-3.5" /></span></div>
   </article></Link>
 }
-

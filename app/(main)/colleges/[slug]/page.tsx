@@ -15,15 +15,19 @@ import {
   Calendar,
   GraduationCap,
   ExternalLink,
+  BadgeCheck,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import ReviewForm from "@/components/colleges/ReviewForm";
+import ReviewResponseForm from "@/components/colleges/ReviewResponseForm";
 import ApplyNowButton from "@/components/colleges/ApplyNowButton";
+import SaveCollegeButton from "@/components/colleges/SaveCollegeButton";
 import AdUnit from "@/components/ads/AdUnit";
 import type { College, CollegeProgram, Review } from "@/types";
 import VerificationBadge from "@/components/institutions/VerificationBadge";
 import ReportCorrectionForm from "@/components/institutions/ReportCorrectionForm";
 import AdmissionCard from "@/components/admissions/AdmissionCard";
+import ShareButton from "@/components/ui/ShareButton";
 import type { Admission } from "@/types";
 
 // Affiliation → gradient config
@@ -81,7 +85,7 @@ async function getCollege(slug: string) {
       .eq("college_id", college.id),
     supabase
       .from("reviews")
-      .select("*")
+      .select("*, review_responses(*)")
       .eq("college_id", college.id)
       .eq("is_approved", true)
       .order("created_at", { ascending: false })
@@ -276,6 +280,7 @@ export default async function CollegeProfilePage({
             <h1 className="text-2xl font-bold text-ink leading-tight">
               {college.name}
             </h1>
+            <div className="mt-3 flex flex-wrap gap-2"><SaveCollegeButton collegeId={college.id} /><ShareButton title={`${college.name} | SikshyaNepal`} /></div>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <VerificationBadge status={college.verification_status} />
               {college.affiliation && (
@@ -343,7 +348,7 @@ export default async function CollegeProfilePage({
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
                 About
               </h2>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="whitespace-pre-line text-gray-600 leading-relaxed">
                 {college.description}
               </p>
             </div>
@@ -432,6 +437,19 @@ export default async function CollegeProfilePage({
                     )
                   })}
               </div>
+            ) : college.programs_offered ? (
+              <div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {college.programs_offered.split(';').map((program) => program.trim()).filter(Boolean).map((program) => (
+                    <div key={program} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-700">
+                      {program}
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-xs leading-relaxed text-gray-500">
+                  Program list is from the college research pack. Confirm current intakes and eligibility on the official website before applying.
+                </p>
+              </div>
             ) : (
               <p className="text-sm text-gray-500">No programs listed yet.</p>
             )}
@@ -462,7 +480,7 @@ export default async function CollegeProfilePage({
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
                         <p className="font-medium text-gray-800 text-sm">
-                          {review.student_name}
+                          <span className="inline-flex items-center gap-1">{review.student_name}{review.verification_status === 'verified' && <><BadgeCheck className="h-3.5 w-3.5 text-blue-600" /><span className="text-[10px] font-bold uppercase tracking-wide text-blue-700">Verified student</span></>}</span>
                         </p>
                         {review.program && (
                           <p className="text-xs text-gray-500">
@@ -482,6 +500,10 @@ export default async function CollegeProfilePage({
                     <p className="text-sm text-gray-600">
                       {review.review_text}
                     </p>
+                    {(review as Review & { review_responses?: { id: string; response_text: string; status: string; created_at: string }[] }).review_responses?.filter(response => response.status === 'published').map(response => <div key={response.id} className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-sm text-blue-950"><p className="text-xs font-bold uppercase tracking-wide text-blue-700">Institution response</p><p className="mt-1 leading-6">{response.response_text}</p></div>)}
+                    {Object.entries({ Teaching: review.teaching_rating, Facilities: review.facilities_rating, Administration: review.administration_rating, Value: review.value_rating, Placement: review.placement_rating, Attendance: review.attendance_rating, Safety: review.safety_rating, Internships: review.internship_support_rating }).some(([, value]) => value != null) && <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500">{Object.entries({ Teaching: review.teaching_rating, Facilities: review.facilities_rating, Administration: review.administration_rating, Value: review.value_rating, Placement: review.placement_rating, Attendance: review.attendance_rating, Safety: review.safety_rating, Internships: review.internship_support_rating }).filter(([, value]) => value != null).map(([label, value]) => <span key={label} className="rounded-full bg-gray-100 px-2 py-1">{label} {value}/5</span>)}{review.hidden_costs_reported && <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-800">Student reported unclear costs</span>}</div>}
+                    {review.hostel_transport_note && <p className="mt-3 rounded-lg bg-gray-50 p-3 text-xs leading-5 text-gray-600"><strong>Student note:</strong> {review.hostel_transport_note}</p>}
+                    <ReviewResponseForm reviewId={review.id} />
                   </div>
                 ))}
               </div>
@@ -536,7 +558,9 @@ export default async function CollegeProfilePage({
               )}
               <div className="flex justify-between">
                 <dt className="text-gray-500">Programs Offered</dt>
-                <dd className="font-medium text-gray-800">{programs.length}</dd>
+                <dd className="font-medium text-gray-800">
+                  {programs.length || (college.programs_offered ? college.programs_offered.split(';').filter(Boolean).length : 0)}
+                </dd>
               </div>
             </dl>
             {college.website && (

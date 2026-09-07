@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 export async function POST() {
-  const response = NextResponse.json({ success: true })
-  response.cookies.delete('admin_session')
-  return response
+  const { createAuthClient } = await import('@/lib/auth')
+  await createAuthClient().auth.signOut()
+  return NextResponse.json({ success: true })
 }

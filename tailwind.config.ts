@@ -9,31 +9,31 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['var(--font-sora)',    'system-ui', 'sans-serif'],
+        display: ['var(--font-sora)', 'Georgia', 'serif'],
         sans:    ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
         mono:    ['var(--font-dm-mono)', 'Menlo', 'monospace'],
       },
       colors: {
         // ── Primary — deep confident blue ─────────────
         primary: {
-          DEFAULT: '#1847c4',
-          50:  '#eff3fe',
-          100: '#dde6fd',
-          200: '#bccafb',
-          300: '#91a8f8',
-          600: '#1340b0',
-          700: '#0f2f8a',
+          DEFAULT: '#1e429f',
+          50:  '#eff3fb',
+          100: '#dce5f5',
+          200: '#bacce9',
+          300: '#91add8',
+          600: '#173782',
+          700: '#122b66',
         },
         // ── Accent — warm orange (Nepal flag energy) ──
         accent: {
-          DEFAULT: '#f97316',
-          50:  '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          600: '#ea6c0b',
+          DEFAULT: '#c93b37',
+          50:  '#fff5f3',
+          100: '#fee3df',
+          200: '#fac5bd',
+          600: '#ad2d2a',
         },
         // ── Dark sections ─────────────────────────────
-        navy: '#0d1b3e',
+        navy: '#16233f',
         // ── Surfaces & cards ─────────────────────────
         card:    '#ffffff',
         surface: '#ffffff',

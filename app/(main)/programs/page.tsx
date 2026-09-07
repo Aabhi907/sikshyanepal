@@ -167,7 +167,7 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
                         </div>
                       </Link>
                       <Link
-                        href={`/colleges?program=${prog.slug}`}
+                        href={`/colleges/program/${prog.slug}`}
                         className="text-xs text-blue-600 font-medium whitespace-nowrap hover:underline flex-shrink-0"
                       >
                         Find Colleges

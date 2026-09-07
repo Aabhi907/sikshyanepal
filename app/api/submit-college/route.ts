@@ -16,6 +16,15 @@ function slugify(text: string): string {
     .slice(0, 200)
 }
 
+function inferEducationLevels(programs: string[]): string[] {
+  const text = programs.join(' ').toLowerCase()
+  const levels = new Set<string>()
+  if (text.includes('+2')) levels.add('plus_two')
+  if (/\b(bca|bba|mbbs|bsc|bim|bhm|bbs|be|bpharm|bnurs|bachelor)\b/.test(text)) levels.add('bachelor')
+  if (/\b(mba|master|msc|ma|med)\b/.test(text)) levels.add('master')
+  return Array.from(levels)
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -66,6 +75,7 @@ export async function POST(request: Request) {
         description:       body.description?.trim() || null,
         affiliation:       body.affiliation,
         programs_offered:  Array.isArray(body.programs) ? body.programs.join(', ') : '',
+        education_levels:  inferEducationLevels(body.programs),
         is_featured:       false,
         status:            'pending_review',
         source:            'public_submission',

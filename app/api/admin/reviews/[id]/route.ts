@@ -1,21 +1,28 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { cookies } from 'next/headers'
+import { getAuthContext, isStaff } from '@/lib/auth'
 
-function isAuthed() {
-  return cookies().get('admin_session')?.value === 'authenticated'
-}
+const isAuthed = isStaff
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  if (!isAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAuthed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
+  const update: Record<string, unknown> = {}
+  if (typeof body.is_approved === 'boolean') update.is_approved = body.is_approved
+  if (['unverified', 'submitted', 'verified', 'rejected'].includes(body.verification_status)) update.verification_status = body.verification_status
+  if (body.verification_status === 'verified' || typeof body.is_approved === 'boolean') {
+    const auth = await getAuthContext()
+    update.moderated_at = new Date().toISOString()
+    update.moderated_by = auth?.user.id || null
+  }
+  if (!Object.keys(update).length) return NextResponse.json({ error: 'No supported review update.' }, { status: 400 })
   const supabase = createAdminSupabaseClient()
 
   const { data, error } = await supabase
     .from('reviews')
-    .update(body)
+    .update(update)
     .eq('id', params.id)
     .select('*, college:colleges(slug)')
     .single()
@@ -33,7 +40,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  if (!isAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAuthed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = createAdminSupabaseClient()
 

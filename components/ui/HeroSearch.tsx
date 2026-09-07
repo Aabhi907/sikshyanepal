@@ -38,14 +38,14 @@ export default function HeroSearch() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search schools, colleges, programs, results..."
-              className="w-full h-14 pl-12 pr-4 text-sm text-ink placeholder:text-gray-400
-                         bg-transparent focus:outline-none font-sans"
+              placeholder="Search education in Nepal"
+              aria-label="Search schools, colleges, programs and results"
+              className="h-14 w-full min-w-0 bg-transparent pl-11 pr-2 text-sm text-ink placeholder:text-gray-400 focus:outline-none sm:pl-12 sm:pr-4"
             />
           </div>
           <button
             type="submit"
-            className="flex-shrink-0 m-1.5 px-6 bg-[#1847c4] text-white text-sm font-semibold
+            className="m-1.5 flex-shrink-0 bg-[#1847c4] px-4 text-sm font-semibold text-white sm:px-6
                        rounded-lg hover:bg-[#1340b0] transition-colors duration-150 active:scale-[0.98]"
             style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)' }}
           >

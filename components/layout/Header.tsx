@@ -216,12 +216,17 @@ export default function Header() {
             </div>
 
             {/* ── Mobile ───────────────────────────────────── */}
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="xl:hidden p-2 text-ink-secondary hover:bg-gray-100 rounded-lg"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1 xl:hidden">
+              <SubscribeButton variant="header" />
+              <button
+                onClick={() => setMobileOpen(true)}
+                className="rounded-lg p-2 text-ink-secondary hover:bg-gray-100"
+                aria-label="Open navigation menu"
+                aria-expanded={mobileOpen}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -248,6 +253,7 @@ export default function Header() {
               </Link>
               <button
                 onClick={() => setMobileOpen(false)}
+                aria-label="Close navigation menu"
                 className="p-2 hover:bg-gray-100 rounded-lg text-ink-secondary"
               >
                 <X className="w-5 h-5" />

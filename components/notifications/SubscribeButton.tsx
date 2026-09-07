@@ -61,7 +61,7 @@ export default function SubscribeButton({ variant }: Props) {
 
   // The modal (shared between both variants)
   const modal = modalOpen && (
-    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 z-[200] flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="notification-dialog-title">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleDismiss} />
 
@@ -69,6 +69,7 @@ export default function SubscribeButton({ variant }: Props) {
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in slide-in-from-bottom-4 duration-200">
         <button
           onClick={handleDismiss}
+          aria-label="Close notification dialog"
           className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
         >
           <X className="w-4 h-4 text-gray-500" />
@@ -78,7 +79,7 @@ export default function SubscribeButton({ variant }: Props) {
           <Bell className="w-7 h-7 text-blue-600" />
         </div>
 
-        <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+        <h3 id="notification-dialog-title" className="text-lg font-bold text-gray-900 text-center mb-2">
           Get instant alerts when exam results drop
         </h3>
         <p className="text-sm text-gray-500 text-center mb-6">
@@ -112,6 +113,7 @@ export default function SubscribeButton({ variant }: Props) {
         <button
           onClick={() => subscribed ? undefined : setModalOpen(true)}
           title={subscribed ? 'Notifications enabled' : 'Enable notifications'}
+          aria-label={subscribed ? 'Notifications enabled' : 'Enable result and notice notifications'}
           className={`p-2 rounded-lg transition-colors ${
             subscribed
               ? 'text-blue-600 bg-blue-50 cursor-default'

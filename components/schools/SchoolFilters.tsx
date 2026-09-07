@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Filter, Search, X } from 'lucide-react'
 import { useState } from 'react'
+import { districtsForProvince, NEPAL_PROVINCES } from '@/lib/nepal-geography'
 
 export type SchoolSearchParams = {
   q?: string
@@ -15,8 +16,6 @@ export type SchoolSearchParams = {
   verified?: string
 }
 
-const PROVINCES = ['Koshi', 'Madhesh', 'Bagmati', 'Gandaki', 'Lumbini', 'Karnali', 'Sudurpashchim']
-
 export default function SchoolFilters({
   searchParams,
   districts,
@@ -27,6 +26,9 @@ export default function SchoolFilters({
   resultCount: number
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [province, setProvince] = useState(searchParams.province || '')
+  const [district, setDistrict] = useState(searchParams.district || '')
+  const provinceDistricts = province ? districtsForProvince(province) : districts
   const hasFilters = Object.values(searchParams).some(Boolean)
   const field = 'h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10'
 
@@ -46,16 +48,16 @@ export default function SchoolFilters({
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-semibold text-gray-500">Province</span>
-          <select name="province" defaultValue={searchParams.province || ''} className={field}>
+          <select name="province" value={province} onChange={(event) => { setProvince(event.target.value); setDistrict('') }} className={field}>
             <option value="">All provinces</option>
-            {PROVINCES.map((p) => <option key={p}>{p}</option>)}
+            {NEPAL_PROVINCES.map((p) => <option key={p}>{p}</option>)}
           </select>
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-semibold text-gray-500">District</span>
-          <select name="district" defaultValue={searchParams.district || ''} className={field}>
-            <option value="">All districts</option>
-            {districts.map((d) => <option key={d}>{d}</option>)}
+          <select name="district" value={district} onChange={(event) => setDistrict(event.target.value)} className={field} disabled={!province && provinceDistricts.length === 0}>
+            <option value="">{province ? `All districts in ${province}` : 'Choose a province first'}</option>
+            {provinceDistricts.map((d) => <option key={d}>{d}</option>)}
           </select>
         </label>
         <label className="block">

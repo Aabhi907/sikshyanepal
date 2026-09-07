@@ -45,6 +45,7 @@ const navItems = [
   { label: 'Audit Log',        href: '/admin/audit',            icon: ScrollText },
   { label: 'Colleges',         href: '/admin/colleges',         icon: Building2 },
   { label: 'Programs',         href: '/admin/programs',         icon: BookOpen },
+  { label: 'Study Resources',  href: '/admin/study-resources',  icon: BookOpen },
   { label: 'Pending Colleges', href: '/admin/colleges/pending', icon: Building2,  pending: true },
   { label: 'Applications',     href: '/admin/leads',            icon: Send,        revenue: true },
   { label: 'News',             href: '/admin/news',             icon: Newspaper },

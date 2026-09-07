@@ -52,6 +52,7 @@ const navLinks = [
       { label: 'Management',     href: '/programs?faculty=management' },
       { label: 'Medical',        href: '/programs?faculty=medical' },
       { label: 'Career Explorer', href: '/careers' },
+      { label: 'Study Resources', href: '/study-resources' },
       { label: 'Skills & Opportunities', href: '/opportunities' },
       { label: 'Student Wellbeing', href: '/wellbeing' },
       { label: 'Results', href: '/results' },

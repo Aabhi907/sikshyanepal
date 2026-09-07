@@ -278,6 +278,9 @@ export interface Syllabus {
   semester: string | null
   title: string
   file_url: string | null
+  source_url?: string | null
+  last_verified_at?: string | null
+  is_published?: boolean
   created_at: string
   program?: Program
   university?: University
@@ -291,6 +294,9 @@ export interface OldQuestion {
   year: number | null
   subject: string
   file_url: string | null
+  source_url?: string | null
+  last_verified_at?: string | null
+  is_published?: boolean
   created_at: string
   program?: Program
   university?: University

@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Filter, X, SlidersHorizontal } from 'lucide-react'
+import { districtsForProvince, NEPAL_PROVINCES } from '@/lib/nepal-geography'
 
 const LOCATIONS = ['Kathmandu', 'Pokhara', 'Chitwan', 'Biratnagar', 'Butwal', 'Other']
-const PROVINCES = ['Koshi', 'Madhesh', 'Bagmati', 'Gandaki', 'Lumbini', 'Karnali', 'Sudurpashchim']
+const PROVINCES = NEPAL_PROVINCES
 
 const AFFILIATIONS = [
   { label: 'TU',      value: 'Tribhuvan University',  hint: null },
@@ -58,6 +59,7 @@ function buildUrl(current: CollegeSearchParams, key: string, value: string): str
   // toggle: clicking an active filter removes it
   if (p.get(key) === value) p.delete(key)
   else p.set(key, value)
+  if (key === 'province') p.delete('district')
   const str = p.toString()
   return `/colleges${str ? `?${str}` : ''}`
 }
@@ -89,7 +91,7 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
     return (
       <div className="space-y-5">
         <div><p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Province</p><div className="flex flex-wrap gap-2">{PROVINCES.map(value => <Link key={value} href={buildUrl(searchParams, 'province', value)} onClick={() => setOpen(false)} className={pill(searchParams.province === value)}>{value}</Link>)}</div></div>
-        <form action="/colleges" className="grid gap-2 sm:grid-cols-2">{Object.entries(searchParams).filter(([key, value]) => value && key !== 'district' && key !== 'maxFee').map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}<input name="district" defaultValue={searchParams.district} placeholder="District" className="rounded-lg border border-gray-200 px-3 py-2 text-sm"/><select name="maxFee" defaultValue={searchParams.maxFee || ''} className="rounded-lg border border-gray-200 px-3 py-2 text-sm"><option value="">Any annual fee</option><option value="100000">Under NPR 1 lakh</option><option value="250000">Under NPR 2.5 lakh</option><option value="500000">Under NPR 5 lakh</option><option value="1000000">Under NPR 10 lakh</option></select><button className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2">Apply district & fee</button></form>
+        <form action="/colleges" className="grid gap-2 sm:grid-cols-2">{Object.entries(searchParams).filter(([key, value]) => value && key !== 'district' && key !== 'maxFee').map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}<select name="district" defaultValue={searchParams.district || ''} disabled={!searchParams.province} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"><option value="">{searchParams.province ? `All districts in ${searchParams.province}` : 'Choose province first'}</option>{districtsForProvince(searchParams.province || '').map(district=><option key={district}>{district}</option>)}</select><select name="maxFee" defaultValue={searchParams.maxFee || ''} className="rounded-lg border border-gray-200 px-3 py-2 text-sm"><option value="">Any annual fee</option><option value="100000">Under NPR 1 lakh</option><option value="250000">Under NPR 2.5 lakh</option><option value="500000">Under NPR 5 lakh</option><option value="1000000">Under NPR 10 lakh</option></select><button className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2">Apply district & fee</button></form>
         <div><p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Trust & support</p><div className="flex flex-wrap gap-2"><Link href={buildUrl(searchParams,'scholarship','true')} className={pill(searchParams.scholarship==='true')}>Scholarship available</Link><Link href={buildUrl(searchParams,'verified','true')} className={pill(searchParams.verified==='true')}>Verified colleges</Link></div></div>
         {/* Location */}
         <div>

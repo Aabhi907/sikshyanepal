@@ -55,6 +55,7 @@ const navLinks = [
       { label: 'Skills & Opportunities', href: '/opportunities' },
       { label: 'Student Wellbeing', href: '/wellbeing' },
       { label: 'Results', href: '/results' },
+      { label: 'Entrance Exams', href: '/entrance-exams' },
       { label: 'Notices', href: '/notices' },
       { label: 'Education News', href: '/news' },
       { label: 'Scholarships', href: '/scholarships' },

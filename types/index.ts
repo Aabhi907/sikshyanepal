@@ -159,6 +159,30 @@ export interface University {
   created_at: string
 }
 
+export interface EntranceExam {
+  id: string
+  title: string
+  slug: string
+  university_id: string | null
+  program: string | null
+  exam_body: string | null
+  education_level: string | null
+  exam_date: string | null
+  application_deadline: string | null
+  fee: number | null
+  description: string | null
+  eligibility: string | null
+  exam_url: string | null
+  syllabus_url: string | null
+  source_name: string | null
+  source_url: string | null
+  last_verified_at: string | null
+  status: 'draft' | 'published' | 'closed'
+  created_at: string
+  updated_at: string
+  university?: University | null
+}
+
 export interface Result {
   id: string
   title: string

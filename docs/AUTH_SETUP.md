@@ -16,4 +16,14 @@ where id = (select id from auth.users where email = 'OWNER_EMAIL_HERE');
 5. Representatives register, sign in, and submit a request at `/account/claim`.
 6. An editor or owner verifies the requester through official contact details before approving `/admin/claims`.
 
+## Google sign-in
+
+1. In Google Cloud Console, create an OAuth 2.0 Web application.
+2. Add the Supabase callback URL shown under **Supabase → Authentication → Providers → Google** as an authorized redirect URI. It normally looks like `https://PROJECT_REF.supabase.co/auth/v1/callback`.
+3. Paste the Google client ID and client secret into the Supabase Google provider and enable it.
+4. In **Supabase → Authentication → URL Configuration**, set the production site URL and add these redirect URLs:
+   - `http://localhost:3000/auth/callback`
+   - `https://YOUR_DOMAIN/auth/callback`
+5. Test both `/account/login` and `/account/register`. A successful Google login returns the student to `/my-path`.
+
 Never place passwords, access tokens, or the Supabase service-role key in Git. The service-role key is server-only. There is no fallback admin password.

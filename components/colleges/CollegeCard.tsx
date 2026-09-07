@@ -42,10 +42,16 @@ export default function CollegeCard({ college }: CollegeCardProps) {
   const affiliShort   = affiliationShort(college.affiliation)
   const coverGradient = AFFIL_GRADIENT[college.affiliation ?? ''] ?? 'from-gray-600 to-gray-800'
 
-  const topPrograms = (college.programs ?? [])
+  const linkedPrograms = (college.programs ?? [])
     .slice(0, 4)
     .map((cp) => cp.program?.name)
     .filter(Boolean) as string[]
+  const researchedPrograms = (college.programs_offered ?? '')
+    .split(';')
+    .map((program) => program.trim())
+    .filter(Boolean)
+    .slice(0, 4)
+  const topPrograms = linkedPrograms.length > 0 ? linkedPrograms : researchedPrograms
   const levelLabels: Record<string, string> = { plus_two: '+2', bachelor: 'Bachelor', master: 'Master', mphil: 'MPhil', phd: 'PhD', diploma: 'Diploma', certificate: 'Certificate' }
 
   const hasFees  = college.fee_min != null && college.fee_max != null

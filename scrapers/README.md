@@ -20,7 +20,11 @@ records and defaults to a dry run. With `--commit`, new records are inserted as
 `pending_review`, never directly into the public directory. Review each record's
 website, current programs, affiliation, fees and admissions before changing its
 status to active and verification status to source/institution verified.
-into the SikshyaNepal Supabase database every 6 hours via GitHub Actions.
+
+For the reviewed 50-college pack used by this project, apply
+`supabase/migrations/20260923_research_college_profiles.sql`. It upserts the
+static, source-reviewed profiles as active directory entries and deliberately
+omits dynamic fees, deadlines, eligibility and scholarship amounts.
 
 ## Collectors
 

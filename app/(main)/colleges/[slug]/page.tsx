@@ -348,7 +348,7 @@ export default async function CollegeProfilePage({
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
                 About
               </h2>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="whitespace-pre-line text-gray-600 leading-relaxed">
                 {college.description}
               </p>
             </div>
@@ -436,6 +436,19 @@ export default async function CollegeProfilePage({
                       </div>
                     )
                   })}
+              </div>
+            ) : college.programs_offered ? (
+              <div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {college.programs_offered.split(';').map((program) => program.trim()).filter(Boolean).map((program) => (
+                    <div key={program} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-700">
+                      {program}
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-xs leading-relaxed text-gray-500">
+                  Program list is from the college research pack. Confirm current intakes and eligibility on the official website before applying.
+                </p>
               </div>
             ) : (
               <p className="text-sm text-gray-500">No programs listed yet.</p>
@@ -545,7 +558,9 @@ export default async function CollegeProfilePage({
               )}
               <div className="flex justify-between">
                 <dt className="text-gray-500">Programs Offered</dt>
-                <dd className="font-medium text-gray-800">{programs.length}</dd>
+                <dd className="font-medium text-gray-800">
+                  {programs.length || (college.programs_offered ? college.programs_offered.split(';').filter(Boolean).length : 0)}
+                </dd>
               </div>
             </dl>
             {college.website && (

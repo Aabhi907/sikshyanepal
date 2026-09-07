@@ -178,17 +178,17 @@ export default function Header() {
                   )}
 
                   {link.sub && openDrop === link.label && (
-                    <div className="absolute top-full left-0 z-50">
+                    <div className={`absolute top-full z-50 ${link.label === 'Explore' ? 'right-0' : 'left-0'}`}>
                       {/* Invisible bridge: fills the gap between trigger bottom and
                           dropdown top so the mouse never "misses" while moving down */}
                       <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent" />
-                      <div className="mt-1.5 w-64 bg-white border border-border rounded-xl shadow-card-lg py-1.5 animate-slide-down">
+                      <div className={`mt-1.5 max-h-[70vh] overflow-y-auto overscroll-contain bg-white border border-border rounded-xl shadow-card-lg py-1.5 animate-slide-down ${link.label === 'Explore' ? 'grid w-[32rem] grid-cols-2 gap-x-1 p-2' : 'w-64'}`}>
                         {link.sub.map((s) => (
                           <Link
                             key={s.label}
                             href={s.href}
                             onClick={() => setOpenDrop(null)}
-                            className="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary transition-colors duration-150"
+                            className="block rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary transition-colors duration-150"
                           >
                             {s.label}
                           </Link>

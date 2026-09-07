@@ -20,6 +20,8 @@ export async function GET() {
 export async function POST(request: Request) {
   if (!(await isAuthed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await request.json()
+  if (!body.title?.trim() || !body.provider_name?.trim() || !body.source_name?.trim() || !/^https?:\/\//.test(body.source_url || '')) return NextResponse.json({ error: 'Title, provider and a valid official source are required.' }, { status: 400 })
+  body.last_verified_at = new Date().toISOString()
   const supabase = createAdminSupabaseClient()
   const { data, error } = await supabase.from('scholarships').insert(body).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -1,104 +1,27 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Award, Calendar, CheckCircle2, ExternalLink, Search } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase'
-import { formatDateShort } from '@/lib/utils'
-import { Award, Calendar, MapPin, ExternalLink } from 'lucide-react'
-
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
 import type { Scholarship } from '@/types'
 
-export const metadata: Metadata = {
-  title: 'Scholarships in Nepal | College & University Scholarships | SikshyaNepal',
-  description: 'Find scholarships available at colleges and universities in Nepal. Merit-based, need-based, and government scholarships.',
-}
+export const dynamic = 'force-dynamic'
+export const metadata: Metadata = { title: 'Scholarship Finder Nepal – Check Funding Options', description: 'Match scholarships in Nepal by study level, funding type and student eligibility, with official sources and verified deadlines.' }
+const LEVELS = ['+2', 'Bachelor', 'Master', 'Diploma']
+const GROUPS: Record<string,string> = { merit: 'Merit-based', need_based: 'Financial need', female: 'Female students', disability: 'Students with disabilities', dalit: 'Dalit students', janajati: 'Janajati students', remote_area: 'Remote-area students' }
+const date = (value: string) => new Date(value).toLocaleDateString('en-NP', { day: 'numeric', month: 'short', year: 'numeric' })
 
-async function getScholarships() {
-  const supabase = createServerSupabaseClient()
-  const { data } = await supabase
-    .from('scholarships')
-    .select('*, college:colleges(name, slug, location)')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
-    .limit(50)
-  return (data || []) as (Scholarship & { college?: { name: string; slug: string; location: string } | null })[]
-}
-
-export default async function ScholarshipsPage() {
-  const scholarships = await getScholarships()
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <Award className="w-6 h-6 text-green-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Scholarships</h1>
-        </div>
-        <p className="text-gray-500">Find scholarships to fund your education in Nepal</p>
-      </div>
-
-      {scholarships.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {scholarships.map((s) => (
-            <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Award className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{s.title}</h3>
-                    {s.college && (
-                      <Link href={`/colleges/${s.college.slug}`} className="text-sm text-blue-600 hover:underline">
-                        {s.college.name}
-                      </Link>
-                    )}
-                  </div>
-                </div>
-                {s.amount && (
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-green-700">NPR {s.amount.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500">max amount</p>
-                  </div>
-                )}
-              </div>
-
-              {s.description && (
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{s.description}</p>
-              )}
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {s.college?.location && (
-                    <span className="flex items-center gap-1 text-xs text-gray-500">
-                      <MapPin className="w-3.5 h-3.5" /> {s.college.location}
-                    </span>
-                  )}
-                  {s.deadline && (
-                    <span className="flex items-center gap-1 text-xs text-orange-600 font-medium">
-                      <Calendar className="w-3.5 h-3.5" /> Deadline: {formatDateShort(s.deadline)}
-                    </span>
-                  )}
-                </div>
-                {s.college && (
-                  <Link
-                    href={`/colleges/${s.college.slug}`}
-                    className="text-xs text-blue-600 font-medium flex items-center gap-1 hover:underline"
-                  >
-                    Apply <ExternalLink className="w-3 h-3" />
-                  </Link>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
-          <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <h3 className="font-medium text-gray-900 mb-1">No scholarships listed yet</h3>
-          <p className="text-sm text-gray-500">Check back soon</p>
-        </div>
-      )}
-    </div>
-  )
+export default async function ScholarshipsPage({ searchParams }: { searchParams: { q?: string; level?: string; group?: string; open?: string } }) {
+  const db = createServerSupabaseClient()
+  let query = db.from('scholarships').select('*, college:colleges(name,slug,location)').eq('is_active', true).order('deadline', { ascending: true, nullsFirst: false }).limit(100)
+  if (searchParams.q) query = query.or(`title.ilike.%${searchParams.q}%,provider_name.ilike.%${searchParams.q}%,eligibility.ilike.%${searchParams.q}%`)
+  if (searchParams.level) query = query.contains('education_levels', [searchParams.level])
+  if (searchParams.group) query = query.contains('target_groups', [searchParams.group])
+  if (searchParams.open === 'true') query = query.gte('deadline', new Date().toISOString())
+  const { data } = await query
+  const items = (data || []) as Scholarship[]
+  return <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[.14em] text-[#9a302c]">Funding that fits you</p><h1 className="mt-2 font-display text-4xl font-bold text-ink">Scholarship finder</h1><p className="mt-3 leading-7 text-slate-600">Filter by your study level and situation. A match means “worth checking”—final eligibility always comes from the official provider.</p></div>
+    <form className="mt-7 grid gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:grid-cols-4"><label className="relative"><Search className="absolute left-3 top-3.5 h-4 w-4 text-gray-400"/><input name="q" defaultValue={searchParams.q} placeholder="Search scholarships" className="w-full rounded-lg border border-gray-200 py-3 pl-9 pr-3 text-sm"/></label><select name="level" defaultValue={searchParams.level||''} className="rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="">Any study level</option>{LEVELS.map(x=><option key={x}>{x}</option>)}</select><select name="group" defaultValue={searchParams.group||''} className="rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="">Any eligibility group</option>{Object.entries(GROUPS).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select><button className="rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white">Show my matches</button><label className="flex items-center gap-2 text-sm text-slate-600 md:col-span-4"><input type="checkbox" name="open" value="true" defaultChecked={searchParams.open==='true'}/>Only show future deadlines</label></form>
+    <div className="mt-8 flex items-end justify-between"><div><h2 className="text-xl font-bold text-ink">Matching opportunities</h2><p className="mt-1 text-sm text-slate-500">{items.length} result{items.length===1?'':'s'}</p></div><Link href="/scholarships" className="text-sm font-bold text-primary">Clear filters</Link></div>
+    {items.length?<div className="mt-4 grid gap-5 md:grid-cols-2">{items.map(s=><article key={s.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wide text-emerald-700">{s.scholarship_type||'Scholarship'}</p><h3 className="mt-1 text-lg font-bold text-ink">{s.title}</h3><p className="mt-1 text-sm text-slate-500">{s.provider_name||s.college?.name||'Scholarship provider'}</p></div><Award className="h-6 w-6 shrink-0 text-amber-500"/></div>{s.coverage&&<p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">{s.coverage}</p>}<div className="mt-4 flex flex-wrap gap-2">{(s.education_levels||[]).map(x=><span key={x} className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">{x}</span>)}{(s.target_groups||[]).slice(0,3).map(x=><span key={x} className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">{GROUPS[x]||x}</span>)}</div>{s.eligibility&&<p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-600"><strong className="text-ink">Who can apply:</strong> {s.eligibility}</p>}<div className="mt-5 flex flex-wrap items-center gap-4 border-t border-gray-100 pt-4 text-xs">{s.deadline&&<span className="flex items-center gap-1 font-bold text-orange-700"><Calendar className="h-3.5 w-3.5"/>Deadline {date(s.deadline)}</span>}{s.last_verified_at&&<span className="flex items-center gap-1 text-slate-500"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600"/>Checked {date(s.last_verified_at)}</span>}<a href={s.application_url||s.source_url||'#'} target="_blank" rel="noopener noreferrer" className="ml-auto flex items-center gap-1 font-bold text-primary">Official details <ExternalLink className="h-3.5 w-3.5"/></a></div></article>)}</div>:<div className="mt-4 rounded-xl border border-gray-200 bg-white py-16 text-center"><Award className="mx-auto h-10 w-10 text-gray-300"/><h3 className="mt-3 font-bold text-ink">No matching scholarships</h3><p className="mt-1 text-sm text-slate-500">Clear a filter or check again when new verified opportunities are added.</p></div>}
+  </div>
 }

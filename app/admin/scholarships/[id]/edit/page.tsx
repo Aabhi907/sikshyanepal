@@ -6,5 +6,5 @@ export default async function EditScholarshipPage({ params }: { params: { id: st
   const supabase = createServerSupabaseClient()
   const { data } = await supabase.from('scholarships').select('*').eq('id', params.id).single()
   if (!data) notFound()
-  return <ScholarshipForm initialData={{ ...data, amount: data.amount?.toString() || '', deadline: data.deadline?.split('T')[0] || '' }} scholarshipId={params.id} isEdit />
+  return <ScholarshipForm initialData={{ ...data, amount: data.amount?.toString() || '', deadline: data.deadline?.split('T')[0] || '', education_levels: data.education_levels?.join(', ') || '', target_groups: data.target_groups?.join(', ') || '' }} scholarshipId={params.id} isEdit />
 }

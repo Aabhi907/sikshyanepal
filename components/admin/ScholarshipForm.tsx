@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, ArrowLeft } from 'lucide-react'
 
-interface ScholarshipFormData { title: string; description: string; amount: string; college_id: string; deadline: string; eligibility: string; application_url: string }
-const EMPTY: ScholarshipFormData = { title: '', description: '', amount: '', college_id: '', deadline: '', eligibility: '', application_url: '' }
+interface ScholarshipFormData { title: string; description: string; amount: string; college_id: string; deadline: string; eligibility: string; application_url: string; provider_name: string; scholarship_type: string; education_levels: string; target_groups: string; coverage: string; source_name: string; source_url: string }
+const EMPTY: ScholarshipFormData = { title: '', description: '', amount: '', college_id: '', deadline: '', eligibility: '', application_url: '', provider_name: '', scholarship_type: '', education_levels: '', target_groups: '', coverage: '', source_name: '', source_url: '' }
 
 interface Props { initialData?: Partial<ScholarshipFormData>; scholarshipId?: string; isEdit?: boolean }
 
@@ -25,7 +25,7 @@ export default function ScholarshipForm({ initialData, scholarshipId, isEdit = f
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    const payload = { ...form, amount: form.amount ? parseFloat(form.amount) : null, college_id: form.college_id || null }
+    const payload = { ...form, amount: form.amount ? parseFloat(form.amount) : null, college_id: form.college_id || null, education_levels: form.education_levels.split(',').map(x => x.trim()).filter(Boolean), target_groups: form.target_groups.split(',').map(x => x.trim()).filter(Boolean) }
     const res = await fetch(isEdit ? `/api/admin/scholarships/${scholarshipId}` : '/api/admin/scholarships', {
       method: isEdit ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -47,6 +47,13 @@ export default function ScholarshipForm({ initialData, scholarshipId, isEdit = f
           { label: 'Title *', field: 'title', placeholder: 'e.g. Merit Scholarship 2081' },
           { label: 'Eligibility', field: 'eligibility', placeholder: 'e.g. GPA 3.5+ in previous year' },
           { label: 'Application URL', field: 'application_url', placeholder: 'https://...' },
+          { label: 'Provider name *', field: 'provider_name', placeholder: 'e.g. Ministry of Education' },
+          { label: 'Scholarship type', field: 'scholarship_type', placeholder: 'e.g. Need-based, Merit' },
+          { label: 'Coverage', field: 'coverage', placeholder: 'e.g. Full tuition or NPR 50,000' },
+          { label: 'Study levels (comma-separated)', field: 'education_levels', placeholder: '+2, Bachelor' },
+          { label: 'Target tags (comma-separated)', field: 'target_groups', placeholder: 'merit, need_based, female' },
+          { label: 'Official source name *', field: 'source_name', placeholder: 'Official provider website' },
+          { label: 'Official source URL *', field: 'source_url', placeholder: 'https://...' },
         ].map(({ label, field, placeholder }) => (
           <div key={field}>
             <label className="block text-sm font-medium text-gray-300 mb-1.5">{label}</label>

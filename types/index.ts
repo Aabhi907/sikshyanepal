@@ -256,6 +256,17 @@ export interface Scholarship {
   description: string | null
   amount: number | null
   deadline: string | null
+  eligibility: string | null
+  application_url: string | null
+  is_active: boolean
+  provider_name?: string | null
+  scholarship_type?: string | null
+  education_levels?: string[]
+  target_groups?: string[]
+  coverage?: string | null
+  source_name?: string | null
+  source_url?: string | null
+  last_verified_at?: string | null
   created_at: string
   college?: College
 }

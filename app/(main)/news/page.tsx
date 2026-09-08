@@ -12,8 +12,8 @@ export const dynamic   = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: 'Education News in Nepal',
-  description: 'Latest education news from Nepal. Stay updated with policy changes, exam announcements, and more.',
+  title: 'Nepal College News, Admissions & Student Achievements',
+  description: 'Verified Nepal college news for +2 and Bachelor students: admissions, entrance results, scholarships, awards, hackathons and campus events with original sources.',
   alternates: { canonical: '/news' },
 }
 
@@ -26,10 +26,11 @@ const CARD_GRADIENTS = [
   { from: 'from-rose-600',    to: 'to-pink-700' },
 ]
 
-async function getNews(searchParams: { q?: string }) {
+async function getNews(searchParams: { q?: string; topic?: string }) {
   const supabase = createServerSupabaseClient()
   let query = supabase.from('news').select('*').eq('status', 'published').order('published_date', { ascending: false })
   if (searchParams.q) query = query.ilike('title', `%${searchParams.q}%`)
+  if (searchParams.topic) query = query.eq('content_category', searchParams.topic)
   const { data } = await query.limit(30)
   return (data || []) as News[]
 }
@@ -46,7 +47,7 @@ function GradientCover({ idx }: { idx: number }) {
   )
 }
 
-export default async function NewsPage({ searchParams }: { searchParams: { q?: string } }) {
+export default async function NewsPage({ searchParams }: { searchParams: { q?: string; topic?: string } }) {
   const newsList = await getNews(searchParams)
   const featured = newsList[0]
   const rest     = newsList.slice(1)
@@ -57,15 +58,18 @@ export default async function NewsPage({ searchParams }: { searchParams: { q?: s
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Education News</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Nepal College News</p>
           <h1 className="font-display font-bold text-ink text-3xl sm:text-4xl mb-2"
               style={{ letterSpacing: '-0.025em' }}>
-            Latest Updates
+            College admissions, results and campus updates
           </h1>
           <p className="text-gray-500 text-sm mb-6">
-            Policy changes, exam announcements, and education news from Nepal
+            Source-backed updates for +2 and Bachelor students, checked against the original publisher.
           </p>
           <SearchBar placeholder="Search news..." redirectTo="/news" />
+          <nav aria-label="College news topics" className="mt-5 flex gap-2 overflow-x-auto pb-1 text-sm">
+            {[['', 'All'], ['admission', 'Admissions'], ['entrance_result', 'Entrance & results'], ['scholarship', 'Scholarships'], ['event', 'Campus events'], ['achievement', 'Achievements']].map(([value, label]) => <Link key={label} href={value ? `/news?topic=${value}` : '/news'} className={`whitespace-nowrap rounded-full border px-3 py-1.5 font-medium ${searchParams.topic === value || (!searchParams.topic && !value) ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-primary'}`}>{label}</Link>)}
+          </nav>
         </div>
       </div>
 

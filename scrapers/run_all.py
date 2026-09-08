@@ -25,6 +25,7 @@ from ctevt_notices import CTEVTNoticesScraper
 from tu_notices import TUNoticesScraper
 from neb_notices import NEBNoticesScraper
 from college_scraper import CollegeScraper
+from college_newsroom import CollegeNewsroomScraper
 
 load_dotenv()
 
@@ -114,6 +115,7 @@ def post_to_facebook(message: str, link: str) -> None:
 def run() -> int:
     # Order: TU results → KU → PU → POU notices → CTEVT → TU notices → NEB
     scrapers = [
+        ("College Newsroom", CollegeNewsroomScraper),
         ("TU Results",    TUResultsScraper),
         ("KU Results",    KUResultsScraper),
         ("PU Results",    PUResultsScraper),

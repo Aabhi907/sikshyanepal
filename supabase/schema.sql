@@ -296,7 +296,12 @@ CREATE TABLE IF NOT EXISTS news (
   author TEXT DEFAULT 'SikshyaNepal Editorial Team',
   tags TEXT[],
   published_date TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  author_name TEXT NOT NULL DEFAULT 'SikshyaNepal Editorial', source_name TEXT, source_url TEXT,
+  last_verified_at TIMESTAMPTZ, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  status TEXT NOT NULL DEFAULT 'published', content_category TEXT NOT NULL DEFAULT 'college_news',
+  education_levels TEXT[] NOT NULL DEFAULT '{}', college_id UUID REFERENCES colleges(id) ON DELETE SET NULL,
+  automation_mode TEXT NOT NULL DEFAULT 'manual', disclosure TEXT
 );
 
 -- ============================================================
@@ -322,7 +327,10 @@ CREATE TABLE IF NOT EXISTS content_ingestion_items (
   reviewed_by TEXT, reviewed_at TIMESTAMPTZ, published_record_id UUID, content_hash TEXT, raw_snapshot TEXT,
   confidence_score SMALLINT NOT NULL DEFAULT 0 CHECK (confidence_score BETWEEN 0 AND 100),
   verification_status TEXT NOT NULL DEFAULT 'pending' CHECK (verification_status IN ('pending', 'source_verified', 'editor_verified', 'rejected')),
-  last_source_check_at TIMESTAMPTZ, fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_source_check_at TIMESTAMPTZ, content_category TEXT NOT NULL DEFAULT 'college_news',
+  claim_risk TEXT NOT NULL DEFAULT 'medium', college_id UUID REFERENCES colleges(id) ON DELETE SET NULL,
+  auto_publish_eligible BOOLEAN NOT NULL DEFAULT FALSE, generation_version TEXT,
+  fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

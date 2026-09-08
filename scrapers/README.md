@@ -1,15 +1,18 @@
 # SikshyaNepal Scrapers
 
-Automated collectors for exam results and university notices.
+Automated collectors for college news, admissions, exam results and university notices.
 
 ## Editorial safety model
 
-Collectors never publish scraped news, notices, or results directly. Every item is
+Collectors never republish scraped text. Every item is
 stored in `content_ingestion_items` with its original URL, normalized payload,
 quality flags, source registry entry, and a SHA-256 duplicate fingerprint. An editor
 must open `/admin/ingestion`, compare the item with the original source, and choose
-**Verify & publish** or **Reject**. Approval creates the public record and preserves
-the queue audit trail. Do not add a direct-publish mode to a collector.
+**Verify & publish** or **Reject**. The college newsroom has one narrow exception:
+an original brief about a low-risk admission or campus-event announcement may publish
+automatically when it is matched to an active, verified college and its official
+website. Rankings, awards, result statistics, named student ranks, placements and
+scholarship claims always require editor review.
 
 Before running collectors, apply `supabase/migrations/20260905_content_ingestion_queue.sql`.
 
@@ -34,12 +37,24 @@ omits dynamic fees, deadlines, eligibility and scholarship amounts.
 | `ku_results.py` | kuexam.edu.np | Editorial queue → results | KU exam results with program, semester, result URL |
 | `tu_notices.py` | tribhuvan-university.edu.np | Editorial queue → notices | TU official notices, admission notices, exam schedules |
 | `neb_notices.py` | neb.gov.np | Editorial queue → notices | NEB exam notices, Grade 11/12 schedules, results |
+| `college_newsroom.py` | Verified college websites | News or editorial queue | +2/Bachelor admissions, events, scholarships, achievements and results |
 
 All collectors:
-- Store candidates in the editorial queue; they never publish content by themselves
+- Store every candidate and its evidence in the editorial queue
 - Skip duplicate entries using a source fingerprint and preserve the original source URL
 - Never crash the entire run if one record fails
 - Log exactly how many records were inserted vs skipped
+
+The scheduled workflow runs at 00:17, 05:17, 10:17, 15:17 and 20:17 UTC. GitHub
+Actions schedules are best-effort and may start a few minutes late. Apply
+`20261002_college_newsroom_automation.sql` before enabling the workflow.
+
+## Ranking and “best college” articles
+
+Never generate a “best college” list from promotional language or payment. Publish
+one only after defining a dated methodology, the eligible college set, comparable
+verified evidence, scoring weights, conflict disclosures and a correction route.
+Sponsored placements must be visibly labelled and must not change editorial scores.
 
 ---
 

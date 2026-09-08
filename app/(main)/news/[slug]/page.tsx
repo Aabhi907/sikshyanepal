@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createServerSupabaseClient } from '@/lib/supabase'
-import { ArrowLeft, Calendar, User, Download, ExternalLink, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Calendar, User, Download, ExternalLink, ShieldCheck, Building2 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import type { News } from '@/types'
 import PdfViewer from '@/components/results/PdfViewer'
@@ -36,7 +36,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
   const hasPdf = news.content_type === 'pdf' && !!news.news_pdf_url
   const pageUrl = absoluteUrl(`/news/${news.slug}`)
   const jsonLd = { '@context': 'https://schema.org', '@graph': [
-    { '@type': 'NewsArticle', '@id': `${pageUrl}#article`, headline: news.title, description: news.content?.slice(0, 300) || undefined, datePublished: news.published_date || undefined, dateModified: news.updated_at || news.created_at || news.published_date || undefined, mainEntityOfPage: { '@id': `${pageUrl}#webpage` }, image: news.image_url ? [news.image_url] : undefined, author: { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: news.author_name || 'SikshyaNepal Editorial' }, publisher: { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal', logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png` } }, citation: news.source_url || undefined },
+    { '@type': 'NewsArticle', '@id': `${pageUrl}#article`, headline: news.title, articleSection: news.content_category?.replaceAll('_', ' ') || 'College news', keywords: news.education_levels?.join(', '), description: news.content?.slice(0, 300) || undefined, datePublished: news.published_date || undefined, dateModified: news.updated_at || news.created_at || news.published_date || undefined, mainEntityOfPage: { '@id': `${pageUrl}#webpage` }, image: news.image_url ? [news.image_url] : undefined, author: { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: news.author_name || 'SikshyaNepal Editorial' }, publisher: { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal', logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png` } }, citation: news.source_url || undefined },
     { '@type': 'WebPage', '@id': `${pageUrl}#webpage`, url: pageUrl, name: news.title, mainEntity: { '@id': `${pageUrl}#article` }, isPartOf: { '@id': `${BASE_URL}/#website` } },
     breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Education news', path: '/news' }, { name: news.title, path: `/news/${news.slug}` }]),
   ] }
@@ -88,6 +88,8 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
               </p>
             </div>
           )}
+          {news.college_id && <p className="mt-6 flex items-center gap-2 text-sm text-gray-600"><Building2 className="h-4 w-4 text-primary" />This update is linked to a college profile in the SikshyaNepal directory.</p>}
+          {news.disclosure && <p className="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-xs leading-5 text-gray-500"><strong>How this was prepared:</strong> {news.disclosure}</p>}
           {(news.source_url || news.last_verified_at) && <div className="mt-7 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm"><p className="flex items-center gap-2 font-semibold text-ink"><ShieldCheck className="h-4 w-4 text-primary" />Source and verification</p>{news.last_verified_at && <p className="mt-2 text-gray-600">Last checked {formatDate(news.last_verified_at)}.</p>}{news.source_url && <a href={news.source_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 font-semibold text-primary">{news.source_name || 'Open original source'} <ExternalLink className="h-3.5 w-3.5" /></a>}</div>}
         </div>
       </article>

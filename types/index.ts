@@ -229,6 +229,11 @@ export interface News {
   last_verified_at?: string | null
   updated_at?: string
   status?: 'draft' | 'published' | 'archived'
+  content_category?: 'college_news' | 'admission' | 'achievement' | 'entrance_result' | 'event' | 'award' | 'scholarship' | 'ranking_methodology' | 'policy'
+  education_levels?: string[]
+  college_id?: string | null
+  automation_mode?: 'manual' | 'auto_published' | 'editor_approved'
+  disclosure?: string | null
 }
 
 export interface Review {

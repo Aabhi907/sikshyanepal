@@ -179,9 +179,9 @@ class BaseScraper:
         source_id = None
         try:
             source = self.supabase.table("content_sources").upsert({
-                "name": self.name,
+                "name": data.get("source_name") or self.name,
                 "base_url": f"{parsed.scheme}://{parsed.netloc}",
-                "source_type": "official",
+                "source_type": data.get("source_type") or "official",
                 "last_checked_at": datetime.now().isoformat(),
             }, on_conflict="name").execute()
             source_id = source.data[0]["id"] if source.data else None
@@ -203,6 +203,11 @@ class BaseScraper:
             "last_source_check_at": datetime.now().isoformat(),
             "quality_flags": flags,
             "status": "pending",
+            "content_category": data.get("content_category", "college_news"),
+            "claim_risk": data.get("claim_risk", "medium"),
+            "college_id": data.get("college_id"),
+            "auto_publish_eligible": bool(data.get("auto_publish_eligible", False)),
+            "generation_version": data.get("generation_version"),
         }
         try:
             existing = self.supabase.table("content_ingestion_items").select("id,content_hash,status,published_record_id,quality_flags").eq("fingerprint", fingerprint).limit(1).execute()
@@ -225,6 +230,8 @@ class BaseScraper:
                 self.supabase.table("content_sources").update({"last_success_at": datetime.now().isoformat(), "consecutive_failures": 0, "last_error": None}).eq("id", source_id).execute()
             self.logger.info(f"Queued for editorial review: {title[:80]}")
             self.inserted += 1
+            if target_type == "news" and row["auto_publish_eligible"]:
+                self._auto_publish_news(row)
             return True
         except Exception as e:
             if "23505" in str(e) or "duplicate" in str(e).lower() or "409" in str(e):
@@ -233,6 +240,42 @@ class BaseScraper:
             self.logger.error(f"Queue insert failed: {e}")
             self.errors += 1
             return False
+
+    def _auto_publish_news(self, queue_row: dict) -> None:
+        """Publish only a low-risk, source-backed, original college update."""
+        payload = queue_row.get("payload") or {}
+        content = str(payload.get("content") or "").strip()
+        if queue_row.get("claim_risk") != "low" or queue_row.get("confidence_score", 0) < 92:
+            return
+        if len(content) < 200 or not queue_row.get("college_id"):
+            return
+        source_id = queue_row.get("source_id")
+        try:
+            source = self.supabase.table("content_sources").select("name,auto_publish_low_risk,is_active").eq("id", source_id).single().execute()
+            source_data = source.data or {}
+            if not source_data.get("is_active") or not source_data.get("auto_publish_low_risk"):
+                return
+            now = datetime.now().isoformat()
+            news_row = {
+                "title": payload["title"], "slug": payload["slug"], "content": content,
+                "published_date": payload.get("published_date") or now,
+                "author_name": "SikshyaNepal Newsroom", "source_name": source_data.get("name"),
+                "source_url": queue_row["source_url"], "last_verified_at": now, "status": "published",
+                "content_category": queue_row["content_category"],
+                "education_levels": payload.get("education_levels") or ["plus_two", "bachelor"],
+                "college_id": queue_row["college_id"], "automation_mode": "auto_published",
+                "disclosure": "Automatically prepared from the linked official college announcement and checked by deterministic publication rules.",
+            }
+            published = self.supabase.table("news").upsert(news_row, on_conflict="slug").execute()
+            if published.data:
+                self.supabase.table("content_ingestion_items").update({
+                    "status": "approved", "verification_status": "source_verified",
+                    "reviewed_by": "college-newsroom-automation", "reviewed_at": now,
+                    "published_record_id": published.data[0]["id"],
+                }).eq("fingerprint", queue_row["fingerprint"]).execute()
+                self.logger.info(f"Auto-published low-risk college update: {payload['title'][:80]}")
+        except Exception as error:
+            self.logger.warning(f"Auto-publication skipped: {error}")
 
     # ------------------------------------------------------------------
     # University lookup (cached)

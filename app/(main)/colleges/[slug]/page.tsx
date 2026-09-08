@@ -128,10 +128,10 @@ export async function generateMetadata({
   if (!data) return { title: "College Not Found" };
   const { college } = data;
   return {
-    title: college.name,
+    title: `${college.name}: Programs, Admissions and Verified Details`,
     description:
       college.description ||
-      `Learn about ${college.name} - programs, fees, reviews, scholarships and more.`,
+      `Explore ${college.name} programs, affiliation, location, admissions, scholarships and verified college updates. Check original sources before applying.`,
     openGraph: {
       title: `${college.name} | SikshyaNepal`,
       description:
@@ -141,7 +141,7 @@ export async function generateMetadata({
       images: college.cover_url ? [{ url: college.cover_url }] : [],
     },
     alternates: { canonical: `${BASE_URL}/colleges/${college.slug}` },
-    robots: { index: college.status !== 'pending_review', follow: true },
+    robots: { index: college.status !== 'pending_review', follow: true, googleBot: { index: college.status !== 'pending_review', follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   };
 }
 
@@ -158,6 +158,18 @@ export default async function CollegeProfilePage({
     reviews.length > 0
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
       : null;
+  const linkedProgramNames = programs.map(item => item.program?.name).filter((name): name is string => Boolean(name));
+  const fallbackProgramNames = (college.programs_offered || '').split(';').map(name => name.trim()).filter(Boolean);
+  const programNames = linkedProgramNames.length ? linkedProgramNames : fallbackProgramNames;
+  const levelNames = (college.education_levels || []).map(level => ({ plus_two: '+2', bachelor: 'Bachelor', master: 'Master', mphil: 'MPhil', phd: 'PhD', diploma: 'Diploma', certificate: 'Certificate' }[level] || level));
+  const place = [college.local_level, college.district, college.province].filter(Boolean).join(', ') || college.location;
+  const facts = [
+    place ? { question: `Where is ${college.name} located?`, answer: `${college.name} is listed in ${place}, Nepal. Check the official contact page before travelling to the campus.` } : null,
+    college.affiliation ? { question: `Which university is ${college.name} affiliated with?`, answer: `${college.name} is listed as affiliated with ${college.affiliation}. Students should confirm the affiliation for their specific programme and intake.` } : null,
+    levelNames.length ? { question: `What study levels does ${college.name} offer?`, answer: `The profile currently lists ${levelNames.join(', ')} study options. Programme availability can change between admission cycles.` } : null,
+    programNames.length ? { question: `What can I study at ${college.name}?`, answer: `Listed programmes include ${programNames.slice(0, 6).join(', ')}${programNames.length > 6 ? ` and ${programNames.length - 6} more` : ''}. Open the programme section and verify the current intake with the college.` } : null,
+    { question: `How can I verify information about ${college.name}?`, answer: college.source_name ? `This profile was checked against ${college.source_name}. Use the visible source link and last-verified date, then confirm changing details such as fees, seats and deadlines with the college.` : `Use the college's official website and contact details to confirm programmes, fees, seats and deadlines before applying.` },
+  ].filter((fact): fact is { question: string; answer: string } => Boolean(fact));
 
   const pageUrl = absoluteUrl(`/colleges/${college.slug}`)
   const jsonLd = { "@context": "https://schema.org", "@graph": [
@@ -168,10 +180,12 @@ export default async function CollegeProfilePage({
       address: { "@type": "PostalAddress", streetAddress: college.address || undefined, addressLocality: college.local_level || college.location, addressRegion: college.province || undefined, addressCountry: "NP" },
       telephone: college.phone || undefined, email: college.email || undefined,
       foundingDate: college.established_year?.toString(), sameAs: college.website ? [college.website] : undefined,
+      hasOfferCatalog: programNames.length ? { '@type': 'OfferCatalog', name: `Programs at ${college.name}`, itemListElement: programNames.slice(0, 20).map(name => ({ '@type': 'Offer', itemOffered: { '@type': 'Course', name, provider: { '@id': `${pageUrl}#college` } } })) } : undefined,
       ...(avgRating && { aggregateRating: { "@type": "AggregateRating", ratingValue: avgRating.toFixed(1), reviewCount: reviews.length, bestRating: "5", worstRating: "1" } }),
     },
     { "@type": "WebPage", "@id": `${pageUrl}#webpage`, url: pageUrl, name: `${college.name} college profile`, mainEntity: { "@id": `${pageUrl}#college` }, dateModified: college.last_verified_at || college.created_at, citation: college.source_url || undefined, isPartOf: { "@id": `${absoluteUrl('/')}#website` } },
     breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Colleges', path: '/colleges' }, { name: college.name, path: `/colleges/${college.slug}` }]),
+    { '@type': 'FAQPage', '@id': `${pageUrl}#questions`, mainEntity: facts.map(fact => ({ '@type': 'Question', name: fact.question, acceptedAnswer: { '@type': 'Answer', text: fact.answer } })) },
   ] };
 
   return (
@@ -460,6 +474,12 @@ export default async function CollegeProfilePage({
               <div className="divide-y divide-gray-100">{news.map(article => <Link key={article.id} href={`/news/${article.slug}`} className="group flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"><div><p className="text-xs font-semibold uppercase tracking-wide text-blue-600">{article.content_category?.replaceAll('_', ' ') || 'College news'}</p><h3 className="mt-1 text-sm font-semibold text-gray-800 group-hover:text-blue-700">{article.title}</h3></div><span className="text-xs text-gray-400">{new Date(article.published_date).toLocaleDateString('en-NP', { day: 'numeric', month: 'short', year: 'numeric' })}</span></Link>)}</div>
             </section>
           )}
+
+          <section className="rounded-xl border border-gray-200 bg-white p-6" aria-labelledby="student-questions-heading">
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-600">Quick answers</p>
+            <h2 id="student-questions-heading" className="mt-2 text-lg font-semibold text-gray-900">Questions students ask about {college.name}</h2>
+            <div className="mt-5 divide-y divide-gray-100">{facts.map(fact => <details key={fact.question} className="group py-4 first:pt-0 last:pb-0"><summary className="cursor-pointer list-none pr-6 text-sm font-semibold text-gray-900 marker:hidden">{fact.question}<span className="float-right text-blue-600 group-open:rotate-45">+</span></summary><p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600">{fact.answer}</p></details>)}</div>
+          </section>
 
           {/* Reviews */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">

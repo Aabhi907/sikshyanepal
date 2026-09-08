@@ -27,6 +27,7 @@ function gradeLabel(school: School) {
 
 export default function SchoolCard({ school }: { school: School }) {
   const grades = gradeLabel(school)
+  const place = Array.from(new Set([school.local_level || school.location, school.district].filter(Boolean))).join(', ')
   return (
     <Link href={`/schools/${school.slug}`} className="group block h-full">
       <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-primary hover:shadow-lg">
@@ -59,14 +60,14 @@ export default function SchoolCard({ school }: { school: School }) {
           </div>
 
           <div className="space-y-2 text-xs text-gray-500">
-            <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-gray-400" />{school.local_level || school.location || school.district}, {school.district}</p>
+            <p className="flex items-start gap-1.5"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" /><span className="line-clamp-2">{place || school.province || 'Location not listed'}</span></p>
             {grades && <p className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 text-gray-400" />{grades}</p>}
             {school.student_count != null && <p className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-gray-400" />{school.student_count.toLocaleString()} students</p>}
           </div>
 
           <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
             <span className="text-xs font-medium text-gray-500">{ownershipLabel(school.ownership_type)}</span>
-            <span className="flex items-center gap-1 text-xs font-semibold text-primary">Profile <ArrowRight className="h-3 w-3" /></span>
+            <span className="flex items-center gap-1 text-xs font-semibold text-primary">View details <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" /></span>
           </div>
         </div>
       </article>

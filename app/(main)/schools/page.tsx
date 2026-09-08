@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Building2, Database, MapPinned, ShieldCheck } from 'lucide-react'
+import { Building2, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import SchoolCard from '@/components/schools/SchoolCard'
 import SchoolFilters, { type SchoolSearchParams } from '@/components/schools/SchoolFilters'
@@ -17,7 +17,9 @@ export const metadata: Metadata = {
 
 async function getSchools(sp: SchoolSearchParams) {
   const supabase = createServerSupabaseClient()
-  let query = supabase.from('schools').select('*').eq('status', 'active').or('grades_to.lte.10,grades_to.is.null').order('is_featured', { ascending: false }).order('name').limit(500)
+  const page = Math.max(1, Number.parseInt(sp.page || '1', 10) || 1)
+  const pageSize = 24
+  let query = supabase.from('schools').select('*', { count: 'exact' }).eq('status', 'active').or('grades_to.lte.10,grades_to.is.null').order('is_featured', { ascending: false }).order('name')
   if (sp.q) query = query.ilike('name', `%${sp.q}%`)
   if (sp.province) query = query.eq('province', sp.province)
   if (sp.district) query = query.eq('district', sp.district)
@@ -29,22 +31,17 @@ async function getSchools(sp: SchoolSearchParams) {
     query = query.or(`grades_from.lte.${grade},grades_from.is.null`).or(`grades_to.gte.${grade},grades_to.is.null`)
   }
   if (sp.verified === 'true') query = query.in('verification_status', ['source_verified', 'institution_verified'])
-  const { data, error } = await query
+  const from = (page - 1) * pageSize
+  const { data, error, count } = await query.range(from, from + pageSize - 1)
   if (error) console.error('[schools] query failed:', error.message)
-  return (data || []) as School[]
-}
-
-async function getDistricts(province?: string) {
-  const supabase = createServerSupabaseClient()
-  let query = supabase.from('schools').select('district').eq('status', 'active').or('grades_to.lte.10,grades_to.is.null').order('district').limit(5000)
-  if (province) query = query.eq('province', province)
-  const { data } = await query
-  return Array.from(new Set((data || []).map((row) => row.district).filter(Boolean))) as string[]
+  return { schools: (data || []) as School[], total: count || 0, page, pageSize }
 }
 
 export default async function SchoolsPage({ searchParams }: { searchParams: SchoolSearchParams }) {
-  const [schools, districts] = await Promise.all([getSchools(searchParams), getDistricts(searchParams.province)])
+  const { schools, total, page, pageSize } = await getSchools(searchParams)
   const verifiedCount = schools.filter((s) => s.verification_status !== 'unverified').length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const pageHref = (nextPage: number) => { const params = new URLSearchParams(); Object.entries(searchParams).forEach(([key, value]) => { if (value && key !== 'page') params.set(key, value) }); if (nextPage > 1) params.set('page', String(nextPage)); const query = params.toString(); return `/schools${query ? `?${query}` : ''}` }
 
   return (
     <div className="min-h-screen bg-[#f0f4ff]">
@@ -62,21 +59,16 @@ export default async function SchoolsPage({ searchParams }: { searchParams: Scho
       </section>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[['Profiles found', schools.length.toLocaleString(), Database], ['Verified results', verifiedCount.toLocaleString(), ShieldCheck], ['Districts', new Set(schools.map((s) => s.district)).size.toLocaleString(), MapPinned], ['Provinces', new Set(schools.map((s) => s.province)).size.toLocaleString(), Building2]].map(([label, value, Icon]) => (
-            <div key={String(label)} className="rounded-2xl border border-gray-200 bg-white p-4"><Icon className="mb-3 h-5 w-5 text-primary" /><p className="font-mono text-2xl font-extrabold text-ink">{String(value)}</p><p className="mt-1 text-xs font-medium text-gray-500">{String(label)}</p></div>
-          ))}
-        </div>
-
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <SchoolFilters searchParams={searchParams} districts={districts} resultCount={schools.length} />
+          <SchoolFilters searchParams={searchParams} resultCount={total} />
           <main>
-            <div className="mb-4 flex items-center justify-between gap-4"><p className="text-sm text-gray-500"><strong className="text-ink">{schools.length.toLocaleString()}</strong> matching school{schools.length === 1 ? '' : 's'}</p></div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-gray-500"><strong className="text-ink">{total.toLocaleString()}</strong> matching school{total === 1 ? '' : 's'}</p>{schools.length > 0 && <p className="text-xs text-gray-400">Page {page} of {totalPages} · {verifiedCount} source-checked on this page</p>}</div>
             {schools.length ? (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{schools.map((school) => <SchoolCard key={school.id} school={school} />)}</div>
             ) : (
               <div className="rounded-3xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center"><Building2 className="mx-auto h-10 w-10 text-gray-300" /><h2 className="mt-4 font-display text-xl font-bold text-ink">No schools match these filters</h2><p className="mt-2 text-sm text-gray-500">Try a broader location or clear the filters.</p><Link href="/schools" className="mt-5 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white">View all schools</Link></div>
             )}
+            {totalPages > 1 && <nav aria-label="Schools pages" className="mt-8 flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3"><Link href={pageHref(page - 1)} aria-disabled={page <= 1} className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-bold ${page <= 1 ? 'pointer-events-none text-gray-300' : 'text-primary hover:bg-blue-50'}`}><ChevronLeft className="h-4 w-4"/>Previous</Link><span className="text-xs font-semibold text-gray-500">{page} / {totalPages}</span><Link href={pageHref(page + 1)} aria-disabled={page >= totalPages} className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-bold ${page >= totalPages ? 'pointer-events-none text-gray-300' : 'text-primary hover:bg-blue-50'}`}>Next<ChevronRight className="h-4 w-4"/></Link></nav>}
           </main>
         </div>
 

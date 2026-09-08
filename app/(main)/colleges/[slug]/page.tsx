@@ -71,6 +71,7 @@ async function getCollege(slug: string) {
     .from("colleges")
     .select("*")
     .eq("slug", slug)
+    .or("status.eq.active,status.is.null")
     .single();
 
   if (!college) return null;
@@ -138,6 +139,7 @@ export async function generateMetadata({
       images: college.cover_url ? [{ url: college.cover_url }] : [],
     },
     alternates: { canonical: `${BASE_URL}/colleges/${college.slug}` },
+    robots: { index: college.status !== 'pending_review', follow: true },
   };
 }
 

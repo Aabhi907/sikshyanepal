@@ -223,6 +223,12 @@ export interface News {
   content_type: 'pdf' | 'image' | 'link' | null
   published_date: string
   created_at: string
+  author_name?: string
+  source_name?: string | null
+  source_url?: string | null
+  last_verified_at?: string | null
+  updated_at?: string
+  status?: 'draft' | 'published' | 'archived'
 }
 
 export interface Review {

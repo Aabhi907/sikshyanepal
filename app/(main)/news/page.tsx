@@ -12,8 +12,9 @@ export const dynamic   = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: 'Education News Nepal | SikshyaNepal',
+  title: 'Education News in Nepal',
   description: 'Latest education news from Nepal. Stay updated with policy changes, exam announcements, and more.',
+  alternates: { canonical: '/news' },
 }
 
 const CARD_GRADIENTS = [
@@ -27,7 +28,7 @@ const CARD_GRADIENTS = [
 
 async function getNews(searchParams: { q?: string }) {
   const supabase = createServerSupabaseClient()
-  let query = supabase.from('news').select('*').order('published_date', { ascending: false })
+  let query = supabase.from('news').select('*').eq('status', 'published').order('published_date', { ascending: false })
   if (searchParams.q) query = query.ilike('title', `%${searchParams.q}%`)
   const { data } = await query.limit(30)
   return (data || []) as News[]

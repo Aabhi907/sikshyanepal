@@ -7,7 +7,7 @@ import { formatDateShort } from '@/lib/utils'
 import ConfirmDialog, { ConfirmState, CONFIRM_CLOSED } from '@/components/ui/ConfirmDialog'
 import { ToastList, useToast } from '@/components/ui/Toast'
 
-interface NewsItem { id: string; title: string; slug: string; published_date: string }
+interface NewsItem { id: string; title: string; slug: string; published_date: string; status?: 'draft' | 'published' | 'archived'; source_name?: string | null }
 
 export default function AdminNewsPage() {
   const [items,   setItems]   = useState<NewsItem[]>([])
@@ -74,13 +74,14 @@ export default function AdminNewsPage() {
               <tr className="border-b border-gray-700">
                 <th className="text-left px-5 py-3 text-gray-400 font-medium">Title</th>
                 <th className="text-left px-5 py-3 text-gray-400 font-medium hidden md:table-cell">Published</th>
+                <th className="text-left px-5 py-3 text-gray-400 font-medium">Status</th>
                 <th className="text-right px-5 py-3 text-gray-400 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="text-center py-10 text-gray-500">
+                  <td colSpan={4} className="text-center py-10 text-gray-500">
                     No articles yet.{' '}
                     <Link href="/admin/news/new" className="text-blue-400 hover:underline">Add one</Link>
                   </td>
@@ -90,11 +91,12 @@ export default function AdminNewsPage() {
                   <tr key={item.id} className="border-b border-gray-700/50">
                     <td className="px-5 py-3">
                       <div className="font-medium text-white line-clamp-1">{item.title}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">{item.slug}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{item.source_name || item.slug}</div>
                     </td>
                     <td className="px-5 py-3 text-gray-400 hidden md:table-cell">
                       {formatDateShort(item.published_date)}
                     </td>
+                    <td className="px-5 py-3"><span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${item.status === 'published' ? 'bg-emerald-950 text-emerald-300' : item.status === 'archived' ? 'bg-gray-700 text-gray-300' : 'bg-amber-950 text-amber-300'}`}>{item.status || 'published'}</span></td>
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-2">
                         <Link

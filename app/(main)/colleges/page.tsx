@@ -12,8 +12,9 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: '+2, Bachelor and Master Colleges in Nepal | SikshyaNepal',
+  title: '+2, Bachelor and Master Colleges in Nepal',
   description: 'Browse Nepal colleges for +2, Bachelor, Master, diploma and higher education. Filter by location, affiliation, faculty and level.',
+  alternates: { canonical: '/colleges' },
 }
 
 // Extended type with server-computed fields the card needs

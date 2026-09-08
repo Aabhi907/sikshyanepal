@@ -7,8 +7,10 @@ import Badge from '@/components/ui/Badge'
 import type { Program, CollegeProgram, Admission, Scholarship } from '@/types'
 import JsonLd from '@/components/seo/JsonLd'
 import { absoluteUrl, breadcrumbSchema } from '@/lib/seo'
+import { cache } from 'react'
+import { collegeDisplayAffiliation, collegeDisplayLocation } from '@/lib/college-display'
 
-async function getProgram(slug: string) {
+const getProgram = cache(async function getProgram(slug: string) {
   const supabase = createServerSupabaseClient()
   const { data: program } = await supabase.from('programs').select('*').eq('slug', slug).single()
   if (!program) return null
@@ -19,14 +21,16 @@ async function getProgram(slug: string) {
     .eq('program_id', program.id)
     .limit(20)
 
-  const collegeIds = (colleges || []).map(item => item.college_id)
+  const visibleColleges = ((colleges || []) as CollegeProgram[]).filter(item => item.college && (item.college.status === 'active' || item.college.status == null))
+  const collegeIds = visibleColleges.map(item => item.college_id)
+  const today = new Date().toISOString()
   const [{ data: admissions }, { data: scholarships }] = await Promise.all([
-    supabase.from('admissions').select('id,title,slug,institution_name,application_deadline,status,programs').eq('status','published').contains('programs',[program.name]).limit(8),
-    collegeIds.length ? supabase.from('scholarships').select('*,college:colleges(id,name,slug)').in('college_id',collegeIds).eq('is_active',true).limit(8) : Promise.resolve({ data: [] }),
+    supabase.from('admissions').select('id,title,slug,institution_name,application_deadline,status,programs').eq('status','published').contains('programs',[program.name]).or(`application_deadline.is.null,application_deadline.gte.${today}`).order('application_deadline',{ascending:true,nullsFirst:false}).limit(8),
+    collegeIds.length ? supabase.from('scholarships').select('*,college:colleges(id,name,slug)').in('college_id',collegeIds).eq('is_active',true).or(`deadline.is.null,deadline.gte.${today}`).order('deadline',{ascending:true,nullsFirst:false}).limit(8) : Promise.resolve({ data: [] }),
   ])
 
-  return { program: program as Program, colleges: (colleges || []) as CollegeProgram[], admissions: (admissions || []) as Admission[], scholarships: (scholarships || []) as Scholarship[] }
-}
+  return { program: program as Program, colleges: visibleColleges, admissions: (admissions || []) as Admission[], scholarships: (scholarships || []) as Scholarship[] }
+})
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const data = await getProgram(params.slug)
@@ -80,7 +84,7 @@ export default async function ProgramDetailPage({ params }: { params: { slug: st
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border bg-white p-5"><GraduationCap className="h-5 w-5 text-blue-600"/><h2 className="mt-3 font-bold">Eligibility</h2><p className="mt-2 text-sm leading-6 text-gray-600">{program.eligibility || 'Confirm current eligibility with the awarding university or college.'}</p></div>
-        <div className="rounded-2xl border bg-white p-5"><CircleDollarSign className="h-5 w-5 text-emerald-600"/><h2 className="mt-3 font-bold">Typical fee</h2><p className="mt-2 text-sm text-gray-600">{feeMin != null ? `NPR ${feeMin.toLocaleString()}${feeMax && feeMax !== feeMin ? ` – ${feeMax.toLocaleString()}` : ''}` : 'Fees vary by college.'}</p></div>
+        <div className="rounded-2xl border bg-white p-5"><CircleDollarSign className="h-5 w-5 text-emerald-600"/><h2 className="mt-3 font-bold">Published fee range</h2><p className="mt-2 text-sm text-gray-600">{feeMin != null ? `NPR ${feeMin.toLocaleString()}${feeMax && feeMax !== feeMin ? ` – ${feeMax.toLocaleString()}` : ''}` : 'Fees vary by college.'}</p><p className="mt-2 text-xs leading-5 text-gray-400">Confirm whether each amount is annual, semester-based or total.</p></div>
         <div className="rounded-2xl border bg-white p-5"><BadgeCheck className="h-5 w-5 text-violet-600"/><h2 className="mt-3 font-bold">Entrance</h2><p className="mt-2 text-sm leading-6 text-gray-600">{program.entrance_requirements || 'Check the latest university admission notice.'}</p></div>
       </div>
       {program.overview && <section className="mb-6 rounded-2xl border bg-white p-6"><h2 className="text-xl font-bold">About {program.name}</h2><p className="mt-3 whitespace-pre-line leading-7 text-gray-600">{program.overview}</p></section>}
@@ -97,7 +101,7 @@ export default async function ProgramDetailPage({ params }: { params: { slug: st
 
         {colleges.length > 0 ? (
           <div className="space-y-3">
-            {colleges.map((cp) => (
+            {colleges.filter(cp => cp.college).map((cp) => (
               <Link key={cp.college_id} href={`/colleges/${cp.college?.slug}`} className="group block">
                 <div className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-sm transition-all bg-gray-50 hover:bg-white">
                   <div>
@@ -105,9 +109,9 @@ export default async function ProgramDetailPage({ params }: { params: { slug: st
                       {cp.college?.name}
                     </p>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-gray-500">{cp.college?.location}</span>
+                      <span className="text-xs text-gray-500">{collegeDisplayLocation(cp.college!) || 'Location not listed'}</span>
                       {cp.college?.affiliation && (
-                        <Badge variant="gray">{cp.college.affiliation}</Badge>
+                        <Badge variant="gray">{collegeDisplayAffiliation(cp.college.affiliation)}</Badge>
                       )}
                       {cp.scholarship_available && <Badge variant="green">Scholarship</Badge>}
                     </div>
@@ -125,7 +129,7 @@ export default async function ProgramDetailPage({ params }: { params: { slug: st
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500">No colleges listed for this program yet.</p>
+          <div className="rounded-xl bg-gray-50 p-5 text-sm text-gray-600"><p>No active college profile is linked to this program yet.</p><Link href={`/colleges?program=${program.slug}`} className="mt-3 inline-flex font-bold text-primary">Search the college directory →</Link></div>
         )}
       </div>
       {admissions.length > 0 && <section className="mt-6 rounded-2xl border bg-white p-6"><h2 className="text-lg font-bold">Current admissions</h2><div className="mt-4 space-y-3">{admissions.map(item=><Link key={item.id} href={`/admissions/${item.slug}`} className="flex justify-between rounded-xl bg-blue-50 p-4 text-sm"><span><strong>{item.title}</strong><span className="block text-gray-500">{item.institution_name}</span></span><span className="text-blue-700">View →</span></Link>)}</div></section>}

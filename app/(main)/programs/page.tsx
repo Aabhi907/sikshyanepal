@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
+import SearchBar from '@/components/ui/SearchBar'
+import { AlertCircle } from 'lucide-react'
 
 const FACULTY_ICONS: Record<string, LucideIcon> = {
   'plus-two':     BookOpen,       // +2 / Intermediate
@@ -54,7 +56,7 @@ const DEGREE_LEVELS = [
   { label: 'Certificate',       value: 'certificate'},
 ]
 
-async function getPrograms(searchParams: { faculty?: string; degree?: string }) {
+async function getPrograms(searchParams: { faculty?: string; degree?: string; q?: string }) {
   const supabase = createServerSupabaseClient()
   let query = supabase.from('programs').select('*').order('faculty').order('name')
 
@@ -71,12 +73,23 @@ async function getPrograms(searchParams: { faculty?: string; degree?: string }) 
     // Values are always lowercase (or '+2') — compare directly, no transform needed
     query = query.eq('degree_level', searchParams.degree)
   }
-  const { data } = await query
-  return (data || []) as Program[]
+  if (searchParams.q) query = query.ilike('name', `%${searchParams.q.trim().slice(0, 80)}%`)
+  const { data, error } = await query.limit(500)
+  return { programs: (data || []) as Program[], loadError: Boolean(error) }
 }
 
-export default async function ProgramsPage({ searchParams }: { searchParams: { faculty?: string; degree?: string } }) {
-  const programs = await getPrograms(searchParams)
+function filterUrl(searchParams: { faculty?: string; degree?: string; q?: string }, key: 'faculty' | 'degree', value: string) {
+  const params = new URLSearchParams()
+  if (searchParams.q) params.set('q', searchParams.q)
+  if (searchParams.faculty) params.set('faculty', searchParams.faculty)
+  if (searchParams.degree) params.set('degree', searchParams.degree)
+  if (params.get(key) === value) params.delete(key)
+  else params.set(key, value)
+  return `/programs${params.size ? `?${params}` : ''}`
+}
+
+export default async function ProgramsPage({ searchParams }: { searchParams: { faculty?: string; degree?: string; q?: string } }) {
+  const { programs, loadError } = await getPrograms(searchParams)
 
   const grouped = programs.reduce((acc, prog) => {
     if (!acc[prog.faculty]) acc[prog.faculty] = []
@@ -93,12 +106,14 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
           </span>
           <h1 className="font-display font-bold text-2xl text-ink" style={{ letterSpacing: '-0.02em' }}>University Programs</h1>
         </div>
-        <p className="text-gray-500">Explore all programs offered by universities in Nepal</p>
+        <p className="text-gray-500">Understand study routes, eligibility, fees and colleges from +2 through postgraduate level.</p>
       </div>
+
+      <SearchBar placeholder="Search programs by name…" redirectTo="/programs" initialValue={searchParams.q} className="mb-5" />
 
       {/* Faculty Filter */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <Link href="/programs" className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${!searchParams.faculty ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}>
+        <Link href={searchParams.q ? `/programs?q=${encodeURIComponent(searchParams.q)}` : '/programs'} className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${!searchParams.faculty ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}>
           All Faculties
         </Link>
         {FACULTIES.map((f) => {
@@ -107,7 +122,7 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
           return (
             <Link
               key={f.slug}
-              href={`/programs?faculty=${f.slug}`}
+              href={filterUrl(searchParams, 'faculty', f.slug)}
               className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                 active
                   ? 'bg-primary text-white border-primary'
@@ -126,7 +141,7 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
         {DEGREE_LEVELS.map(({ label, value }) => (
           <Link
             key={value}
-            href={`/programs?${searchParams.faculty ? `faculty=${searchParams.faculty}&` : ''}degree=${encodeURIComponent(value)}`}
+            href={filterUrl(searchParams, 'degree', value)}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               searchParams.degree === value
                 ? 'bg-gray-800 text-white border-gray-800'
@@ -138,7 +153,11 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
         ))}
       </div>
 
-      {Object.keys(grouped).length > 0 ? (
+      {(searchParams.faculty || searchParams.degree) && <div className="mb-6 flex flex-wrap items-center gap-2 text-xs"><span className="font-bold text-gray-500">Active filters:</span>{searchParams.faculty&&<Link href={filterUrl(searchParams,'faculty',searchParams.faculty)} className="rounded-full bg-blue-50 px-3 py-1 font-semibold text-blue-700">Faculty: {FACULTIES.find(item=>item.slug===searchParams.faculty)?.name||searchParams.faculty} ×</Link>}{searchParams.degree&&<Link href={filterUrl(searchParams,'degree',searchParams.degree)} className="rounded-full bg-gray-100 px-3 py-1 font-semibold text-gray-700">Level: {searchParams.degree === '+2' ? '+2' : searchParams.degree} ×</Link>}</div>}
+
+      {loadError ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 py-14 text-center text-amber-950"><AlertCircle className="mx-auto h-10 w-10 text-amber-600"/><h2 className="mt-3 font-display text-xl font-bold">Programs could not load</h2><p className="mt-2 text-sm">This is a temporary connection problem. Please try again.</p><Link href="/programs" className="mt-4 inline-flex rounded-lg bg-amber-950 px-4 py-2 text-sm font-bold text-white">Reload programs</Link></div>
+      ) : Object.keys(grouped).length > 0 ? (
         <div className="space-y-8">
           {Object.entries(grouped).map(([faculty, progs]) => (
             <div key={faculty}>
@@ -183,6 +202,8 @@ export default async function ProgramsPage({ searchParams }: { searchParams: { f
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
           <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <h3 className="font-medium text-gray-900 mb-1">No programs found</h3>
+          <p className="mt-2 text-sm text-gray-500">Try a shorter name or remove one filter.</p>
+          <Link href="/programs" className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white">Clear search and filters</Link>
         </div>
       )}
     </div>

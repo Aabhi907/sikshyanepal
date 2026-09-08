@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { MapPin, Star, ArrowRight, Banknote } from 'lucide-react'
 import type { College } from '@/types'
 import VerificationBadge from '@/components/institutions/VerificationBadge'
+import { collegeDisplayLocation, collegeDisplayPrograms } from '@/lib/college-display'
 
 // Affiliation short name
 function affiliationShort(full: string | null): string | null {
@@ -46,11 +47,8 @@ export default function CollegeCard({ college }: CollegeCardProps) {
     .slice(0, 4)
     .map((cp) => cp.program?.name)
     .filter(Boolean) as string[]
-  const researchedPrograms = (college.programs_offered ?? '')
-    .split(';')
-    .map((program) => program.trim())
-    .filter(Boolean)
-    .slice(0, 4)
+  const researchedPrograms = collegeDisplayPrograms(college.programs_offered).slice(0, 4)
+  const displayLocation = collegeDisplayLocation(college)
   const topPrograms = linkedPrograms.length > 0 ? linkedPrograms : researchedPrograms
   const levelLabels: Record<string, string> = { plus_two: '+2', bachelor: 'Bachelor', master: 'Master', mphil: 'MPhil', phd: 'PhD', diploma: 'Diploma', certificate: 'Certificate' }
 
@@ -142,10 +140,10 @@ export default function CollegeCard({ college }: CollegeCardProps) {
           </div>
 
           {/* Location */}
-          {college.location && (
+          {displayLocation && (
             <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 mb-2">
               <MapPin className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{college.location}</span>
+              <span className="truncate">{displayLocation}</span>
             </div>
           )}
 

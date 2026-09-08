@@ -31,6 +31,7 @@ import ShareButton from "@/components/ui/ShareButton";
 import type { Admission } from "@/types";
 import JsonLd from "@/components/seo/JsonLd";
 import { absoluteUrl, breadcrumbSchema, SITE_URL } from "@/lib/seo";
+import { collegeDisplayAffiliation, collegeDisplayLocation, collegeDisplayPrograms, safeCollegeAddress } from "@/lib/college-display";
 
 // Affiliation → gradient config
 const AFFIL_COVER: Record<string, { gradient: string; pattern: string }> = {
@@ -150,13 +151,15 @@ export default async function CollegeProfilePage({
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
       : null;
   const linkedProgramNames = programs.map(item => item.program?.name).filter((name): name is string => Boolean(name));
-  const fallbackProgramNames = (college.programs_offered || '').split(';').map(name => name.trim()).filter(Boolean);
+  const fallbackProgramNames = collegeDisplayPrograms(college.programs_offered);
   const programNames = linkedProgramNames.length ? linkedProgramNames : fallbackProgramNames;
+  const displayLocation = collegeDisplayLocation(college);
+  const displayAffiliation = collegeDisplayAffiliation(college.affiliation);
   const levelNames = (college.education_levels || []).map(level => ({ plus_two: '+2', bachelor: 'Bachelor', master: 'Master', mphil: 'MPhil', phd: 'PhD', diploma: 'Diploma', certificate: 'Certificate' }[level] || level));
-  const place = [college.local_level, college.district, college.province].filter(Boolean).join(', ') || college.location;
+  const place = [college.local_level, college.district, college.province].filter(Boolean).join(', ') || displayLocation;
   const facts = [
     place ? { question: `Where is ${college.name} located?`, answer: `${college.name} is listed in ${place}, Nepal. Check the official contact page before travelling to the campus.` } : null,
-    college.affiliation ? { question: `Which university is ${college.name} affiliated with?`, answer: `${college.name} is listed as affiliated with ${college.affiliation}. Students should confirm the affiliation for their specific programme and intake.` } : null,
+    displayAffiliation ? { question: `Which university is ${college.name} affiliated with?`, answer: `${college.name} is listed as affiliated with ${displayAffiliation}. Students should confirm the affiliation for their specific programme and intake.` } : null,
     levelNames.length ? { question: `What study levels does ${college.name} offer?`, answer: `The profile currently lists ${levelNames.join(', ')} study options. Programme availability can change between admission cycles.` } : null,
     programNames.length ? { question: `What can I study at ${college.name}?`, answer: `Listed programmes include ${programNames.slice(0, 6).join(', ')}${programNames.length > 6 ? ` and ${programNames.length - 6} more` : ''}. Open the programme section and verify the current intake with the college.` } : null,
     { question: `How can I verify information about ${college.name}?`, answer: college.source_name ? `This profile was checked against ${college.source_name}. Use the visible source link and last-verified date, then confirm changing details such as fees, seats and deadlines with the college.` : `Use the college's official website and contact details to confirm programmes, fees, seats and deadlines before applying.` },
@@ -168,7 +171,7 @@ export default async function CollegeProfilePage({
       "@type": "CollegeOrUniversity", "@id": `${pageUrl}#college`, name: college.name,
       description: college.description || undefined, url: pageUrl, logo: college.logo_url || undefined,
       image: college.cover_url || undefined,
-      address: { "@type": "PostalAddress", streetAddress: college.address || undefined, addressLocality: college.local_level || college.location, addressRegion: college.province || undefined, addressCountry: "NP" },
+      address: { "@type": "PostalAddress", streetAddress: safeCollegeAddress(college.address) || undefined, addressLocality: college.local_level || displayLocation || undefined, addressRegion: college.province || undefined, addressCountry: "NP" },
       telephone: college.phone || undefined, email: college.email || undefined,
       foundingDate: college.established_year?.toString(), sameAs: college.website ? [college.website] : undefined,
       hasOfferCatalog: programNames.length ? { '@type': 'OfferCatalog', name: `Programs at ${college.name}`, itemListElement: programNames.slice(0, 20).map(name => ({ '@type': 'Offer', itemOffered: { '@type': 'Course', name, provider: { '@id': `${pageUrl}#college` } } })) } : undefined,
@@ -277,8 +280,8 @@ export default async function CollegeProfilePage({
             <div className="mt-3 flex flex-wrap gap-2"><SaveCollegeButton collegeId={college.id} /><ShareButton title={`${college.name} | SikshyaNepal`} /></div>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <VerificationBadge status={college.verification_status} />
-              {college.affiliation && (
-                <Badge variant="blue">{college.affiliation}</Badge>
+              {displayAffiliation && (
+                <Badge variant="blue">{displayAffiliation}</Badge>
               )}
               {college.established_year && (
                 <span className="flex items-center gap-1 text-xs text-ink-secondary">
@@ -297,9 +300,9 @@ export default async function CollegeProfilePage({
 
           {/* Contact Info */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-            {college.location && (
+            {displayLocation && (
               <span className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-gray-400" /> {college.location}
+                <MapPin className="w-4 h-4 text-gray-400" /> {displayLocation}
               </span>
             )}
             {college.phone && (
@@ -431,10 +434,10 @@ export default async function CollegeProfilePage({
                     )
                   })}
               </div>
-            ) : college.programs_offered ? (
+            ) : fallbackProgramNames.length ? (
               <div>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {college.programs_offered.split(';').map((program) => program.trim()).filter(Boolean).map((program) => (
+                  {fallbackProgramNames.map((program) => (
                     <div key={program} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-700">
                       {program}
                     </div>
@@ -539,11 +542,11 @@ export default async function CollegeProfilePage({
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h3 className="font-semibold text-gray-900 mb-4">Quick Info</h3>
             <dl className="space-y-3 text-sm">
-              {college.affiliation && (
+              {displayAffiliation && (
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Affiliation</dt>
                   <dd className="font-medium text-gray-800 text-right">
-                    {college.affiliation}
+                    {displayAffiliation}
                   </dd>
                 </div>
               )}
@@ -555,18 +558,18 @@ export default async function CollegeProfilePage({
                   </dd>
                 </div>
               )}
-              {college.location && (
+              {displayLocation && (
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Location</dt>
                   <dd className="font-medium text-gray-800">
-                    {college.location}
+                    {displayLocation}
                   </dd>
                 </div>
               )}
               <div className="flex justify-between">
                 <dt className="text-gray-500">Programs Offered</dt>
                 <dd className="font-medium text-gray-800">
-                  {programs.length || (college.programs_offered ? college.programs_offered.split(';').filter(Boolean).length : 0)}
+                  {programs.length || fallbackProgramNames.length}
                 </dd>
               </div>
             </dl>

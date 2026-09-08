@@ -1,5 +1,75 @@
 'use client'
+
 /* eslint-disable @next/next/no-img-element -- announcement images are admin-supplied external URLs. */
-import Link from 'next/link'; import { X } from 'lucide-react'; import { useEffect,useState } from 'react'
-type A={id:string;title:string;message:string;image_url:string|null;link_url:string|null;link_label:string|null;placement:string}
-export default function SiteAnnouncement(){const[item,setItem]=useState<A|null>(null);useEffect(()=>{fetch('/api/announcements').then(r=>r.json()).then(d=>{const a=Array.isArray(d)?d[0]:null;if(a&&localStorage.getItem(`sn_announcement_${a.id}`)!=='dismissed')setItem(a)})},[]);if(!item)return null;const close=()=>{localStorage.setItem(`sn_announcement_${item.id}`,'dismissed');setItem(null)};const body=<><div className="min-w-0 flex-1">{item.image_url&&<img src={item.image_url} alt="" className="mb-3 h-28 w-full rounded-lg object-cover"/>}<strong>{item.title}</strong><p className="mt-1 text-amber-900/80">{item.message}</p>{item.link_url&&<Link href={item.link_url} className="mt-3 inline-block font-bold underline">{item.link_label||'Learn more'} →</Link>}</div><button onClick={close} aria-label="Dismiss announcement" className="absolute right-3 top-3 rounded p-1 hover:bg-amber-100"><X className="h-4 w-4"/></button></>;return item.placement==='popup'?<div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/30 p-4 sm:items-center"><div className="relative w-full max-w-sm rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-2xl">{body}</div></div>:<div className="border-b border-amber-200 bg-amber-50"><div className="relative mx-auto flex max-w-7xl gap-3 px-4 py-3 text-sm text-amber-950 sm:px-6">{body}</div></div>}
+import Link from 'next/link'
+import { X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+type Announcement = {
+  id: string
+  title: string
+  message: string
+  image_url: string | null
+  link_url: string | null
+  link_label: string | null
+  placement: 'banner' | 'popup'
+}
+
+export default function SiteAnnouncement() {
+  const [item, setItem] = useState<Announcement | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/announcements', { cache: 'no-store', signal: controller.signal })
+      .then(async response => response.ok ? response.json() : [])
+      .then(data => {
+        if (!Array.isArray(data)) return
+        const visible = data.find(announcement => (
+          sessionStorage.getItem(`sn_announcement_${announcement.id}`) !== 'dismissed'
+        ))
+        if (visible) setItem(visible)
+      })
+      .catch(error => {
+        if (error instanceof Error && error.name !== 'AbortError') console.warn('Announcement could not be loaded.')
+      })
+    return () => controller.abort()
+  }, [])
+
+  if (!item) return null
+
+  const close = () => {
+    sessionStorage.setItem(`sn_announcement_${item.id}`, 'dismissed')
+    setItem(null)
+  }
+
+  const body = (
+    <>
+      <div className="min-w-0 flex-1">
+        {item.image_url && <img src={item.image_url} alt="" className="mb-3 h-36 w-full rounded-xl object-cover" />}
+        <strong className="block pr-7 font-display text-lg leading-snug">{item.title}</strong>
+        <p className="mt-1.5 leading-6 text-amber-900/80">{item.message}</p>
+        {item.link_url && (
+          <Link href={item.link_url} className="mt-4 inline-flex rounded-lg bg-amber-950 px-4 py-2 text-xs font-bold text-white hover:bg-amber-900">
+            {item.link_label || 'Learn more'} →
+          </Link>
+        )}
+      </div>
+      <button type="button" onClick={close} aria-label="Dismiss announcement" className="absolute right-3 top-3 rounded-full p-1.5 text-amber-950/60 hover:bg-amber-100 hover:text-amber-950">
+        <X className="h-4 w-4" />
+      </button>
+    </>
+  )
+
+  return item.placement === 'popup' ? (
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/45 p-4 backdrop-blur-[2px] sm:items-center" role="presentation">
+      <section role="dialog" aria-modal="true" aria-labelledby={`announcement-${item.id}`} className="relative w-full max-w-md rounded-2xl bg-amber-50 p-6 text-sm text-amber-950 shadow-2xl">
+        <span id={`announcement-${item.id}`} className="sr-only">Site announcement: {item.title}</span>
+        {body}
+      </section>
+    </div>
+  ) : (
+    <aside className="border-b border-amber-200 bg-amber-50" aria-label="Site announcement">
+      <div className="relative mx-auto flex max-w-7xl gap-3 px-4 py-3 text-sm text-amber-950 sm:px-6">{body}</div>
+    </aside>
+  )
+}

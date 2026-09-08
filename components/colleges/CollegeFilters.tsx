@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Filter, X, SlidersHorizontal } from 'lucide-react'
 import { districtsForProvince, NEPAL_PROVINCES } from '@/lib/nepal-geography'
@@ -28,6 +28,12 @@ const LEVELS = [
   { label: 'Master',            value: 'master'   },
   { label: 'Diploma',           value: 'diploma'  },
 ]
+
+const FILTER_LABELS: Record<string, string> = {
+  location: 'Location', province: 'Province', district: 'District', affiliation: 'Affiliation',
+  faculty: 'Faculty', level: 'Level', maxFee: 'Fee', scholarship: 'Scholarship',
+  verified: 'Verified', program: 'Program',
+}
 
 export type CollegeSearchParams = {
   q?:          string
@@ -79,6 +85,19 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
 
   const hasFilters  = !!(searchParams.location || searchParams.province || searchParams.district || searchParams.affiliation || searchParams.faculty || searchParams.level || searchParams.maxFee || searchParams.scholarship || searchParams.verified || searchParams.program)
   const activeCount = [searchParams.location, searchParams.province, searchParams.district, searchParams.affiliation, searchParams.faculty, searchParams.level, searchParams.maxFee, searchParams.scholarship, searchParams.verified, searchParams.program].filter(Boolean).length
+  const activeFilters = Object.entries(searchParams).filter(([key, value]) => key !== 'q' && Boolean(value))
+
+  useEffect(() => {
+    if (!open) return
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', closeOnEscape)
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.body.style.overflow = previous
+    }
+  }, [open])
 
   const pill = (isActive: boolean) =>
     `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -91,7 +110,7 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
     return (
       <div className="space-y-5">
         <div><p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Province</p><div className="flex flex-wrap gap-2">{PROVINCES.map(value => <Link key={value} href={buildUrl(searchParams, 'province', value)} onClick={() => setOpen(false)} className={pill(searchParams.province === value)}>{value}</Link>)}</div></div>
-        <form action="/colleges" className="grid gap-2 sm:grid-cols-2">{Object.entries(searchParams).filter(([key, value]) => value && key !== 'district' && key !== 'maxFee').map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}<select name="district" defaultValue={searchParams.district || ''} disabled={!searchParams.province} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"><option value="">{searchParams.province ? `All districts in ${searchParams.province}` : 'Choose province first'}</option>{districtsForProvince(searchParams.province || '').map(district=><option key={district}>{district}</option>)}</select><select name="maxFee" defaultValue={searchParams.maxFee || ''} className="rounded-lg border border-gray-200 px-3 py-2 text-sm"><option value="">Any annual fee</option><option value="100000">Under NPR 1 lakh</option><option value="250000">Under NPR 2.5 lakh</option><option value="500000">Under NPR 5 lakh</option><option value="1000000">Under NPR 10 lakh</option></select><button className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2">Apply district & fee</button></form>
+        <form action="/colleges" className="grid gap-2 sm:grid-cols-2">{Object.entries(searchParams).filter(([key, value]) => value && key !== 'district' && key !== 'maxFee').map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}<label><span className="sr-only">District</span><select name="district" defaultValue={searchParams.district || ''} disabled={!searchParams.province} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"><option value="">{searchParams.province ? `All districts in ${searchParams.province}` : 'Choose province first'}</option>{districtsForProvince(searchParams.province || '').map(district=><option key={district}>{district}</option>)}</select></label><label><span className="sr-only">Maximum published program fee</span><select name="maxFee" defaultValue={searchParams.maxFee || ''} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"><option value="">Any published fee</option><option value="100000">Under NPR 1 lakh</option><option value="250000">Under NPR 2.5 lakh</option><option value="500000">Under NPR 5 lakh</option><option value="1000000">Under NPR 10 lakh</option></select></label><button className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2">Apply district & fee</button></form>
         <div><p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Trust & support</p><div className="flex flex-wrap gap-2"><Link href={buildUrl(searchParams,'scholarship','true')} className={pill(searchParams.scholarship==='true')}>Scholarship available</Link><Link href={buildUrl(searchParams,'verified','true')} className={pill(searchParams.verified==='true')}>Verified colleges</Link></div></div>
         {/* Location */}
         <div>
@@ -153,6 +172,16 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
 
   return (
     <>
+      {hasFilters && (
+        <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Active filters">
+          <span className="text-xs font-bold text-gray-500">Active:</span>
+          {activeFilters.map(([key, value]) => (
+            <Link key={key} href={buildUrl(searchParams, key, value!)} className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800 hover:bg-blue-100" aria-label={`Remove ${FILTER_LABELS[key] || key} filter`}>
+              {FILTER_LABELS[key] || key}: {key === 'scholarship' || key === 'verified' ? 'Yes' : value}<X className="h-3 w-3" />
+            </Link>
+          ))}
+        </div>
+      )}
       {/* ── Mobile trigger + result count ── */}
       <div className="flex items-center justify-between mb-4 lg:hidden">
         <p className="text-sm text-gray-500">
@@ -205,11 +234,11 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
+          <div role="dialog" aria-modal="true" aria-labelledby="college-filter-title" className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-5 h-5 text-gray-700" />
-                <h3 className="text-lg font-semibold">Filters</h3>
+                <h3 id="college-filter-title" className="text-lg font-semibold">Filter colleges</h3>
               </div>
               <div className="flex items-center gap-3">
                 {hasFilters && (
@@ -218,7 +247,7 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
                     Clear all
                   </Link>
                 )}
-                <button onClick={() => setOpen(false)}
+                <button onClick={() => setOpen(false)} aria-label="Close filters"
                   className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
                   <X className="w-4 h-4" />
                 </button>

@@ -5,7 +5,7 @@ import CollegeCard from '@/components/colleges/CollegeCard'
 import CollegeFilters from '@/components/colleges/CollegeFilters'
 import SearchBar from '@/components/ui/SearchBar'
 import type { College, CollegeProgram, Review } from '@/types'
-import { Building2 } from 'lucide-react'
+import { AlertCircle, Building2 } from 'lucide-react'
 import AdUnit from '@/components/ads/AdUnit'
 
 export const dynamic = 'force-dynamic'
@@ -37,7 +37,7 @@ async function getColleges(sp: {
   scholarship?: string
   verified?: string
   program?: string
-}): Promise<{ all: RichCollege[]; filtered: RichCollege[] }> {
+}): Promise<{ all: RichCollege[]; filtered: RichCollege[]; loadError: boolean }> {
   const supabase = createServerSupabaseClient()
 
   let query = supabase
@@ -55,16 +55,20 @@ async function getColleges(sp: {
     .or('status.eq.active,status.is.null')
     .order('is_featured', { ascending: false })
     .order('name')
-    .limit(200)
+    .limit(500)
 
-  if (sp.q)           query = query.ilike('name',        `%${sp.q}%`)
+  if (sp.q)           query = query.ilike('name',        `%${sp.q.trim().slice(0, 80)}%`)
   if (sp.location)    query = query.ilike('location',    `%${sp.location}%`)
   if (sp.province)    query = query.eq('province', sp.province)
   if (sp.district)    query = query.ilike('district', `%${sp.district}%`)
   if (sp.affiliation) query = query.ilike('affiliation', `%${sp.affiliation}%`)
   if (sp.verified === 'true') query = query.in('verification_status', ['source_verified', 'institution_verified'])
 
-  const { data } = await query
+  const { data, error } = await query
+  if (error) {
+    console.error('Unable to load college directory:', error.message)
+    return { all: [], filtered: [], loadError: true }
+  }
   const raw = (data ?? []) as (College & { programs?: CollegeProgram[]; reviews?: Review[] })[]
 
   // Compute avg_rating, review_count, fee range on the server
@@ -92,7 +96,7 @@ async function getColleges(sp: {
   if (sp.faculty) {
     const fac = sp.faculty.toLowerCase()
     filtered = filtered.filter((c) =>
-      (c.programs ?? []).some((cp) => cp.program?.faculty?.toLowerCase() === fac)
+      (c.programs ?? []).some((cp) => cp.program?.faculty?.toLowerCase().includes(fac))
     )
   }
   if (sp.level) {
@@ -107,7 +111,7 @@ async function getColleges(sp: {
   const maxFee = Number(sp.maxFee)
   if (Number.isFinite(maxFee) && maxFee > 0) filtered = filtered.filter(c => (c.programs ?? []).some(cp => cp.fee != null && cp.fee <= maxFee))
 
-  return { all, filtered }
+  return { all, filtered, loadError: false }
 }
 
 export default async function CollegesPage({
@@ -115,7 +119,7 @@ export default async function CollegesPage({
 }: {
   searchParams: { q?: string; location?: string; affiliation?: string; faculty?: string; level?: string; province?: string; district?: string; maxFee?: string; scholarship?: string; verified?: string; program?: string }
 }) {
-  const { all, filtered } = await getColleges(searchParams)
+  const { all, filtered, loadError } = await getColleges(searchParams)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -123,14 +127,14 @@ export default async function CollegesPage({
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <Building2 className="w-6 h-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Colleges in Nepal</h1>
+          <h1 className="font-display text-3xl font-extrabold text-gray-900">Colleges in Nepal</h1>
         </div>
         <p className="text-gray-500 text-sm">Post-SEE study: +2, Bachelor, Master, diploma and higher education</p>
       </div>
 
       {/* Search */}
       <div className="mb-5">
-        <SearchBar placeholder="Search college by name..." redirectTo="/colleges" />
+        <SearchBar placeholder="Search college by name…" redirectTo="/colleges" initialValue={searchParams.q} />
       </div>
       <div className="mb-5 flex flex-wrap gap-2 text-xs"><span className="font-semibold text-gray-500">Popular:</span>{['Kathmandu','Pokhara','Chitwan','Lalitpur','Bhaktapur'].map(place=><Link key={place} href={`/colleges/in/${place.toLowerCase()}`} className="font-semibold text-blue-700 hover:underline">Colleges in {place}</Link>)}</div>
 
@@ -142,7 +146,14 @@ export default async function CollegesPage({
       />
 
       {/* Grid */}
-      {filtered.length > 0 ? (
+      {loadError ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-12 text-center text-amber-950">
+          <AlertCircle className="mx-auto h-10 w-10 text-amber-600" />
+          <h2 className="mt-4 font-display text-xl font-bold">College listings could not load</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6">This is a temporary connection problem—not an empty result. Please reload the page in a moment.</p>
+          <Link href="/colleges" className="mt-5 inline-flex rounded-xl bg-amber-950 px-5 py-2.5 text-sm font-bold text-white">Try again</Link>
+        </div>
+      ) : filtered.length > 0 ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.slice(0, 6).map((college) => (
@@ -169,7 +180,7 @@ export default async function CollegesPage({
           <Building2 className="w-14 h-14 text-gray-200 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No colleges found</h3>
           <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto">
-            Try changing your filters or search term — there are lots of great colleges here.
+            No listing matches every selected option. Remove one filter or try a shorter college name.
           </p>
           <Link
             href={searchParams.q ? `/colleges?q=${encodeURIComponent(searchParams.q)}` : '/colleges'}

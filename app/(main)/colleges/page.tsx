@@ -7,6 +7,8 @@ import SearchBar from '@/components/ui/SearchBar'
 import type { College, CollegeProgram, Review } from '@/types'
 import { AlertCircle, Building2 } from 'lucide-react'
 import AdUnit from '@/components/ads/AdUnit'
+import JsonLd from '@/components/seo/JsonLd'
+import { absoluteUrl, breadcrumbSchema } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -24,6 +26,21 @@ type RichCollege = College & {
   fee_min?:      number
   fee_max?:      number
 }
+
+const directoryAnswers = [
+  {
+    question: 'What study levels are included in the Nepal college directory?',
+    answer: 'The directory covers post-SEE education: +2, Bachelor, Master, diploma, certificate and other higher-education programmes. Use the level filter to narrow the listings.',
+  },
+  {
+    question: 'How should I compare colleges in Nepal?',
+    answer: 'Start with programme availability and affiliation, then compare location, published fees, scholarships, admission requirements and student reviews. Confirm changing details with the college before applying.',
+  },
+  {
+    question: 'Does SikshyaNepal verify every college listing?',
+    answer: 'Verification status is shown on individual college profiles. A source-verified profile links to documented source information; an unverified profile should be treated as a starting point and checked directly with the institution.',
+  },
+]
 
 async function getColleges(sp: {
   q?:           string
@@ -120,9 +137,47 @@ export default async function CollegesPage({
   searchParams: { q?: string; location?: string; affiliation?: string; faculty?: string; level?: string; province?: string; district?: string; maxFee?: string; scholarship?: string; verified?: string; program?: string }
 }) {
   const { all, filtered, loadError } = await getColleges(searchParams)
+  const pageUrl = absoluteUrl('/colleges')
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        '@id': `${pageUrl}#webpage`,
+        url: pageUrl,
+        name: '+2, Bachelor and Master Colleges in Nepal',
+        description: metadata.description,
+        mainEntity: { '@id': `${pageUrl}#college-list` },
+        isPartOf: { '@id': `${absoluteUrl('/')}#website` },
+      },
+      breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Colleges', path: '/colleges' }]),
+      {
+        '@type': 'ItemList',
+        '@id': `${pageUrl}#college-list`,
+        name: 'College profiles in Nepal',
+        numberOfItems: filtered.length,
+        itemListElement: filtered.slice(0, 100).map((college, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          url: absoluteUrl(`/colleges/${college.slug}`),
+          name: college.name,
+        })),
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': `${pageUrl}#questions`,
+        mainEntity: directoryAnswers.map(item => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      },
+    ],
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {!loadError && <JsonLd data={jsonLd} />}
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
@@ -130,6 +185,9 @@ export default async function CollegesPage({
           <h1 className="font-display text-3xl font-extrabold text-gray-900">Colleges in Nepal</h1>
         </div>
         <p className="text-gray-500 text-sm">Post-SEE study: +2, Bachelor, Master, diploma and higher education</p>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600">
+          Search by programme, location, affiliation and study level. Verification badges show which profiles have documented source checks; always confirm current fees, seats and deadlines before applying.
+        </p>
       </div>
 
       {/* Search */}
@@ -190,6 +248,26 @@ export default async function CollegesPage({
           </Link>
         </div>
       )}
+
+      <section className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 sm:p-8" aria-labelledby="college-directory-questions">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Student guide</p>
+        <h2 id="college-directory-questions" className="mt-2 font-display text-2xl font-bold text-gray-950">How to use the college directory</h2>
+        <div className="mt-5 divide-y divide-gray-100">
+          {directoryAnswers.map(item => (
+            <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
+              <summary className="cursor-pointer list-none pr-8 text-sm font-semibold text-gray-900 marker:hidden">
+                {item.question}<span className="float-right text-blue-600 group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600">{item.answer}</p>
+            </details>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3 border-t border-gray-100 pt-5 text-sm font-semibold">
+          <Link href="/compare" className="text-blue-700 hover:underline">Compare shortlisted colleges</Link>
+          <Link href="/tools/college-finder" className="text-blue-700 hover:underline">Use the college finder</Link>
+          <Link href="/about/editorial-policy" className="text-blue-700 hover:underline">Read our verification policy</Link>
+        </div>
+      </section>
     </div>
   )
 }

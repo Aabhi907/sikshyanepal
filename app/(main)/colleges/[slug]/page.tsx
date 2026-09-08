@@ -90,12 +90,13 @@ const getCollege = cache(async function getCollege(slug: string) {
       .eq("is_approved", true)
       .order("created_at", { ascending: false })
       .limit(10),
-    supabase.from("scholarships").select("*").eq("college_id", college.id),
+    supabase.from("scholarships").select("*").eq("college_id", college.id).eq("is_active", true),
     supabase
       .from("admissions")
       .select("*, college:colleges(id,name,slug,location)")
       .eq("college_id", college.id)
       .eq("status", "published")
+      .or(`application_deadline.is.null,application_deadline.gte.${new Date().toISOString()}`)
       .order("application_deadline", { ascending: true })
       .limit(4),
     supabase.from("news").select("id,title,slug,published_date,content_category").eq("college_id", college.id).eq("status", "published").order("published_date", { ascending: false }).limit(5),
@@ -592,6 +593,7 @@ export default async function CollegeProfilePage({
               programs={programs
                 .map(cp => cp.program?.name)
                 .filter((n): n is string => !!n)
+                .concat(linkedProgramNames.length ? [] : fallbackProgramNames)
                 .map(name => ({ name }))}
             />
           </div>

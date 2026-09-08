@@ -6,30 +6,48 @@ const resend      = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_A
 const FROM        = 'SikshyaNepal <onboarding@resend.dev>'
 const ADMIN_EMAIL = 'devskiller14@gmail.com'
 
+const clean = (value: unknown, max: number) => typeof value === 'string' ? value.trim().slice(0, max) : ''
+const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]!)
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { college_id, college_name, name, phone, email, program, message } = body
+    const collegeId = clean(body.college_id, 80)
+    const name = clean(body.name, 100)
+    const phone = clean(body.phone, 30).replace(/\s/g, '')
+    const email = clean(body.email, 160)
+    const program = clean(body.program, 140)
+    const message = clean(body.message, 300)
 
     // ── Validate required fields ───────────────────────────────────────
-    if (!name?.trim())      return NextResponse.json({ error: 'Name is required' },    { status: 400 })
-    if (!phone?.trim())     return NextResponse.json({ error: 'Phone is required' },   { status: 400 })
-    if (!program?.trim())   return NextResponse.json({ error: 'Program is required' }, { status: 400 })
-    if (!college_id)        return NextResponse.json({ error: 'College ID missing' },  { status: 400 })
+    if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+    if (!/^(?:9[6-9]\d{8}|\d{2}-?\d{6,7})$/.test(phone)) return NextResponse.json({ error: 'Enter a valid Nepali phone number' }, { status: 400 })
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 })
+    if (!program) return NextResponse.json({ error: 'Program is required' }, { status: 400 })
+    if (!collegeId) return NextResponse.json({ error: 'College ID missing' }, { status: 400 })
 
     const supabase = createAdminSupabaseClient()
+
+    const { data: college } = await supabase
+      .from('colleges')
+      .select('id,name,status')
+      .eq('id', collegeId)
+      .or('status.eq.active,status.is.null')
+      .maybeSingle()
+    if (!college) return NextResponse.json({ error: 'This college is not available for enquiries.' }, { status: 404 })
+    const collegeName = college.name
 
     // ── Insert lead ────────────────────────────────────────────────────
     const { data: lead, error } = await supabase
       .from('leads')
       .insert({
-        college_id,
-        college_name: college_name?.trim() ?? '',
-        student_name:  name.trim(),
-        student_email: email?.trim()   || null,
-        student_phone: phone.trim(),
-        program_interest: program.trim(),
-        message:       message?.trim() || null,
+        college_id: college.id,
+        college_name: collegeName,
+        student_name: name,
+        student_email: email || null,
+        student_phone: phone,
+        program_interest: program,
+        message: message || null,
         status:        'new',
       })
       .select('id')
@@ -45,35 +63,35 @@ export async function POST(request: Request) {
       await resend.emails.send({
         from:    FROM,
         to:      ADMIN_EMAIL,
-        subject: `New Application — ${college_name}`,
+        subject: `New admission enquiry — ${collegeName}`,
         html: `
           <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
-            <h2 style="color:#1847c4;margin:0 0 4px;">New College Application</h2>
-            <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">A student just applied via SikshyaNepal</p>
+            <h2 style="color:#1847c4;margin:0 0 4px;">New admission enquiry</h2>
+            <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">A student requested admission information through SikshyaNepal.</p>
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
               <tr style="border-bottom:1px solid #f0f0f0;">
                 <td style="padding:10px 0;color:#6b7280;width:140px;">College</td>
-                <td style="padding:10px 0;font-weight:600;">${college_name}</td>
+                <td style="padding:10px 0;font-weight:600;">${escapeHtml(collegeName)}</td>
               </tr>
               <tr style="border-bottom:1px solid #f0f0f0;">
                 <td style="padding:10px 0;color:#6b7280;">Student Name</td>
-                <td style="padding:10px 0;font-weight:600;">${name}</td>
+                <td style="padding:10px 0;font-weight:600;">${escapeHtml(name)}</td>
               </tr>
               <tr style="border-bottom:1px solid #f0f0f0;">
                 <td style="padding:10px 0;color:#6b7280;">Phone</td>
-                <td style="padding:10px 0;font-weight:600;color:#1847c4;">${phone}</td>
+                <td style="padding:10px 0;font-weight:600;color:#1847c4;">${escapeHtml(phone)}</td>
               </tr>
               <tr style="border-bottom:1px solid #f0f0f0;">
                 <td style="padding:10px 0;color:#6b7280;">Email</td>
-                <td style="padding:10px 0;">${email || '—'}</td>
+                <td style="padding:10px 0;">${email ? escapeHtml(email) : '—'}</td>
               </tr>
               <tr style="border-bottom:1px solid #f0f0f0;">
                 <td style="padding:10px 0;color:#6b7280;">Program</td>
-                <td style="padding:10px 0;">${program}</td>
+                <td style="padding:10px 0;">${escapeHtml(program)}</td>
               </tr>
               ${message ? `<tr>
                 <td style="padding:10px 0;color:#6b7280;vertical-align:top;">Message</td>
-                <td style="padding:10px 0;">${message}</td>
+                <td style="padding:10px 0;">${escapeHtml(message)}</td>
               </tr>` : ''}
             </table>
             <div style="margin-top:24px;">

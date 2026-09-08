@@ -102,14 +102,15 @@ export default function ApplyNowModal({
           <div>
             <h2 className="font-display font-bold text-ink text-lg leading-tight"
                 style={{ letterSpacing: '-0.02em' }}>
-              Apply to {collegeName}
+              Ask {collegeName} about admission
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              Fill your details — the college will contact you within 48 hours. Free.
+              Send an enquiry through SikshyaNepal. This is not an official application or seat confirmation.
             </p>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close admission enquiry"
             className="ml-3 flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4 text-gray-600" />
@@ -133,18 +134,13 @@ export default function ApplyNowModal({
               </div>
               <h3 className="font-display font-bold text-ink text-xl mb-2"
                   style={{ letterSpacing: '-0.02em' }}>
-                Application Sent!
+                Enquiry received
               </h3>
               <p className="text-sm text-gray-500 leading-relaxed mb-1">
-                <span className="font-semibold text-ink">{collegeName}</span> will contact
-                you within 48 hours on{' '}
+                Your request for <span className="font-semibold text-ink">{collegeName}</span> has been recorded with the phone number{' '}
                 <span className="font-semibold text-[#1847c4]">{form.phone}</span>.
               </p>
-              {form.email && (
-                <p className="text-xs text-gray-400 mt-1">
-                  Confirmation sent to {form.email}
-                </p>
-              )}
+              <p className="mt-2 text-xs leading-5 text-gray-400">Response times vary. For an urgent deadline, use the official phone, email or website shown on the college profile.</p>
               <button
                 onClick={onClose}
                 className="mt-6 w-full py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
@@ -183,7 +179,7 @@ export default function ApplyNowModal({
                   placeholder="98XXXXXXXX"
                   className={inputClass('phone')}
                 />
-                <p className="text-xs text-gray-400 mt-1">College will call you on this number</p>
+                <p className="text-xs text-gray-400 mt-1">Used only to respond to this admission enquiry</p>
                 {errors.phone && <p className="text-xs text-red-500 mt-0.5">{errors.phone}</p>}
               </div>
 
@@ -250,13 +246,12 @@ export default function ApplyNowModal({
               >
                 {loading
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
-                  : <><Send className="w-4 h-4" /> Send Application</>
+                  : <><Send className="w-4 h-4" /> Send admission enquiry</>
                 }
               </button>
 
               <p className="text-center text-xs text-gray-400">
-                By applying you agree to be contacted by the college. We never share
-                your details with third parties.
+                By sending, you agree that SikshyaNepal may share these details with this college so it can respond. Do not include citizenship numbers, marksheets or payment details.
               </p>
             </form>
           )}

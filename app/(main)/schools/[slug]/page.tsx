@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { BookOpen, Building2, CalendarDays, ExternalLink, GraduationCap, Mail, MapPin, Phone, School as SchoolIcon, ShieldCheck, Users } from 'lucide-react'
+import { BookOpen, Building2, CalendarDays, CheckCircle2, ExternalLink, GraduationCap, Info, Mail, MapPin, Phone, School as SchoolIcon, ShieldCheck, Users } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import VerificationBadge from '@/components/institutions/VerificationBadge'
 import ReportCorrectionForm from '@/components/institutions/ReportCorrectionForm'
@@ -23,9 +23,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const school = await getSchool(params.slug)
   if (!school) return { title: 'School not found' }
   const place = [school.local_level, school.district, school.province].filter(Boolean).join(', ')
+  const detail = school.grades_from != null || school.school_level
+    ? 'grades, location, contact details and official sources'
+    : 'official registry identity, location and available school information'
   return {
-    title: `${school.name} – Programs, Contact and School Information`,
-    description: `Verified information about ${school.name} in ${place}: grades, contact details, facilities and official sources.`,
+    title: `${school.name} – School Profile and Verified Source`,
+    description: `Check ${detail} for ${school.name} in ${place}. See what is verified and what to confirm directly before admission.`,
     alternates: { canonical: `/schools/${school.slug}` },
   }
 }
@@ -42,6 +45,8 @@ export default async function SchoolProfilePage({ params }: { params: { slug: st
   const address = [school.address || school.location, school.local_level, school.ward_number ? `Ward ${school.ward_number}` : null, school.district, school.province].filter(Boolean).join(', ')
   const gradeRange = school.grades_from != null && school.grades_to != null ? `${school.grades_from === 0 ? 'ECD' : `Grade ${school.grades_from}`} to Grade ${school.grades_to}` : null
   const verifiedDate = school.last_verified_at ? new Date(school.last_verified_at).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' }) : null
+  const hasContact = Boolean(school.phone || school.email || school.website)
+  const registryOnly = !gradeRange && !school.school_level && !school.ownership_type && !hasContact && !school.facilities?.length
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'School',
@@ -69,6 +74,8 @@ export default async function SchoolProfilePage({ params }: { params: { slug: st
 
       <div className="mx-auto grid max-w-7xl gap-7 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_340px] lg:px-8">
         <main className="space-y-6">
+          {registryOnly && <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5 sm:p-6"><div className="flex items-start gap-3"><Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" /><div><h2 className="font-bold text-ink">Official registry profile</h2><p className="mt-1 text-sm leading-6 text-gray-600">CEHRD data confirms this school&apos;s name, IEMIS code and administrative location. Grades, ownership, fees, contacts and facilities have not yet been independently added, so confirm them directly before making an admission decision.</p></div></div></section>}
+
           <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><h2 className="font-display text-xl font-bold text-ink">About this school</h2><p className="mt-4 whitespace-pre-line text-sm leading-7 text-gray-600">{school.description || `${school.name} is listed in the SikshyaNepal school directory. We are progressively adding verified academic, facility and admission information from official sources.`}</p></section>
 
           <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><h2 className="font-display text-xl font-bold text-ink">Academic information</h2><div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -86,6 +93,8 @@ export default async function SchoolProfilePage({ params }: { params: { slug: st
 
           {school.facilities?.length ? <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><h2 className="font-display text-xl font-bold text-ink">Facilities</h2><div className="mt-4 grid gap-3 sm:grid-cols-2">{school.facilities.map((facility) => <div key={facility} className="flex items-center gap-2 rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-700"><ShieldCheck className="h-4 w-4 text-emerald-500" />{facility}</div>)}</div></section> : null}
 
+          <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><h2 className="font-display text-xl font-bold text-ink">Confirm before admission</h2><p className="mt-2 text-sm leading-6 text-gray-500">School information and costs can change. Ask the school for these details in writing before paying an application or admission fee.</p><ul className="mt-5 grid gap-3 sm:grid-cols-2">{['Current grades and available seats', 'Admission dates and required documents', 'Complete fee structure and refund rules', 'Transport, facilities and teaching medium'].map((item) => <li key={item} className="flex items-start gap-2 rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-700"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{item}</li>)}</ul></section>
+
           <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-display text-xl font-bold text-ink">Source and verification</h2><p className="mt-1 text-sm text-gray-500">See where this information came from.</p></div><VerificationBadge status={school.verification_status} /></div><dl className="mt-5 divide-y divide-gray-100 text-sm"><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Source</dt><dd className="text-right font-semibold text-ink">{school.source_name || 'Not yet documented'}</dd></div><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Last verified</dt><dd className="text-right font-semibold text-ink">{verifiedDate || 'Verification pending'}</dd></div>{school.source_url && <div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Evidence</dt><dd><a href={school.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 font-semibold text-primary">Open original source <ExternalLink className="h-3.5 w-3.5" /></a></dd></div>}</dl><div className="mt-5 border-t border-gray-100 pt-5"><ReportCorrectionForm entityType="school" entityId={school.id} entityName={school.name} /></div></section>
         </main>
 
@@ -93,7 +102,7 @@ export default async function SchoolProfilePage({ params }: { params: { slug: st
           <div className="flex flex-wrap gap-2"><SaveSchoolButton schoolId={school.id} /><ShareButton title={`${school.name} | SikshyaNepal`} /></div>
           <Link href={`/schools/compare?school1=${school.slug}`} className="flex items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-bold text-primary hover:bg-blue-100">Compare this school</Link>
           <section className="rounded-2xl border border-gray-200 bg-white p-5"><h2 className="font-bold text-ink">Quick information</h2><dl className="mt-4 space-y-4 text-sm">{school.iemis_code && <div><dt className="text-xs text-gray-400">IEMIS code</dt><dd className="mt-1 font-mono font-semibold text-ink">{school.iemis_code}</dd></div>}<div><dt className="text-xs text-gray-400">Location</dt><dd className="mt-1 font-semibold text-ink">{address}</dd></div>{school.principal_name && <div><dt className="text-xs text-gray-400">Principal</dt><dd className="mt-1 font-semibold text-ink">{school.principal_name}</dd></div>}{school.medium_of_instruction?.length ? <div><dt className="text-xs text-gray-400">Medium</dt><dd className="mt-1 font-semibold text-ink">{school.medium_of_instruction.join(', ')}</dd></div> : null}</dl></section>
-          <section className="rounded-2xl border border-gray-200 bg-white p-5"><h2 className="font-bold text-ink">Contact school</h2><div className="mt-4 space-y-2">{school.phone && <a href={`tel:${school.phone}`} className="flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white"><Phone className="h-4 w-4" />{school.phone}</a>}{school.email && <a href={`mailto:${school.email}`} className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-ink"><Mail className="h-4 w-4 text-primary" />Email school</a>}{school.website && <a href={school.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-ink"><ExternalLink className="h-4 w-4 text-primary" />Official website</a>}</div>{!school.phone && !school.email && !school.website && <p className="mt-3 text-sm leading-relaxed text-gray-500">Verified contact details have not been added yet. You can report official details using the correction form.</p>}</section>
+          <section className="rounded-2xl border border-gray-200 bg-white p-5"><h2 className="font-bold text-ink">Contact school</h2><div className="mt-4 space-y-2">{school.phone && <a href={`tel:${school.phone}`} className="flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white"><Phone className="h-4 w-4" />{school.phone}</a>}{school.email && <a href={`mailto:${school.email}`} className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-ink"><Mail className="h-4 w-4 text-primary" />Email school</a>}{school.website && <a href={school.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-ink"><ExternalLink className="h-4 w-4 text-primary" />Official website</a>}</div>{!hasContact && <p className="mt-3 text-sm leading-relaxed text-gray-500">Verified contact details have not been added yet. You can report official details using the correction form.</p>}</section>
           {(school.student_count != null || school.teacher_count != null) && <section className="rounded-2xl border border-gray-200 bg-white p-5"><h2 className="font-bold text-ink">School community</h2><div className="mt-4 grid grid-cols-2 gap-3">{school.student_count != null && <div className="rounded-xl bg-blue-50 p-3"><Users className="h-4 w-4 text-primary" /><p className="mt-2 font-mono text-xl font-bold text-ink">{school.student_count.toLocaleString()}</p><p className="text-xs text-gray-500">Students</p></div>}{school.teacher_count != null && <div className="rounded-xl bg-emerald-50 p-3"><GraduationCap className="h-4 w-4 text-emerald-600" /><p className="mt-2 font-mono text-xl font-bold text-ink">{school.teacher_count.toLocaleString()}</p><p className="text-xs text-gray-500">Teachers</p></div>}</div></section>}
         </aside>
       </div>

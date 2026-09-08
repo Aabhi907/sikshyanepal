@@ -158,7 +158,7 @@ class BaseScraper:
         canonical = source_url.split("#", 1)[0].rstrip("/").lower()
         parsed = urlparse(source_url)
         fingerprint = hashlib.sha256(f"{target_type}|{title.lower()}|{canonical}".encode()).hexdigest()
-        flags = []
+        flags = list(data.get("quality_flags") or [])
         if len(title) < 12:
             flags.append("short_title")
         if not data.get("content"):

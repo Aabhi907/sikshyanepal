@@ -11,7 +11,8 @@ must open `/admin/ingestion`, compare the item with the original source, and cho
 **Verify & publish** or **Reject**. The college newsroom has one narrow exception:
 an original brief about a low-risk admission or campus-event announcement may publish
 automatically when it is matched to an active, verified college and its official
-website. Rankings, awards, result statistics, named student ranks, placements and
+website and the page exposes a publication date from the last 14 days. Rankings,
+awards, result statistics, named student ranks, placements and
 scholarship claims always require editor review.
 
 Before running collectors, apply `supabase/migrations/20260905_content_ingestion_queue.sql`.

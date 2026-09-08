@@ -10,6 +10,11 @@ Low-risk official admissions and event notices can publish as short original bri
 Every published brief links to the exact official page, states how it was prepared,
 and is retained in the ingestion audit trail.
 
+Automatic publication additionally requires a machine-readable publication date no
+more than 14 days old. If the date is missing, future-dated or stale, the item stays
+in the review queue. The collector follows each institution's `robots.txt` rules and
+uses a same-domain canonical URL when the source declares one.
+
 These claims always require a human editor:
 
 - “best”, “top” or comparative ranking claims;

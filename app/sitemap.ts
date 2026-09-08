@@ -21,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .neq('verification_status', 'unverified'),
     supabase
       .from('colleges')
-      .select('slug, created_at, district, province')
+      .select('slug, created_at, updated_at, district, province')
       .or('status.eq.active,status.is.null')
       .order('created_at', { ascending: false }),
     supabase
@@ -42,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .limit(200),
     supabase
       .from('programs')
-      .select('slug, created_at'),
+      .select('slug, created_at, updated_at'),
   ])
 
   // Supabase projects commonly cap one REST response at 1,000 rows. Fetch every
@@ -59,121 +59,100 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ))
   const schools = { data: schoolPages.flatMap(page => page.data || []) }
 
-  const staticModified = new Date('2026-09-08')
-
   // ── Static routes ──────────────────────────────────────────────────────────
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url:             BASE_URL,
-      lastModified:    staticModified,
       changeFrequency: 'daily',
       priority:        1.0,
     },
     {
       url:             `${BASE_URL}/admissions`,
-      lastModified:    staticModified,
       changeFrequency: 'daily',
       priority:        0.9,
     },
     {
       url:             `${BASE_URL}/admissions/status`,
-      lastModified:    staticModified,
       changeFrequency: 'daily',
       priority:        0.8,
     },
     {
       url:             `${BASE_URL}/schools/compare`,
-      lastModified:    staticModified,
       changeFrequency: 'weekly',
       priority:        0.7,
     },
     {
       url:             `${BASE_URL}/tools/school-finder`,
-      lastModified:    staticModified,
       changeFrequency: 'weekly',
       priority:        0.7,
     },
     {
       url:             `${BASE_URL}/submit-school`,
-      lastModified:    staticModified,
       changeFrequency: 'monthly',
       priority:        0.6,
     },
     {
       url:             `${BASE_URL}/schools`,
-      lastModified:    staticModified,
       changeFrequency: 'weekly',
       priority:        0.9,
     },
     {
       url:             `${BASE_URL}/colleges`,
-      lastModified:    staticModified,
       changeFrequency: 'daily',
       priority:        0.9,
     },
     {
       url:             `${BASE_URL}/results`,
-      lastModified:    staticModified,
       changeFrequency: 'hourly',
       priority:        0.9,
     },
     {
       url:             `${BASE_URL}/notices`,
-      lastModified:    staticModified,
       changeFrequency: 'hourly',
       priority:        0.9,
     },
     {
       url:             `${BASE_URL}/news`,
-      lastModified:    staticModified,
       changeFrequency: 'daily',
       priority:        0.8,
     },
     {
       url:             `${BASE_URL}/news/feed.xml`,
-      lastModified:    staticModified,
       changeFrequency: 'hourly',
       priority:        0.5,
     },
     {
       url:             `${BASE_URL}/programs`,
-      lastModified:    staticModified,
       changeFrequency: 'weekly',
       priority:        0.8,
     },
     {
       url:             `${BASE_URL}/careers`,
-      lastModified:    staticModified,
       changeFrequency: 'monthly',
       priority:        0.8,
     },
     {
       url:             `${BASE_URL}/compare`,
-      lastModified:    staticModified,
       changeFrequency: 'weekly',
       priority:        0.7,
     },
     {
       url:             `${BASE_URL}/scholarships`,
-      lastModified:    staticModified,
       changeFrequency: 'weekly',
       priority:        0.7,
     },
     {
       url:             `${BASE_URL}/entrance-exams`,
-      lastModified:    staticModified,
       changeFrequency: 'daily',
       priority:        0.8,
     },
     {
       url:             `${BASE_URL}/study-resources`,
-      lastModified:    staticModified,
       changeFrequency: 'weekly',
       priority:        0.8,
     },
     {
       url:             `${BASE_URL}/deadlines`,
-      lastModified:    staticModified,
       changeFrequency: 'daily',
       priority:        0.9,
     },
@@ -202,7 +181,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const collegeRoutes: MetadataRoute.Sitemap = (colleges.data ?? []).map((c) => ({
     url:             `${BASE_URL}/colleges/${c.slug}`,
-    lastModified:    new Date(c.created_at),
+    lastModified:    new Date(c.updated_at || c.created_at),
     changeFrequency: 'weekly' as const,
     priority:        0.8,
   }))
@@ -230,24 +209,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const programRoutes: MetadataRoute.Sitemap = (programs.data ?? []).map((p) => ({
     url:             `${BASE_URL}/programs/${p.slug}`,
-    lastModified:    new Date(p.created_at),
+    lastModified:    new Date(p.updated_at || p.created_at),
     changeFrequency: 'monthly' as const,
     priority:        0.6,
   }))
 
   const careerRoutes: MetadataRoute.Sitemap = careers.map((career) => ({
     url: `${BASE_URL}/careers/${career.slug}`,
-    lastModified: staticModified,
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }))
-  const programCollegeRoutes: MetadataRoute.Sitemap = (programs.data ?? []).map((p) => ({ url: `${BASE_URL}/colleges/program/${p.slug}`, lastModified: new Date(p.created_at), changeFrequency: 'weekly' as const, priority: 0.75 }))
-  const locationRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/colleges/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: staticModified, changeFrequency: 'weekly' as const, priority: 0.7 }))
-  const schoolDistrictRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/schools/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: staticModified, changeFrequency: 'weekly' as const, priority: 0.7 }))
-  const municipalityRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.local_level).filter(Boolean))).map(municipality => ({ url: `${BASE_URL}/schools/municipality/${String(municipality).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: staticModified, changeFrequency: 'weekly' as const, priority: 0.65 }))
-  const schoolProvinceRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.province).filter(Boolean))).map(province => ({ url: `${BASE_URL}/schools/province/${String(province).toLowerCase()}`, lastModified: staticModified, changeFrequency: 'weekly' as const, priority: 0.7 }))
-  const collegeProvinceRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.province).filter(Boolean))).map(province => ({ url: `${BASE_URL}/colleges/province/${String(province).toLowerCase()}`, lastModified: staticModified, changeFrequency: 'weekly' as const, priority: 0.7 }))
-  const collegeNewsTopicRoutes: MetadataRoute.Sitemap = Object.keys(COLLEGE_NEWS_TOPICS).map(topic => ({ url: `${BASE_URL}/news/topic/${topic}`, lastModified: staticModified, changeFrequency: 'daily' as const, priority: 0.8 }))
+  const programCollegeRoutes: MetadataRoute.Sitemap = (programs.data ?? []).map((p) => ({ url: `${BASE_URL}/colleges/program/${p.slug}`, lastModified: new Date(p.updated_at || p.created_at), changeFrequency: 'weekly' as const, priority: 0.75 }))
+  const locationRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/colleges/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, changeFrequency: 'weekly' as const, priority: 0.7 }))
+  const schoolDistrictRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.district).filter(Boolean))).map(district => ({ url: `${BASE_URL}/schools/in/${String(district).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, changeFrequency: 'weekly' as const, priority: 0.7 }))
+  const municipalityRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.local_level).filter(Boolean))).map(municipality => ({ url: `${BASE_URL}/schools/municipality/${String(municipality).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, changeFrequency: 'weekly' as const, priority: 0.65 }))
+  const schoolProvinceRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.province).filter(Boolean))).map(province => ({ url: `${BASE_URL}/schools/province/${String(province).toLowerCase()}`, changeFrequency: 'weekly' as const, priority: 0.7 }))
+  const collegeProvinceRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.province).filter(Boolean))).map(province => ({ url: `${BASE_URL}/colleges/province/${String(province).toLowerCase()}`, changeFrequency: 'weekly' as const, priority: 0.7 }))
+  const collegeNewsTopicRoutes: MetadataRoute.Sitemap = Object.keys(COLLEGE_NEWS_TOPICS).map(topic => ({ url: `${BASE_URL}/news/topic/${topic}`, changeFrequency: 'daily' as const, priority: 0.8 }))
 
   return [
     ...staticRoutes,

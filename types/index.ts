@@ -32,6 +32,7 @@ export interface College {
   verified_by?: string | null
   education_levels?: ('plus_two' | 'bachelor' | 'master' | 'mphil' | 'phd' | 'diploma' | 'certificate')[]
   created_at: string
+  updated_at?: string | null
   programs?: CollegeProgram[]
   reviews?: Review[]
   scholarships?: Scholarship[]

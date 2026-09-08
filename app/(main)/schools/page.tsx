@@ -19,8 +19,9 @@ async function getSchools(sp: SchoolSearchParams) {
   const supabase = createServerSupabaseClient()
   const page = Math.max(1, Number.parseInt(sp.page || '1', 10) || 1)
   const pageSize = 24
-  let query = supabase.from('schools').select('*', { count: 'exact' }).eq('status', 'active').or('grades_to.lte.10,grades_to.is.null').order('is_featured', { ascending: false }).order('name')
-  if (sp.q) query = query.ilike('name', `%${sp.q}%`)
+  let query = supabase.from('schools').select('id,iemis_code,name,slug,ownership_type,school_level,grades_from,grades_to,province,district,local_level,location,logo_url,cover_url,student_count,verification_status,is_featured', { count: 'exact' }).eq('status', 'active').or('grades_to.lte.10,grades_to.is.null').order('is_featured', { ascending: false }).order('name')
+  const searchTerm = sp.q?.trim().slice(0, 100)
+  if (searchTerm) query = query.ilike('name', `%${searchTerm}%`)
   if (sp.province) query = query.eq('province', sp.province)
   if (sp.district) query = query.eq('district', sp.district)
   if (sp.ownership) query = query.eq('ownership_type', sp.ownership)
@@ -34,11 +35,11 @@ async function getSchools(sp: SchoolSearchParams) {
   const from = (page - 1) * pageSize
   const { data, error, count } = await query.range(from, from + pageSize - 1)
   if (error) console.error('[schools] query failed:', error.message)
-  return { schools: (data || []) as School[], total: count || 0, page, pageSize }
+  return { schools: (data || []) as School[], total: count || 0, page, pageSize, failed: Boolean(error) }
 }
 
 export default async function SchoolsPage({ searchParams }: { searchParams: SchoolSearchParams }) {
-  const { schools, total, page, pageSize } = await getSchools(searchParams)
+  const { schools, total, page, pageSize, failed } = await getSchools(searchParams)
   const verifiedCount = schools.filter((s) => s.verification_status !== 'unverified').length
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const pageHref = (nextPage: number) => { const params = new URLSearchParams(); Object.entries(searchParams).forEach(([key, value]) => { if (value && key !== 'page') params.set(key, value) }); if (nextPage > 1) params.set('page', String(nextPage)); const query = params.toString(); return `/schools${query ? `?${query}` : ''}` }
@@ -63,7 +64,9 @@ export default async function SchoolsPage({ searchParams }: { searchParams: Scho
           <SchoolFilters searchParams={searchParams} resultCount={total} />
           <main>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-gray-500"><strong className="text-ink">{total.toLocaleString()}</strong> matching school{total === 1 ? '' : 's'}</p>{schools.length > 0 && <p className="text-xs text-gray-400">Page {page} of {totalPages} · {verifiedCount} source-checked on this page</p>}</div>
-            {schools.length ? (
+            {failed ? (
+              <div role="alert" className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-16 text-center"><Building2 className="mx-auto h-10 w-10 text-amber-500" /><h2 className="mt-4 font-display text-xl font-bold text-ink">School directory is temporarily unavailable</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-600">Your filters are fine. We could not reach the directory just now—please try again in a moment.</p><Link href={pageHref(page)} className="mt-5 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white">Try again</Link></div>
+            ) : schools.length ? (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{schools.map((school) => <SchoolCard key={school.id} school={school} />)}</div>
             ) : (
               <div className="rounded-3xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center"><Building2 className="mx-auto h-10 w-10 text-gray-300" /><h2 className="mt-4 font-display text-xl font-bold text-ink">No schools match these filters</h2><p className="mt-2 text-sm text-gray-500">Try a broader location or clear the filters.</p><Link href="/schools" className="mt-5 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white">View all schools</Link></div>

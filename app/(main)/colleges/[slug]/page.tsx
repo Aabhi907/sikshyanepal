@@ -22,7 +22,7 @@ import ReviewResponseForm from "@/components/colleges/ReviewResponseForm";
 import ApplyNowButton from "@/components/colleges/ApplyNowButton";
 import SaveCollegeButton from "@/components/colleges/SaveCollegeButton";
 import AdUnit from "@/components/ads/AdUnit";
-import type { College, CollegeProgram, Review } from "@/types";
+import type { College, CollegeProgram, Review, News } from "@/types";
 import VerificationBadge from "@/components/institutions/VerificationBadge";
 import ReportCorrectionForm from "@/components/institutions/ReportCorrectionForm";
 import AdmissionCard from "@/components/admissions/AdmissionCard";
@@ -80,7 +80,7 @@ async function getCollege(slug: string) {
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-  const [programsRes, reviewsRes, scholarshipsRes, leadsRes, admissionsRes] = await Promise.all([
+  const [programsRes, reviewsRes, scholarshipsRes, leadsRes, admissionsRes, newsRes] = await Promise.all([
     supabase
       .from("college_programs")
       .select("*, program:programs(*)")
@@ -105,6 +105,7 @@ async function getCollege(slug: string) {
       .eq("status", "published")
       .order("application_deadline", { ascending: true })
       .limit(4),
+    supabase.from("news").select("id,title,slug,published_date,content_category").eq("college_id", college.id).eq("status", "published").order("published_date", { ascending: false }).limit(5),
   ]);
 
   return {
@@ -114,6 +115,7 @@ async function getCollege(slug: string) {
     scholarships: scholarshipsRes.data || [],
     leadsCount: leadsRes.count || 0,
     admissions: (admissionsRes.data || []) as Admission[],
+    news: (newsRes.data || []) as News[],
   };
 }
 
@@ -151,7 +153,7 @@ export default async function CollegeProfilePage({
   const data = await getCollege(params.slug);
   if (!data) notFound();
 
-  const { college, programs, reviews, scholarships, leadsCount, admissions } = data;
+  const { college, programs, reviews, scholarships, leadsCount, admissions, news } = data;
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
@@ -450,6 +452,13 @@ export default async function CollegeProfilePage({
               </div>
               <div className="grid gap-4 sm:grid-cols-2">{admissions.map((admission) => <AdmissionCard key={admission.id} admission={admission} />)}</div>
             </div>
+          )}
+
+          {news.length > 0 && (
+            <section className="rounded-xl border border-gray-200 bg-white p-6" aria-labelledby="college-news-heading">
+              <div className="mb-4 flex items-end justify-between gap-4"><div><h2 id="college-news-heading" className="text-lg font-semibold text-gray-900">Latest updates from {college.name}</h2><p className="mt-1 text-sm text-gray-500">Admissions, results, achievements and campus events with original sources.</p></div><Link href={`/news?q=${encodeURIComponent(college.name)}`} className="whitespace-nowrap text-sm font-semibold text-blue-600">All updates</Link></div>
+              <div className="divide-y divide-gray-100">{news.map(article => <Link key={article.id} href={`/news/${article.slug}`} className="group flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"><div><p className="text-xs font-semibold uppercase tracking-wide text-blue-600">{article.content_category?.replaceAll('_', ' ') || 'College news'}</p><h3 className="mt-1 text-sm font-semibold text-gray-800 group-hover:text-blue-700">{article.title}</h3></div><span className="text-xs text-gray-400">{new Date(article.published_date).toLocaleDateString('en-NP', { day: 'numeric', month: 'short', year: 'numeric' })}</span></Link>)}</div>
+            </section>
           )}
 
           {/* Reviews */}

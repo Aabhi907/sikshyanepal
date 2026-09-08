@@ -14,7 +14,7 @@ export const revalidate = 0
 export const metadata: Metadata = {
   title: 'Nepal College News, Admissions & Student Achievements',
   description: 'Verified Nepal college news for +2 and Bachelor students: admissions, entrance results, scholarships, awards, hackathons and campus events with original sources.',
-  alternates: { canonical: '/news' },
+  alternates: { canonical: '/news', types: { 'application/rss+xml': '/news/feed.xml' } },
 }
 
 const CARD_GRADIENTS = [

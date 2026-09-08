@@ -129,6 +129,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority:        0.8,
     },
     {
+      url:             `${BASE_URL}/news/feed.xml`,
+      lastModified:    staticModified,
+      changeFrequency: 'hourly',
+      priority:        0.5,
+    },
+    {
       url:             `${BASE_URL}/programs`,
       lastModified:    staticModified,
       changeFrequency: 'weekly',

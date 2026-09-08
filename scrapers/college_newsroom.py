@@ -80,6 +80,10 @@ class CollegeNewsroomScraper(BaseScraper):
 
             for source_url, source_title in list(links.items())[:12]:
                 category, risk = classify(source_title)
+                current_year = datetime.now(timezone.utc).year
+                has_fresh_date_signal = bool(re.search(rf"\b(?:{current_year}|{current_year + 1}|208[3-4])\b", f"{source_title} {source_url}"))
+                if risk == "low" and not has_fresh_date_signal:
+                    risk = "medium"
                 article_title = f"{college['name']}: {source_title}"
                 article = brief(college["name"], source_title, category, source_url)
                 levels = college.get("education_levels") or ["plus_two", "bachelor"]
@@ -88,7 +92,7 @@ class CollegeNewsroomScraper(BaseScraper):
                     "source_url": source_url, "published_date": datetime.now(timezone.utc).isoformat(),
                     "content_category": category, "claim_risk": risk, "college_id": college["id"],
                     "education_levels": levels, "generation_version": "college-newsroom-v1",
-                    "auto_publish_eligible": risk == "low", "source_name": source_name,
+                    "auto_publish_eligible": risk == "low" and has_fresh_date_signal, "source_name": source_name,
                     "source_type": "institution",
                 }
                 self.queue_record("news", record)

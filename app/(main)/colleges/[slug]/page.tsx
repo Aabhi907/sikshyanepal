@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -65,7 +66,7 @@ function getCoverStyle(affiliation: string | null | undefined) {
 
 const BASE_URL = SITE_URL;
 
-async function getCollege(slug: string) {
+const getCollege = cache(async function getCollege(slug: string) {
   const supabase = createServerSupabaseClient();
   const { data: college } = await supabase
     .from("colleges")
@@ -76,11 +77,7 @@ async function getCollege(slug: string) {
 
   if (!college) return null;
 
-  // Start of this month
-  const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-
-  const [programsRes, reviewsRes, scholarshipsRes, leadsRes, admissionsRes, newsRes] = await Promise.all([
+  const [programsRes, reviewsRes, scholarshipsRes, admissionsRes, newsRes] = await Promise.all([
     supabase
       .from("college_programs")
       .select("*, program:programs(*)")
@@ -93,11 +90,6 @@ async function getCollege(slug: string) {
       .order("created_at", { ascending: false })
       .limit(10),
     supabase.from("scholarships").select("*").eq("college_id", college.id),
-    supabase
-      .from("leads")
-      .select("id", { count: "exact", head: true })
-      .eq("college_id", college.id)
-      .gte("created_at", monthStart),
     supabase
       .from("admissions")
       .select("*, college:colleges(id,name,slug,location)")
@@ -113,11 +105,10 @@ async function getCollege(slug: string) {
     programs: (programsRes.data || []) as CollegeProgram[],
     reviews: (reviewsRes.data || []) as Review[],
     scholarships: scholarshipsRes.data || [],
-    leadsCount: leadsRes.count || 0,
     admissions: (admissionsRes.data || []) as Admission[],
     news: (newsRes.data || []) as News[],
   };
-}
+})
 
 export async function generateMetadata({
   params,
@@ -153,7 +144,7 @@ export default async function CollegeProfilePage({
   const data = await getCollege(params.slug);
   if (!data) notFound();
 
-  const { college, programs, reviews, scholarships, leadsCount, admissions, news } = data;
+  const { college, programs, reviews, scholarships, admissions, news } = data;
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
@@ -599,7 +590,6 @@ export default async function CollegeProfilePage({
                 .map(cp => cp.program?.name)
                 .filter((n): n is string => !!n)
                 .map(name => ({ name }))}
-              leadsCount={leadsCount}
             />
           </div>
 

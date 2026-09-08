@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Send, Users, CheckCircle } from 'lucide-react'
+import { Send, CheckCircle } from 'lucide-react'
 import ApplyNowModal from './ApplyNowModal'
 
 interface Program {
@@ -13,14 +13,13 @@ interface Props {
   collegeId:   string
   isFeatured:  boolean
   programs:    Program[]
-  leadsCount:  number
 }
 
 const LS_KEY    = (id: string) => `applied_${id}`
 const EXPIRY_MS = 30 * 24 * 60 * 60 * 1000  // 30 days
 
 export default function ApplyNowButton({
-  collegeName, collegeId, isFeatured, programs, leadsCount,
+  collegeName, collegeId, isFeatured, programs,
 }: Props) {
   const [open,    setOpen]    = useState(false)
   const [applied, setApplied] = useState(false)
@@ -78,16 +77,6 @@ export default function ApplyNowButton({
         <Send className="w-4 h-4" />
         Apply Now — It&apos;s Free
       </button>
-
-      {leadsCount > 0 && (
-        <p className="mt-2 flex items-center justify-center gap-1 text-xs text-gray-500">
-          <Users className="w-3.5 h-3.5 text-gray-400" />
-          <span>
-            <strong className="text-gray-700">{leadsCount}</strong>{' '}
-            student{leadsCount !== 1 ? 's' : ''} applied this month
-          </span>
-        </p>
-      )}
 
       {open && (
         <ApplyNowModal

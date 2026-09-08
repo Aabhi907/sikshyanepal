@@ -1,0 +1,61 @@
+{
+  "extracted_at": "2026-09-08T02:02:39.362Z",
+  "official_sources": {
+    "schools": "https://emis.cehrd.gov.np/v1/api/iemisPortal/getAllOrganizationsForSchoolGIS",
+    "geography": "https://emis.cehrd.gov.np/v1/api/iemisPortal/getAllProvinceWithDistrictAndMunicipality",
+    "public_page": "https://emis.cehrd.gov.np/school-gis"
+  },
+  "raw_records": 40742,
+  "accepted_records": 40742,
+  "rejected_records": 0,
+  "provinces": [
+    "Bagmati",
+    "Gandaki",
+    "Karnali",
+    "Koshi",
+    "Lumbini",
+    "Madhesh",
+    "Sudurpashchim"
+  ],
+  "districts": 77,
+  "municipalities": 735,
+  "import_batches": [
+    {
+      "filename": "cehrd-schools-2026-09-08-part-01.csv",
+      "count": 5000
+    },
+    {
+      "filename": "cehrd-schools-2026-09-08-part-02.csv",
+      "count": 5000
+    },
+    {
+      "filename": "cehrd-schools-2026-09-08-part-03.csv",
+      "count": 5000
+    },
+    {
+      "filename": "cehrd-schools-2026-09-08-part-04.csv",
+      "count": 5000
+    },
+    {
+      "filename": "cehrd-schools-2026-09-08-part-05.csv",
+      "count": 5000
+    },
+    {
+      "filename": "cehrd-schools-2026-09-08-part-06.csv",
+      "count": 5000
+    },
+    {
+      "filename": "cehrd-schools-2026-09-08-part-07.csv",
+      "count": 5000
+    },
+    {
+      "filename": "cehrd-schools-2026-09-08-part-08.csv",
+      "count": 5000
+    },
+    {
+      "filename": "cehrd-schools-2026-09-08-part-09.csv",
+      "count": 742
+    }
+  ],
+  "note": "CEHRD public GIS supplies registry identity and geography. Contact, fee, facility, grade-range and marketing details are intentionally left blank until separately verified."
+}

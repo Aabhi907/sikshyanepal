@@ -1,0 +1,30 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { MessageCircle, ShieldCheck } from 'lucide-react'
+import { createServerSupabaseClient } from '@/lib/supabase'
+import type { CommunityComment, CommunityPost } from '@/lib/community'
+import { topicLabel } from '@/lib/community'
+import ReplyForm from '@/components/community/ReplyForm'
+import ReportButton from '@/components/community/ReportButton'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: 'Anonymous Student Discussion | SikshyaNepal', robots: { index: false, follow: true } }
+}
+
+async function load(id: string) {
+  const db = createServerSupabaseClient()
+  const [{ data: post }, { data: comments }] = await Promise.all([
+    db.from('community_posts').select('id,title,body,topic,status,created_at,published_at').eq('id', id).eq('status', 'published').single(),
+    db.from('community_comments').select('id,post_id,body,status,created_at,published_at').eq('post_id', id).eq('status', 'published').order('published_at', { ascending: true }).limit(200),
+  ])
+  return { post: post as CommunityPost | null, comments: (comments || []) as CommunityComment[] }
+}
+
+export default async function CommunityPostPage({ params }: { params: { id: string } }) {
+  const { post, comments } = await load(params.id)
+  if (!post) notFound()
+  return <main className="min-h-screen bg-[#f6f7fb]"><div className="mx-auto max-w-3xl px-4 py-8 sm:px-6"><Link href="/community" className="text-sm font-bold text-primary">← All discussions</Link><article className="mt-5 rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><div className="flex flex-wrap items-center gap-2 text-xs"><span className="rounded-full bg-blue-50 px-2.5 py-1 font-bold text-blue-700">{topicLabel(post.topic)}</span><span className="text-gray-400">Anonymous student</span></div><h1 className="mt-4 font-display text-2xl font-extrabold leading-tight text-ink sm:text-3xl">{post.title}</h1><p className="mt-5 whitespace-pre-line text-sm leading-7 text-gray-700">{post.body}</p><div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4"><span className="text-xs text-gray-400">Shared experience—not verified institutional information</span><ReportButton targetType="post" targetId={post.id}/></div></article><section className="mt-7"><h2 className="flex items-center gap-2 font-display text-xl font-bold text-ink"><MessageCircle className="h-5 w-5 text-primary"/>{comments.length} replies</h2><div className="mt-4 space-y-3">{comments.map(comment=><article key={comment.id} className="rounded-2xl border border-gray-200 bg-white p-5"><p className="text-xs font-bold text-gray-400">Anonymous student</p><p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-700">{comment.body}</p><div className="mt-3 text-right"><ReportButton targetType="comment" targetId={comment.id}/></div></article>)}{!comments.length&&<p className="rounded-xl bg-white p-5 text-sm text-gray-500">No published replies yet.</p>}</div></section><div className="mt-7"><ReplyForm postId={post.id}/></div><p className="mt-5 flex items-start gap-2 text-xs leading-5 text-gray-500"><ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary"/>Replies are moderated. Do not use this community for emergencies, professional medical advice, or unverified accusations.</p></div></main>
+}

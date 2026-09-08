@@ -13,8 +13,8 @@ export const dynamic   = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: 'Nepal College News, Admissions & Student Achievements',
-  description: 'Verified Nepal college news for +2 and Bachelor students: admissions, entrance results, scholarships, awards, hackathons and campus events with original sources.',
+  title: 'Nepal College News & Student Guides',
+  description: 'Source-backed Nepal college news and practical student guides for +2 and Bachelor admissions, entrance results, scholarships, achievements and campus life.',
   alternates: { canonical: '/news', types: { 'application/rss+xml': '/news/feed.xml' } },
 }
 
@@ -59,13 +59,13 @@ export default async function NewsPage({ searchParams }: { searchParams: { q?: s
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Nepal College News</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">News &amp; Blogs</p>
           <h1 className="font-display font-bold text-ink text-3xl sm:text-4xl mb-2"
               style={{ letterSpacing: '-0.025em' }}>
-            College admissions, results and campus updates
+            College news, admissions and student guides
           </h1>
           <p className="text-gray-500 text-sm mb-6">
-            Source-backed updates for +2 and Bachelor students, checked against the original publisher.
+            Source-backed updates and practical explainers for +2 and Bachelor students, checked against the original publisher.
           </p>
           <SearchBar placeholder="Search news..." redirectTo="/news" />
           <nav aria-label="College news topics" className="mt-5 flex gap-2 overflow-x-auto pb-1 text-sm">

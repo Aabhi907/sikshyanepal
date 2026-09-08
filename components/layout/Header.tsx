@@ -43,6 +43,8 @@ const navLinks = [
       { label: 'Scholarships',     href: '/scholarships' },
     ],
   },
+  { label: 'News & Blogs', href: '/news' },
+  { label: 'Community', href: '/community' },
   {
     label: 'Explore',
     href: '/programs',
@@ -59,7 +61,6 @@ const navLinks = [
       { label: 'Results', href: '/results' },
       { label: 'Entrance Exams', href: '/entrance-exams' },
       { label: 'Notices', href: '/notices' },
-      { label: 'Education News', href: '/news' },
       { label: 'Scholarships', href: '/scholarships' },
       { label: 'SEE & NEB GPA Calculator', href: '/tools/gpa-calculator' },
       { label: 'College Cost Calculator', href: '/tools/college-cost-calculator' },

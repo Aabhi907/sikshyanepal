@@ -7,8 +7,10 @@ import { ArrowLeft, Calendar, User, Download } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import type { News } from '@/types'
 import PdfViewer from '@/components/results/PdfViewer'
+import JsonLd from '@/components/seo/JsonLd'
+import { absoluteUrl, breadcrumbSchema, SITE_URL } from '@/lib/seo'
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sikshyanepal.vercel.app'
+const BASE_URL = SITE_URL
 
 async function getNews(slug: string) {
   const supabase = createServerSupabaseClient()
@@ -20,7 +22,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const news = await getNews(params.slug)
   if (!news) return { title: 'News Not Found' }
   return {
-    title:       `${news.title} | SikshyaNepal`,
+    title:       news.title,
     description: news.content?.slice(0, 160),
     openGraph:   { images: news.image_url ? [news.image_url] : [] },
     alternates: { canonical: `/news/${news.slug}` },
@@ -32,11 +34,16 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
   if (!news) notFound()
 
   const hasPdf = news.content_type === 'pdf' && !!news.news_pdf_url
-  const jsonLd = { '@context': 'https://schema.org', '@type': 'NewsArticle', headline: news.title, description: news.content?.slice(0, 300) || undefined, datePublished: news.published_date || undefined, dateModified: news.published_date || undefined, mainEntityOfPage: `${BASE_URL}/news/${news.slug}`, image: news.image_url ? [news.image_url] : undefined, author: { '@type': 'Organization', name: 'SikshyaNepal Editorial' }, publisher: { '@type': 'Organization', name: 'SikshyaNepal', logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png` } } }
+  const pageUrl = absoluteUrl(`/news/${news.slug}`)
+  const jsonLd = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'NewsArticle', '@id': `${pageUrl}#article`, headline: news.title, description: news.content?.slice(0, 300) || undefined, datePublished: news.published_date || undefined, dateModified: news.created_at || news.published_date || undefined, mainEntityOfPage: { '@id': `${pageUrl}#webpage` }, image: news.image_url ? [news.image_url] : undefined, author: { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal Editorial' }, publisher: { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal', logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png` } } },
+    { '@type': 'WebPage', '@id': `${pageUrl}#webpage`, url: pageUrl, name: news.title, mainEntity: { '@id': `${pageUrl}#article` }, isPartOf: { '@id': `${BASE_URL}/#website` } },
+    breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Education news', path: '/news' }, { name: news.title, path: `/news/${news.slug}` }]),
+  ] }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
+      <JsonLd data={jsonLd} />
       <Link
         href="/news"
         className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 mb-6 transition-colors"

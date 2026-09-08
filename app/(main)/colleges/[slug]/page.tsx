@@ -4,7 +4,6 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import Script from "next/script";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import {
   MapPin,
@@ -29,6 +28,8 @@ import ReportCorrectionForm from "@/components/institutions/ReportCorrectionForm
 import AdmissionCard from "@/components/admissions/AdmissionCard";
 import ShareButton from "@/components/ui/ShareButton";
 import type { Admission } from "@/types";
+import JsonLd from "@/components/seo/JsonLd";
+import { absoluteUrl, breadcrumbSchema, SITE_URL } from "@/lib/seo";
 
 // Affiliation → gradient config
 const AFFIL_COVER: Record<string, { gradient: string; pattern: string }> = {
@@ -62,7 +63,7 @@ function getCoverStyle(affiliation: string | null | undefined) {
   return DEFAULT_COVER;
 }
 
-const BASE_URL = "https://sikshyanepal.vercel.app";
+const BASE_URL = SITE_URL;
 
 async function getCollege(slug: string) {
   const supabase = createServerSupabaseClient();
@@ -124,7 +125,7 @@ export async function generateMetadata({
   if (!data) return { title: "College Not Found" };
   const { college } = data;
   return {
-    title: `${college.name} | SikshyaNepal`,
+    title: college.name,
     description:
       college.description ||
       `Learn about ${college.name} - programs, fees, reviews, scholarships and more.`,
@@ -154,40 +155,24 @@ export default async function CollegeProfilePage({
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
       : null;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollegeOrUniversity",
-    name: college.name,
-    description: college.description,
-    url: college.website || `${BASE_URL}/colleges/${college.slug}`,
-    logo: college.logo_url,
-    image: college.cover_url,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: college.location,
-      addressCountry: "NP",
+  const pageUrl = absoluteUrl(`/colleges/${college.slug}`)
+  const jsonLd = { "@context": "https://schema.org", "@graph": [
+    {
+      "@type": "CollegeOrUniversity", "@id": `${pageUrl}#college`, name: college.name,
+      description: college.description || undefined, url: pageUrl, logo: college.logo_url || undefined,
+      image: college.cover_url || undefined,
+      address: { "@type": "PostalAddress", streetAddress: college.address || undefined, addressLocality: college.local_level || college.location, addressRegion: college.province || undefined, addressCountry: "NP" },
+      telephone: college.phone || undefined, email: college.email || undefined,
+      foundingDate: college.established_year?.toString(), sameAs: college.website ? [college.website] : undefined,
+      ...(avgRating && { aggregateRating: { "@type": "AggregateRating", ratingValue: avgRating.toFixed(1), reviewCount: reviews.length, bestRating: "5", worstRating: "1" } }),
     },
-    telephone: college.phone,
-    email: college.email,
-    foundingDate: college.established_year?.toString(),
-    ...(avgRating && {
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: avgRating.toFixed(1),
-        reviewCount: reviews.length,
-        bestRating: "5",
-        worstRating: "1",
-      },
-    }),
-  };
+    { "@type": "WebPage", "@id": `${pageUrl}#webpage`, url: pageUrl, name: `${college.name} college profile`, mainEntity: { "@id": `${pageUrl}#college` }, dateModified: college.last_verified_at || college.created_at, citation: college.source_url || undefined, isPartOf: { "@id": `${absoluteUrl('/')}#website` } },
+    breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Colleges', path: '/colleges' }, { name: college.name, path: `/colleges/${college.slug}` }]),
+  ] };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Script
-        id="college-jsonld"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-blue-600">
@@ -373,7 +358,7 @@ export default async function CollegeProfilePage({
                 </span>
               )}
               {college.source_url && (
-                <a href={college.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 font-semibold text-blue-600">
+                <a href={college.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-blue-600">
                   Open source <ExternalLink className="h-3.5 w-3.5" />
                 </a>
               )}

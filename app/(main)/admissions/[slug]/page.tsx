@@ -9,6 +9,8 @@ import ApplyNowButton from '@/components/colleges/ApplyNowButton'
 import { admissionState } from '@/lib/admissions'
 import type { Admission } from '@/types'
 import ShareButton from '@/components/ui/ShareButton'
+import JsonLd from '@/components/seo/JsonLd'
+import { absoluteUrl, breadcrumbSchema } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -35,8 +37,13 @@ export default async function AdmissionPage({ params }: { params: { slug: string
   const status = admissionState(item)
   const closed = status === 'closed'
   const upcoming = status === 'upcoming'
-  const jsonLd = { '@context': 'https://schema.org', '@type': 'EducationEvent', name: item.title, description: item.summary, startDate: item.application_open_at, endDate: item.application_deadline, eventStatus: closed ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled', organizer: { '@type': 'EducationalOrganization', name: item.institution_name, url: item.application_url || item.source_url }, url: `https://sikshyanepal.vercel.app/admissions/${item.slug}` }
-  return <div className="min-h-screen bg-[#f0f4ff]"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
+  const pageUrl = absoluteUrl(`/admissions/${item.slug}`)
+  const jsonLd = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'EducationEvent', '@id': `${pageUrl}#admission`, name: item.title, description: item.summary || item.details || undefined, startDate: item.application_open_at || undefined, endDate: item.application_deadline || undefined, eventStatus: closed ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled', organizer: { '@type': 'EducationalOrganization', name: item.institution_name, url: item.application_url || item.source_url }, url: pageUrl, mainEntityOfPage: { '@id': `${pageUrl}#webpage` } },
+    { '@type': 'WebPage', '@id': `${pageUrl}#webpage`, url: pageUrl, name: item.title, datePublished: item.published_at || item.created_at, dateModified: item.updated_at, mainEntity: { '@id': `${pageUrl}#admission` }, citation: item.source_url, isPartOf: { '@id': `${absoluteUrl('/')}#website` } },
+    breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Admissions', path: '/admissions' }, { name: item.title, path: `/admissions/${item.slug}` }]),
+  ] }
+  return <div className="min-h-screen bg-[#f0f4ff]"><JsonLd data={jsonLd} />
     <section className="bg-[#0d1b3e] text-white"><div className="mx-auto max-w-5xl px-4 py-10 sm:px-6"><nav className="mb-6 text-xs text-blue-200"><Link href="/admissions">Admissions</Link> <span className="mx-2">/</span> {item.institution_name}</nav><div className="flex flex-wrap items-center gap-2"><AdmissionStatusBadge admission={item} /><VerificationBadge status={item.verification_status} />{item.is_sponsored && <span className="rounded-full bg-amber-300 px-3 py-1 text-xs font-bold text-amber-950">{item.sponsor_label || 'Sponsored placement'}</span>}</div><div className="mt-5 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-blue-300">{item.admission_type} admission</p><h1 className="mt-2 max-w-4xl font-display text-3xl font-extrabold leading-tight sm:text-4xl">{item.title}</h1><p className="mt-4 text-lg font-semibold text-blue-100">{item.institution_name}</p></div><ShareButton title={`${item.title} | SikshyaNepal`} /></div></div></section>
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_320px]"><main className="space-y-6"><section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><h2 className="font-display text-xl font-bold text-ink">Admission overview</h2><p className="mt-4 whitespace-pre-line text-sm leading-7 text-gray-600">{item.details || item.summary || 'Additional details have not been published.'}</p>{item.programs.length > 0 && <div className="mt-6"><h3 className="text-sm font-bold text-ink">Available programs</h3><div className="mt-3 flex flex-wrap gap-2">{item.programs.map((p) => <span key={p} className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-primary">{p}</span>)}</div></div>}</section>
       {item.eligibility && <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><h2 className="flex items-center gap-2 font-display text-xl font-bold text-ink"><CheckCircle2 className="h-5 w-5 text-emerald-500" />Eligibility</h2><p className="mt-4 whitespace-pre-line text-sm leading-7 text-gray-600">{item.eligibility}</p></section>}

@@ -7,7 +7,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sikshyanepal.verce
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createServerSupabaseClient()
 
-  const [admissions, schools, colleges, results, notices, news, programs] = await Promise.all([
+  const [admissions, schoolCount, colleges, results, notices, news, programs] = await Promise.all([
     supabase
       .from('admissions')
       .select('slug, updated_at')
@@ -15,9 +15,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order('updated_at', { ascending: false }),
     supabase
       .from('schools')
-      .select('slug, updated_at, district, local_level, province')
-      .eq('status', 'active')
-      .order('updated_at', { ascending: false }),
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'active'),
     supabase
       .from('colleges')
       .select('slug, created_at, district, province')
@@ -41,6 +40,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from('programs')
       .select('slug, created_at'),
   ])
+
+  // Supabase projects commonly cap one REST response at 1,000 rows. Fetch every
+  // school page so the CEHRD directory is not silently reduced to its first 1,000 URLs.
+  const schoolPageSize = 1000
+  const schoolPages = await Promise.all(Array.from({ length: Math.ceil((schoolCount.count || 0) / schoolPageSize) }, (_, page) =>
+    supabase
+      .from('schools')
+      .select('slug, updated_at, district, local_level, province')
+      .eq('status', 'active')
+      .order('name')
+      .range(page * schoolPageSize, (page + 1) * schoolPageSize - 1)
+  ))
+  const schools = { data: schoolPages.flatMap(page => page.data || []) }
 
   const now = new Date()
 
@@ -153,6 +165,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified:    now,
       changeFrequency: 'daily',
       priority:        0.9,
+    },
+    {
+      url:             `${BASE_URL}/about/editorial-policy`,
+      lastModified:    new Date('2026-09-08'),
+      changeFrequency: 'monthly',
+      priority:        0.5,
     },
   ]
 

@@ -161,6 +161,7 @@ export default function Footer() {
             © {new Date().getFullYear()} SikshyaNepal. All rights reserved.
           </p>
           <div className="flex items-center gap-5 text-xs text-slate-500">
+            <Link href="/about/editorial-policy" className="hover:text-white transition-colors duration-150">Editorial policy</Link>
             <Link href="/privacy" className="hover:text-white transition-colors duration-150">Privacy</Link>
             <Link href="/terms"   className="hover:text-white transition-colors duration-150">Terms</Link>
             <Link href="/contact" className="hover:text-white transition-colors duration-150">Contact</Link>

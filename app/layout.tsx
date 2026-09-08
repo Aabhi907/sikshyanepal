@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Noto_Serif, DM_Sans, DM_Mono } from 'next/font/google'
 import Script from 'next/script'
+import JsonLd from '@/components/seo/JsonLd'
+import { SITE_URL } from '@/lib/seo'
 import './globals.css'
 
 const notoSerif = Noto_Serif({
@@ -22,7 +24,7 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sikshyanepal.vercel.app'
+const BASE_URL = SITE_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -66,7 +68,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "SikshyaNepal - Nepal's #1 Education Portal",
+    title: 'SikshyaNepal – Nepal Education Information Platform',
     description: 'Find colleges, programs, results and notices for Nepal education.',
     images: [`${BASE_URL}/og-image.png`],
     creator: '@sikshyanepal',
@@ -94,7 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${notoSerif.variable} ${dmSans.variable} ${dmMono.variable} font-sans antialiased`}>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@graph': [{ '@type': 'WebSite', '@id': `${BASE_URL}/#website`, url: BASE_URL, name: 'SikshyaNepal', description: 'Verified education information for Nepal.', inLanguage: ['en', 'ne'], potentialAction: { '@type': 'SearchAction', target: `${BASE_URL}/search?q={search_term_string}`, 'query-input': 'required name=search_term_string' } }, { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal', url: BASE_URL, logo: `${BASE_URL}/og-image.png`, email: 'info@sikshyanepal.com', areaServed: { '@type': 'Country', name: 'Nepal' } }] }).replace(/</g, '\\u003c') }} />
+        <JsonLd data={{ '@context': 'https://schema.org', '@graph': [{ '@type': 'WebSite', '@id': `${BASE_URL}/#website`, url: BASE_URL, name: 'SikshyaNepal', description: 'Source-aware education information for students and families in Nepal.', inLanguage: ['en', 'ne'], publisher: { '@id': `${BASE_URL}/#organization` }, potentialAction: { '@type': 'SearchAction', target: `${BASE_URL}/search?q={search_term_string}`, 'query-input': 'required name=search_term_string' } }, { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal', url: BASE_URL, logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png` }, areaServed: { '@type': 'Country', name: 'Nepal' }, knowsAbout: ['Schools in Nepal', 'Colleges in Nepal', 'Nepal education admissions', 'University programs in Nepal', 'Scholarships in Nepal', 'Nepal examination results'] }] }} />
         {children}
 
         {/* ── Google AdSense ─────────────────────────────── */}

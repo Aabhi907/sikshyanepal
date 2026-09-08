@@ -10,6 +10,8 @@ import type { Admission } from '@/types'
 import AdmissionCard from '@/components/admissions/AdmissionCard'
 import SaveSchoolButton from '@/components/schools/SaveSchoolButton'
 import ShareButton from '@/components/ui/ShareButton'
+import JsonLd from '@/components/seo/JsonLd'
+import { absoluteUrl, breadcrumbSchema } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -47,21 +49,22 @@ export default async function SchoolProfilePage({ params }: { params: { slug: st
   const verifiedDate = school.last_verified_at ? new Date(school.last_verified_at).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' }) : null
   const hasContact = Boolean(school.phone || school.email || school.website)
   const registryOnly = !gradeRange && !school.school_level && !school.ownership_type && !hasContact && !school.facilities?.length
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'School',
-    name: school.name,
-    url: `https://sikshyanepal.vercel.app/schools/${school.slug}`,
-    identifier: school.iemis_code || undefined,
-    address: { '@type': 'PostalAddress', streetAddress: school.address || undefined, addressLocality: school.local_level || school.location || undefined, addressRegion: school.province, addressCountry: 'NP' },
-    telephone: school.phone || undefined,
-    email: school.email || undefined,
-    sameAs: school.website ? [school.website] : undefined,
-  }
+  const pageUrl = absoluteUrl(`/schools/${school.slug}`)
+  const jsonLd = { '@context': 'https://schema.org', '@graph': [
+    {
+      '@type': 'School', '@id': `${pageUrl}#school`, name: school.name, url: pageUrl,
+      description: school.description || undefined, identifier: school.iemis_code || undefined,
+      address: { '@type': 'PostalAddress', streetAddress: school.address || undefined, addressLocality: school.local_level || school.location || undefined, addressRegion: school.province, addressCountry: 'NP' },
+      telephone: school.phone || undefined, email: school.email || undefined,
+      sameAs: school.website ? [school.website] : undefined,
+    },
+    { '@type': 'WebPage', '@id': `${pageUrl}#webpage`, url: pageUrl, name: `${school.name} school profile`, mainEntity: { '@id': `${pageUrl}#school` }, dateModified: school.updated_at, isPartOf: { '@id': `${absoluteUrl('/')}#website` } },
+    breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Schools', path: '/schools' }, { name: school.name, path: `/schools/${school.slug}` }]),
+  ] }
 
   return (
     <div className="min-h-screen bg-[#f0f4ff]">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
+      <JsonLd data={jsonLd} />
       <section className="bg-[#0d1b3e] text-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <nav className="mb-7 flex items-center gap-2 text-xs text-blue-200"><Link href="/schools" className="hover:text-white">Schools</Link><span>/</span><span className="truncate text-white/70">{school.name}</span></nav>
@@ -95,7 +98,7 @@ export default async function SchoolProfilePage({ params }: { params: { slug: st
 
           <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><h2 className="font-display text-xl font-bold text-ink">Confirm before admission</h2><p className="mt-2 text-sm leading-6 text-gray-500">School information and costs can change. Ask the school for these details in writing before paying an application or admission fee.</p><ul className="mt-5 grid gap-3 sm:grid-cols-2">{['Current grades and available seats', 'Admission dates and required documents', 'Complete fee structure and refund rules', 'Transport, facilities and teaching medium'].map((item) => <li key={item} className="flex items-start gap-2 rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-700"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{item}</li>)}</ul></section>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-display text-xl font-bold text-ink">Source and verification</h2><p className="mt-1 text-sm text-gray-500">See where this information came from.</p></div><VerificationBadge status={school.verification_status} /></div><dl className="mt-5 divide-y divide-gray-100 text-sm"><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Source</dt><dd className="text-right font-semibold text-ink">{school.source_name || 'Not yet documented'}</dd></div><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Last verified</dt><dd className="text-right font-semibold text-ink">{verifiedDate || 'Verification pending'}</dd></div>{school.source_url && <div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Evidence</dt><dd><a href={school.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 font-semibold text-primary">Open original source <ExternalLink className="h-3.5 w-3.5" /></a></dd></div>}</dl><div className="mt-5 border-t border-gray-100 pt-5"><ReportCorrectionForm entityType="school" entityId={school.id} entityName={school.name} /></div></section>
+          <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-display text-xl font-bold text-ink">Source and verification</h2><p className="mt-1 text-sm text-gray-500">See where this information came from.</p></div><VerificationBadge status={school.verification_status} /></div><dl className="mt-5 divide-y divide-gray-100 text-sm"><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Source</dt><dd className="text-right font-semibold text-ink">{school.source_name || 'Not yet documented'}</dd></div><div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Last verified</dt><dd className="text-right font-semibold text-ink">{verifiedDate || 'Verification pending'}</dd></div>{school.source_url && <div className="flex justify-between gap-4 py-3"><dt className="text-gray-500">Evidence</dt><dd><a href={school.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-primary">Open original source <ExternalLink className="h-3.5 w-3.5" /></a></dd></div>}</dl><div className="mt-5 border-t border-gray-100 pt-5"><ReportCorrectionForm entityType="school" entityId={school.id} entityName={school.name} /></div></section>
         </main>
 
         <aside className="space-y-5">

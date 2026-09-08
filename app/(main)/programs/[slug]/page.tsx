@@ -5,6 +5,8 @@ import { createServerSupabaseClient } from '@/lib/supabase'
 import { BookOpen, Clock, ArrowLeft, Building2, BadgeCheck, BriefcaseBusiness, CircleDollarSign, ExternalLink, GraduationCap } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 import type { Program, CollegeProgram, Admission, Scholarship } from '@/types'
+import JsonLd from '@/components/seo/JsonLd'
+import { absoluteUrl, breadcrumbSchema } from '@/lib/seo'
 
 async function getProgram(slug: string) {
   const supabase = createServerSupabaseClient()
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const data = await getProgram(params.slug)
   if (!data) return { title: 'Program Not Found' }
   return {
-    title: `${data.program.name} | SikshyaNepal`,
+    title: data.program.name,
     description: data.program.overview?.slice(0, 155) || `Eligibility, fees, colleges, scholarships and admissions for ${data.program.name} in Nepal.`,
     alternates: { canonical: `/programs/${data.program.slug}` },
   }
@@ -44,11 +46,16 @@ export default async function ProgramDetailPage({ params }: { params: { slug: st
   const fees = colleges.map(item => item.fee).filter((fee): fee is number => fee != null)
   const feeMin = program.average_fee_min ?? (fees.length ? Math.min(...fees) : null)
   const feeMax = program.average_fee_max ?? (fees.length ? Math.max(...fees) : null)
-  const jsonLd = { '@context': 'https://schema.org', '@type': 'EducationalOccupationalProgram', name: program.name, educationalCredentialAwarded: program.degree_level, timeToComplete: program.duration, occupationalCategory: program.career_paths || [], provider: colleges.slice(0,10).map(item => ({ '@type':'CollegeOrUniversity', name:item.college?.name })) }
+  const pageUrl = absoluteUrl(`/programs/${program.slug}`)
+  const jsonLd = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'EducationalOccupationalProgram', '@id': `${pageUrl}#program`, name: program.name, url: pageUrl, description: program.overview || undefined, educationalCredentialAwarded: program.degree_level, occupationalCategory: program.career_paths || [], provider: colleges.slice(0, 10).filter(item => item.college).map(item => ({ '@type': 'CollegeOrUniversity', name: item.college!.name, url: absoluteUrl(`/colleges/${item.college!.slug}`) })) },
+    { '@type': 'WebPage', '@id': `${pageUrl}#webpage`, url: pageUrl, name: `${program.name} in Nepal`, dateModified: program.updated_at || program.last_verified_at || program.created_at, mainEntity: { '@id': `${pageUrl}#program` }, citation: program.source_url || undefined, isPartOf: { '@id': `${absoluteUrl('/')}#website` } },
+    breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Programs', path: '/programs' }, { name: program.name, path: `/programs/${program.slug}` }]),
+  ] }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd data={jsonLd} />
       <Link href="/programs" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Programs
       </Link>
@@ -123,7 +130,7 @@ export default async function ProgramDetailPage({ params }: { params: { slug: st
       </div>
       {admissions.length > 0 && <section className="mt-6 rounded-2xl border bg-white p-6"><h2 className="text-lg font-bold">Current admissions</h2><div className="mt-4 space-y-3">{admissions.map(item=><Link key={item.id} href={`/admissions/${item.slug}`} className="flex justify-between rounded-xl bg-blue-50 p-4 text-sm"><span><strong>{item.title}</strong><span className="block text-gray-500">{item.institution_name}</span></span><span className="text-blue-700">View →</span></Link>)}</div></section>}
       {scholarships.length > 0 && <section className="mt-6 rounded-2xl border bg-white p-6"><h2 className="text-lg font-bold">Related scholarships</h2><div className="mt-4 grid gap-3 md:grid-cols-2">{scholarships.map(item=><div key={item.id} className="rounded-xl border p-4"><p className="font-semibold">{item.title}</p><p className="mt-1 text-xs text-gray-500">{item.college?.name}</p></div>)}</div></section>}
-      {program.source_url && <a href={program.source_url} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-700">Official program source <ExternalLink className="h-4 w-4"/></a>}
+      {program.source_url && <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm"><p className="font-semibold text-ink">Source and freshness</p><p className="mt-1 text-gray-600">{program.last_verified_at ? `Last checked ${new Date(program.last_verified_at).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' })}.` : 'A last-checked date has not been recorded yet.'} Confirm changing requirements on the original source.</p><a href={program.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 font-semibold text-blue-700">Official program source <ExternalLink className="h-4 w-4"/></a></div>}
     </div>
   )
 }

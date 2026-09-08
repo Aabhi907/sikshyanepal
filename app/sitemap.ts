@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import { careers } from '@/lib/careers'
+import { COLLEGE_NEWS_TOPICS } from '@/lib/college-news'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sikshyanepal.vercel.app'
 
@@ -246,6 +247,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const municipalityRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.local_level).filter(Boolean))).map(municipality => ({ url: `${BASE_URL}/schools/municipality/${String(municipality).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, lastModified: staticModified, changeFrequency: 'weekly' as const, priority: 0.65 }))
   const schoolProvinceRoutes: MetadataRoute.Sitemap = Array.from(new Set((schools.data ?? []).map(s => s.province).filter(Boolean))).map(province => ({ url: `${BASE_URL}/schools/province/${String(province).toLowerCase()}`, lastModified: staticModified, changeFrequency: 'weekly' as const, priority: 0.7 }))
   const collegeProvinceRoutes: MetadataRoute.Sitemap = Array.from(new Set((colleges.data ?? []).map(c => c.province).filter(Boolean))).map(province => ({ url: `${BASE_URL}/colleges/province/${String(province).toLowerCase()}`, lastModified: staticModified, changeFrequency: 'weekly' as const, priority: 0.7 }))
+  const collegeNewsTopicRoutes: MetadataRoute.Sitemap = Object.keys(COLLEGE_NEWS_TOPICS).map(topic => ({ url: `${BASE_URL}/news/topic/${topic}`, lastModified: staticModified, changeFrequency: 'daily' as const, priority: 0.8 }))
 
   return [
     ...staticRoutes,
@@ -263,5 +265,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...municipalityRoutes,
     ...schoolProvinceRoutes,
     ...collegeProvinceRoutes,
+    ...collegeNewsTopicRoutes,
   ]
 }

@@ -7,6 +7,7 @@ import { formatDateShort } from '@/lib/utils'
 import type { News } from '@/types'
 import { Calendar, Newspaper, ArrowRight } from 'lucide-react'
 import AdUnit from '@/components/ads/AdUnit'
+import { COLLEGE_NEWS_TOPICS } from '@/lib/college-news'
 
 export const dynamic   = 'force-dynamic'
 export const revalidate = 0
@@ -68,7 +69,8 @@ export default async function NewsPage({ searchParams }: { searchParams: { q?: s
           </p>
           <SearchBar placeholder="Search news..." redirectTo="/news" />
           <nav aria-label="College news topics" className="mt-5 flex gap-2 overflow-x-auto pb-1 text-sm">
-            {[['', 'All'], ['admission', 'Admissions'], ['entrance_result', 'Entrance & results'], ['scholarship', 'Scholarships'], ['event', 'Campus events'], ['achievement', 'Achievements']].map(([value, label]) => <Link key={label} href={value ? `/news?topic=${value}` : '/news'} className={`whitespace-nowrap rounded-full border px-3 py-1.5 font-medium ${searchParams.topic === value || (!searchParams.topic && !value) ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-primary'}`}>{label}</Link>)}
+            <Link href="/news" className={`whitespace-nowrap rounded-full border px-3 py-1.5 font-medium ${!searchParams.topic ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-primary'}`}>All</Link>
+            {Object.entries(COLLEGE_NEWS_TOPICS).map(([slug, topic]) => <Link key={slug} href={`/news/topic/${slug}`} className="whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 font-medium text-gray-600 hover:border-primary">{topic.label}</Link>)}
           </nav>
         </div>
       </div>

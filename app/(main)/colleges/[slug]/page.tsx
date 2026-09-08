@@ -67,6 +67,16 @@ function getCoverStyle(affiliation: string | null | undefined) {
 
 const BASE_URL = SITE_URL;
 
+function metadataDescription(college: College) {
+  const fallback = `Explore ${college.name} programs, affiliation, location, admissions and scholarships. Check original sources before applying.`;
+  const text = (college.description || fallback).replace(/\s+/g, " ").trim();
+  return text.length > 157 ? `${text.slice(0, 154).trimEnd()}...` : text;
+}
+
+function routeSegment(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 const getCollege = cache(async function getCollege(slug: string) {
   const supabase = createServerSupabaseClient();
   const { data: college } = await supabase
@@ -120,18 +130,22 @@ export async function generateMetadata({
   const data = await getCollege(params.slug);
   if (!data) return { title: "College Not Found" };
   const { college } = data;
+  const description = metadataDescription(college);
   return {
     title: `${college.name}: Programs, Admissions and Verified Details`,
-    description:
-      college.description ||
-      `Explore ${college.name} programs, affiliation, location, admissions, scholarships and verified college updates. Check original sources before applying.`,
+    description,
     openGraph: {
       title: `${college.name} | SikshyaNepal`,
-      description:
-        college.description ||
-        `Learn about ${college.name} - programs, fees, reviews and more.`,
+      description,
       url: `${BASE_URL}/colleges/${college.slug}`,
+      type: "website",
       images: college.cover_url ? [{ url: college.cover_url }] : [],
+    },
+    twitter: {
+      card: college.cover_url ? "summary_large_image" : "summary",
+      title: `${college.name} | SikshyaNepal`,
+      description,
+      images: college.cover_url ? [college.cover_url] : undefined,
     },
     alternates: { canonical: `${BASE_URL}/colleges/${college.slug}` },
     robots: { index: college.status !== 'pending_review', follow: true, googleBot: { index: college.status !== 'pending_review', follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
@@ -158,6 +172,16 @@ export default async function CollegeProfilePage({
   const displayAffiliation = collegeDisplayAffiliation(college.affiliation);
   const levelNames = (college.education_levels || []).map(level => ({ plus_two: '+2', bachelor: 'Bachelor', master: 'Master', mphil: 'MPhil', phd: 'PhD', diploma: 'Diploma', certificate: 'Certificate' }[level] || level));
   const place = [college.local_level, college.district, college.province].filter(Boolean).join(', ') || displayLocation;
+  const verifiedDate = college.last_verified_at
+    ? new Date(college.last_verified_at).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+  const answerSummary = [
+    `${college.name} is a post-SEE college${place ? ` listed in ${place}` : ''}.`,
+    displayAffiliation ? `Its profile lists affiliation with ${displayAffiliation}.` : null,
+    programNames.length
+      ? `Students can explore ${programNames.slice(0, 4).join(', ')}${programNames.length > 4 ? ` and ${programNames.length - 4} more listed programmes` : ''}.`
+      : levelNames.length ? `The listed study levels are ${levelNames.join(', ')}.` : null,
+  ].filter(Boolean).join(' ');
   const facts = [
     place ? { question: `Where is ${college.name} located?`, answer: `${college.name} is listed in ${place}, Nepal. Check the official contact page before travelling to the campus.` } : null,
     displayAffiliation ? { question: `Which university is ${college.name} affiliated with?`, answer: `${college.name} is listed as affiliated with ${displayAffiliation}. Students should confirm the affiliation for their specific programme and intake.` } : null,
@@ -178,7 +202,7 @@ export default async function CollegeProfilePage({
       hasOfferCatalog: programNames.length ? { '@type': 'OfferCatalog', name: `Programs at ${college.name}`, itemListElement: programNames.slice(0, 20).map(name => ({ '@type': 'Offer', itemOffered: { '@type': 'Course', name, provider: { '@id': `${pageUrl}#college` } } })) } : undefined,
       ...(avgRating && { aggregateRating: { "@type": "AggregateRating", ratingValue: avgRating.toFixed(1), reviewCount: reviews.length, bestRating: "5", worstRating: "1" } }),
     },
-    { "@type": "WebPage", "@id": `${pageUrl}#webpage`, url: pageUrl, name: `${college.name} college profile`, mainEntity: { "@id": `${pageUrl}#college` }, dateModified: college.last_verified_at || college.created_at, citation: college.source_url || undefined, isPartOf: { "@id": `${absoluteUrl('/')}#website` } },
+    { "@type": "WebPage", "@id": `${pageUrl}#webpage`, url: pageUrl, name: `${college.name} college profile`, mainEntity: { "@id": `${pageUrl}#college` }, datePublished: college.created_at, dateModified: college.updated_at || college.last_verified_at || college.created_at, citation: college.source_url || undefined, isPartOf: { "@id": `${absoluteUrl('/')}#website` } },
     breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Colleges', path: '/colleges' }, { name: college.name, path: `/colleges/${college.slug}` }]),
     { '@type': 'FAQPage', '@id': `${pageUrl}#questions`, mainEntity: facts.map(fact => ({ '@type': 'Question', name: fact.question, acceptedAnswer: { '@type': 'Answer', text: fact.answer } })) },
   ] };
@@ -340,6 +364,17 @@ export default async function CollegeProfilePage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          <section className="rounded-xl border border-blue-100 bg-blue-50/60 p-6" aria-labelledby="college-at-a-glance">
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-700">At a glance</p>
+            <h2 id="college-at-a-glance" className="mt-2 text-lg font-semibold text-gray-950">What should students know about {college.name}?</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-700">{answerSummary}</p>
+            <p className="mt-3 text-xs leading-5 text-gray-500">
+              {verifiedDate && college.source_name
+                ? `Source checked against ${college.source_name} on ${verifiedDate}. Fees, seats and deadlines can change; confirm them before applying.`
+                : 'This summary uses the information currently listed on the profile. Confirm fees, seats, programmes and deadlines directly with the college before applying.'}
+            </p>
+          </section>
+
           {/* Description */}
           {college.description && (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -406,9 +441,13 @@ export default async function CollegeProfilePage({
                         className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100"
                       >
                         <div>
-                          <p className="font-medium text-gray-800 text-sm">
-                            {cp.program?.name}
-                          </p>
+                          {cp.program?.slug ? (
+                            <Link href={`/programs/${cp.program.slug}`} className="text-sm font-semibold text-gray-800 hover:text-blue-700 hover:underline">
+                              {cp.program.name}
+                            </Link>
+                          ) : (
+                            <p className="font-medium text-gray-800 text-sm">{cp.program?.name}</p>
+                          )}
                           <div className="flex items-center gap-2 mt-1">
                             {/* Show +2 badge for intermediate programs, faculty badge otherwise */}
                             {isPlus2
@@ -562,8 +601,12 @@ export default async function CollegeProfilePage({
               {displayLocation && (
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Location</dt>
-                  <dd className="font-medium text-gray-800">
-                    {displayLocation}
+                  <dd className="text-right font-medium text-gray-800">
+                    {college.district ? (
+                      <Link href={`/colleges/in/${routeSegment(college.district)}`} className="hover:text-blue-700 hover:underline">
+                        {displayLocation}
+                      </Link>
+                    ) : displayLocation}
                   </dd>
                 </div>
               )}

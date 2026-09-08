@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { GitCompare, X, Plus, MapPin, Star, Building2, Search, Award, BookOpen, Check, GraduationCap } from 'lucide-react'
+import { GitCompare, X, Plus, MapPin, Star, Building2, Search, Award, BookOpen, Check, GraduationCap, AlertCircle, Share2 } from 'lucide-react'
+import { cleanCollegeText } from '@/lib/college-display'
 
 interface College {
   id: string
@@ -21,7 +23,18 @@ interface College {
   verification_status?: string
 }
 
+interface CollegeDetail {
+  programs: { fee: number | null }[]
+  reviews: { rating: number }[]
+  scholarships: number
+}
+
 const MAX = 3
+
+const API_HEADERS = {
+  apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+}
 
 const ROW_LABELS = [
   { key: 'location', label: 'Location', icon: MapPin },
@@ -39,23 +52,34 @@ const ROW_LABELS = [
 
 
 export default function ComparePage() {
+  const router = useRouter()
   const [selected, setSelected] = useState<College[]>([])
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<College[]>([])
   const [searching, setSearching] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
-  const [detailData, setDetailData] = useState<Record<string, { programs: { fee: number | null }[]; reviews: { rating: number }[]; scholarships: number }>>({})
+  const [detailData, setDetailData] = useState<Record<string, CollegeDetail>>({})
+  const [error, setError] = useState('')
+  const [initializing, setInitializing] = useState(true)
 
   const searchColleges = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); return }
     setSearching(true)
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?name=ilike.*${encodeURIComponent(q)}*&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status&limit=10`,
-      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}` } }
-    )
-    const data = await res.json()
-    setResults(data || [])
-    setSearching(false)
+    setError('')
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?name=ilike.*${encodeURIComponent(q.trim())}*&or=(status.eq.active,status.is.null)&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status&order=name.asc&limit=10`,
+        { headers: API_HEADERS }
+      )
+      if (!res.ok) throw new Error('Search failed')
+      const data = await res.json()
+      setResults(Array.isArray(data) ? data : [])
+    } catch {
+      setResults([])
+      setError('College search is unavailable right now. Please try again.')
+    } finally {
+      setSearching(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -67,18 +91,51 @@ export default function ComparePage() {
     if (detailData[college.id]) return
     const [programsRes, reviewsRes, scholarshipsRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/college_programs?college_id=eq.${college.id}&select=id,fee`, {
-        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}` },
+        headers: API_HEADERS,
       }),
       fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/reviews?college_id=eq.${college.id}&is_approved=eq.true&select=rating`, {
-        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}` },
+        headers: API_HEADERS,
       }),
       fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/scholarships?college_id=eq.${college.id}&select=id`, {
-        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}` },
+        headers: API_HEADERS,
       }),
     ])
     const [programs, reviews, scholarships] = await Promise.all([programsRes.json(), reviewsRes.json(), scholarshipsRes.json()])
-    setDetailData(prev => ({ ...prev, [college.id]: { programs: programs?.length || 0, reviews: reviews || [], scholarships: scholarships?.length || 0 } }))
+    setDetailData(prev => ({ ...prev, [college.id]: { programs: Array.isArray(programs) ? programs : [], reviews: Array.isArray(reviews) ? reviews : [], scholarships: Array.isArray(scholarships) ? scholarships.length : 0 } }))
   }, [detailData])
+
+  useEffect(() => {
+    const slugs = ['college1', 'college2', 'college3']
+      .map(key => new URLSearchParams(window.location.search).get(key))
+      .filter((slug): slug is string => Boolean(slug) && /^[a-z0-9-]+$/i.test(slug!))
+      .slice(0, MAX)
+    if (!slugs.length) { setInitializing(false); return }
+    const loadInitial = async () => {
+      try {
+        const filter = slugs.map(slug => `slug.eq.${encodeURIComponent(slug)}`).join(',')
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?and=(or(${filter}),or(status.eq.active,status.is.null))&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status`, { headers: API_HEADERS })
+        if (!res.ok) throw new Error('Unable to load comparison')
+        const data = await res.json() as College[]
+        const ordered = slugs.map(slug => data.find(college => college.slug === slug)).filter((college): college is College => Boolean(college))
+        setSelected(ordered)
+        ordered.forEach(loadDetail)
+      } catch {
+        setError('We could not load the colleges in this comparison link.')
+      } finally {
+        setInitializing(false)
+      }
+    }
+    loadInitial()
+    // URL selection is intentionally loaded once on entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (initializing) return
+    const params = new URLSearchParams()
+    selected.forEach((college, index) => params.set(`college${index + 1}`, college.slug))
+    router.replace(`/compare${params.size ? `?${params.toString()}` : ''}`, { scroll: false })
+  }, [selected, initializing, router])
 
   const addCollege = (college: College) => {
     if (selected.length >= MAX || selected.find(c => c.id === college.id)) return
@@ -94,13 +151,13 @@ export default function ComparePage() {
   const getVal = (college: College, key: string) => {
     const d = detailData[college.id]
     switch (key) {
-      case 'location': return college.location || '—'
-      case 'affiliation': return college.affiliation || '—'
+      case 'location': return cleanCollegeText(college.location) || 'Not listed'
+      case 'affiliation': return cleanCollegeText(college.affiliation) || 'Not listed'
       case 'established_year': return college.established_year?.toString() || '—'
-      case 'program_count': return d ? d.programs.length.toString() : '...'
+      case 'program_count': return d ? d.programs.length.toString() : 'Loading…'
       case 'avg_rating': return d && d.reviews.length > 0 ? (d.reviews.reduce((a, r) => a + r.rating, 0) / d.reviews.length).toFixed(1) : '—'
-      case 'review_count': return d ? d.reviews.length.toString() : '...'
-      case 'scholarship_count': return d ? d.scholarships.toString() : '...'
+      case 'review_count': return d ? d.reviews.length.toString() : 'Loading…'
+      case 'scholarship_count': return d ? d.scholarships.toString() : 'Loading…'
       case 'fee_range': { const fees=d?.programs.map(p=>p.fee).filter((fee):fee is number=>fee!=null)||[]; return fees.length?`NPR ${Math.min(...fees).toLocaleString()} – ${Math.max(...fees).toLocaleString()}`:'—' }
       case 'education_levels': return college.education_levels?.map(x=>x==='plus_two'?'+2':x.charAt(0).toUpperCase()+x.slice(1)).join(', ')||'—'
       case 'facilities': return college.facilities?.slice(0,5).join(', ')||'—'
@@ -114,10 +171,12 @@ export default function ComparePage() {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <GitCompare className="w-6 h-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Compare Colleges</h1>
+          <h1 className="font-display text-3xl font-extrabold text-gray-900">Compare colleges</h1>
         </div>
-        <p className="text-gray-500">Select up to {MAX} colleges to compare side-by-side</p>
+        <p className="text-gray-500">Compare up to {MAX} colleges using published fees, programs, scholarships and student reviews.</p>
       </div>
+
+      {error && <div role="alert" className="mb-5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</div>}
 
       {/* College Slots */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -132,11 +191,11 @@ export default function ComparePage() {
                     <X className="w-4 h-4" />
                   </button>
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-lg mb-3">
-                    {college.name.charAt(0)}
+                    {college.name.charAt(0).toUpperCase()}
                   </div>
                   <h3 className="font-semibold text-gray-900 text-sm leading-tight pr-6">{college.name}</h3>
                   <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> {college.location}
+                    <MapPin className="w-3 h-3" /> {cleanCollegeText(college.location) || 'Location not listed'}
                   </p>
                   <Link href={`/colleges/${college.slug}`}
                     className="mt-3 inline-block text-xs text-blue-600 hover:underline">View Profile →</Link>
@@ -159,8 +218,9 @@ export default function ComparePage() {
       {/* Search Modal */}
       {showSearch && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20 px-4" onClick={() => setShowSearch(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-labelledby="college-search-title" className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
             <div className="p-4 border-b border-gray-100">
+              <h2 id="college-search-title" className="mb-3 font-display text-lg font-bold text-ink">Add a college</h2>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -168,14 +228,15 @@ export default function ComparePage() {
                   type="text"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Search colleges by name..."
+                  placeholder="Search colleges by name…"
+                  aria-label="Search colleges to compare"
                   className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
             </div>
             <div className="max-h-72 overflow-y-auto">
               {searching && <div className="text-center py-8 text-gray-400 text-sm">Searching...</div>}
-              {!searching && search && results.length === 0 && (
+              {!searching && search && results.length === 0 && !error && (
                 <div className="text-center py-8 text-gray-400 text-sm">No colleges found</div>
               )}
               {!searching && !search && (
@@ -191,7 +252,7 @@ export default function ComparePage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 text-sm line-clamp-1">{college.name}</p>
-                      <p className="text-xs text-gray-500">{college.location} {college.affiliation && `• ${college.affiliation}`}</p>
+                      <p className="text-xs text-gray-500">{cleanCollegeText(college.location) || 'Location not listed'} {cleanCollegeText(college.affiliation) && `• ${cleanCollegeText(college.affiliation)}`}</p>
                     </div>
                     {alreadyAdded && <Check className="w-4 h-4 text-green-500 flex-shrink-0" />}
                   </button>
@@ -207,12 +268,17 @@ export default function ComparePage() {
 
       {/* Comparison Table */}
       {selected.length >= 2 ? (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <div>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-xs text-gray-500 sm:hidden">Swipe sideways to see every college.</p>
+            <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 hover:border-blue-300 hover:text-primary"><Share2 className="h-3.5 w-3.5" />Copy comparison link</button>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-[760px] w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 w-40">Feature</th>
+                  <th className="sticky left-0 z-[1] bg-gray-50 text-left px-6 py-4 text-sm font-semibold text-gray-700 w-40">Feature</th>
                   {selected.map(c => (
                     <th key={c.id} className="px-6 py-4 text-center">
                       <div className="font-semibold text-gray-900 text-sm">{c.name}</div>
@@ -224,12 +290,12 @@ export default function ComparePage() {
               <tbody>
                 {ROW_LABELS.map(({ key, label }, idx) => (
                   <tr key={key} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-600">{label}</td>
+                    <td className={`sticky left-0 z-[1] px-6 py-4 text-sm font-medium text-gray-600 ${idx % 2 === 0 ? 'bg-white' : 'bg-[#fafafa]'}`}>{label}</td>
                     {selected.map(college => {
                       const val = getVal(college, key)
                       return (
                         <td key={college.id} className="px-6 py-4 text-center text-sm text-gray-800">
-                          {key === 'avg_rating' && val !== '—' && val !== '...' ? (
+                          {key === 'avg_rating' && val !== '—' && val !== 'Loading…' ? (
                             <span className="inline-flex items-center gap-1">
                               <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
                               <span className="font-semibold">{val}</span>
@@ -256,6 +322,8 @@ export default function ComparePage() {
               </tbody>
             </table>
           </div>
+        </div>
+        <p className="mt-4 text-xs leading-5 text-gray-500">Fees, seats and scholarships can change during admission season. Treat “Not listed” as unavailable data—not as “none”—and confirm final details with the college.</p>
         </div>
       ) : selected.length === 1 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">

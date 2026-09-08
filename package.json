@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "schools:extract": "node scripts/extract-cehrd-schools.mjs",
+    "schools:import": "node scripts/import-cehrd-schools.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

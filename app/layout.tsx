@@ -120,12 +120,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {`
                 window.OneSignalDeferred = window.OneSignalDeferred || [];
                 OneSignalDeferred.push(async function(OneSignal) {
-                  await OneSignal.init({
-                    appId: "${appId}",
-                    serviceWorkerPath: "/OneSignalSDKWorker.js",
-                    notifyButton: { enable: false },
-                    allowLocalhostAsSecureOrigin: true,
-                  });
+                  try {
+                    await OneSignal.init({
+                      appId: "${appId}",
+                      serviceWorkerPath: "/OneSignalSDKWorker.js",
+                      notifyButton: { enable: false },
+                      allowLocalhostAsSecureOrigin: true,
+                    });
+                  } catch (error) {
+                    console.error("SikshyaNepal notifications could not initialize", error);
+                  }
                 });
               `}
             </Script>

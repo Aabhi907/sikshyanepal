@@ -27,6 +27,7 @@ export default function SubscribeButton({ variant }: Props) {
   const [subscribed, setSubscribed]     = useState(false)
   const [requesting, setRequesting]     = useState(false)
   const [dismissed, setDismissed]       = useState(false)
+  const [error, setError]               = useState('')
 
   // Check subscription state once SDK is ready
   useEffect(() => {
@@ -39,18 +40,42 @@ export default function SubscribeButton({ variant }: Props) {
     setDismissed(localStorage.getItem('sn_push_dismissed') === '1')
   }, [])
 
-  const handleSubscribe = useCallback(() => {
+  const handleSubscribe = useCallback(async () => {
+    setError('')
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      setError('Push alerts are not supported in this browser. You can still use email alerts.')
+      return
+    }
+    if (Notification.permission === 'denied') {
+      setError('Notifications are blocked. Allow them in your browser site settings, then try again.')
+      return
+    }
     setRequesting(true)
-    window.OneSignalDeferred = window.OneSignalDeferred || []
-    window.OneSignalDeferred.push(async (os) => {
-      try {
-        await os.Notifications.requestPermission()
-        setSubscribed(os.Notifications.permission)
-      } finally {
-        setRequesting(false)
-        setModalOpen(false)
-      }
-    })
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timeout = window.setTimeout(() => reject(new Error('timeout')), 10000)
+        window.OneSignalDeferred = window.OneSignalDeferred || []
+        window.OneSignalDeferred.push(async (os) => {
+          try {
+            await os.Notifications.requestPermission()
+            setSubscribed(os.Notifications.permission || Notification.permission === 'granted')
+            if (!os.Notifications.permission && Notification.permission !== 'granted') throw new Error('not-granted')
+            resolve()
+          } catch (reason) {
+            reject(reason)
+          } finally {
+            window.clearTimeout(timeout)
+          }
+        })
+      })
+      setModalOpen(false)
+    } catch (reason) {
+      setError(reason instanceof Error && reason.message === 'not-granted'
+        ? 'Notification permission was not granted. Check your browser settings and try again.'
+        : 'Alerts could not be enabled right now. Please try again later.')
+    } finally {
+      setRequesting(false)
+    }
   }, [])
 
   const handleDismiss = useCallback(() => {
@@ -87,6 +112,8 @@ export default function SubscribeButton({ variant }: Props) {
           No spam — only real updates.
         </p>
 
+        {error && <p role="alert" className="mb-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700">{error}</p>}
+
         <button
           onClick={handleSubscribe}
           disabled={requesting}
@@ -100,7 +127,7 @@ export default function SubscribeButton({ variant }: Props) {
           onClick={handleDismiss}
           className="w-full py-2.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
-          Maybe later
+          {requesting ? 'Close' : 'Maybe later'}
         </button>
       </div>
     </div>

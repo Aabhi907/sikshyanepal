@@ -19,6 +19,9 @@ export type CommunityPost = {
   status: 'pending' | 'published' | 'rejected' | 'hidden'
   created_at: string
   published_at: string | null
+  media_url?: string | null
+  media_type?: 'image' | 'video' | null
+  vote_score?: number
   community_comments?: { count: number }[]
 }
 
@@ -29,6 +32,7 @@ export type CommunityComment = {
   status: 'pending' | 'published' | 'rejected' | 'hidden'
   created_at: string
   published_at: string | null
+  vote_score?: number
 }
 
 export function topicLabel(topic: string) {

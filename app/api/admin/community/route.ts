@@ -9,7 +9,7 @@ export async function GET() {
   if (!(await isStaff())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const db = createAdminSupabaseClient()
   const [{ data: posts, error: postError }, { data: comments, error: commentError }, { data: reports, error: reportError }] = await Promise.all([
-    db.from('community_posts').select('id,title,body,topic,status,created_at,moderation_note').in('status', ['pending', 'hidden']).order('created_at', { ascending: false }).limit(100),
+    db.from('community_posts').select('id,title,body,topic,status,created_at,moderation_note,media_url,media_type').in('status', ['pending', 'hidden']).order('created_at', { ascending: false }).limit(100),
     db.from('community_comments').select('id,post_id,body,status,created_at,moderation_note,post:community_posts(title)').in('status', ['pending', 'hidden']).order('created_at', { ascending: false }).limit(100),
     db.from('community_reports').select('*').eq('status', 'open').order('created_at', { ascending: false }).limit(100),
   ])

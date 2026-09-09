@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X, ChevronDown, BookOpenCheck, Search } from 'lucide-react'
 import SubscribeButton from '@/components/notifications/SubscribeButton'
+import AccountButton from '@/components/auth/AccountButton'
 
 const navLinks = [
   {
@@ -207,6 +208,7 @@ export default function Header() {
             <div className="hidden xl:flex items-center gap-2">
               <button onClick={() => window.dispatchEvent(new Event('open-site-search'))} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-500 hover:border-blue-200 hover:text-primary" aria-label="Search SikshyaNepal"><Search className="h-4 w-4" /><span className="hidden xl:inline">Search</span><kbd className="hidden xl:inline rounded border border-gray-200 px-1.5 py-0.5 text-[10px] text-gray-400">⌘K</kbd></button>
               <SubscribeButton variant="header" />
+              <AccountButton />
               <Link
                 href="/schools"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors duration-150"
@@ -296,6 +298,7 @@ export default function Header() {
 
             {/* Bottom CTAs */}
             <div className="p-4 border-t border-border space-y-2 flex-shrink-0">
+              <AccountButton mobile onNavigate={() => setMobileOpen(false)} />
               <Link
                 href="/schools"
                 onClick={() => setMobileOpen(false)}

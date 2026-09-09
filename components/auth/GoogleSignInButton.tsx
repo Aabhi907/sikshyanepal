@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export default function GoogleSignInButton({ next = '/my-path' }: { next?: string }) {
+export default function GoogleSignInButton({ next = '/' }: { next?: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 

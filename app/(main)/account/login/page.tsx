@@ -8,7 +8,7 @@ import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
 export default function AccountLogin() {
   const router = useRouter(); const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState('')
   const [oauthError, setOauthError] = useState('')
-  const [nextPath, setNextPath] = useState('/my-path')
+  const [nextPath, setNextPath] = useState('/')
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.has('error')) setOauthError('Google sign-in could not be completed. Please try again.')

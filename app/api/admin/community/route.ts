@@ -9,12 +9,17 @@ export async function GET() {
   if (!(await isStaff())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const db = createAdminSupabaseClient()
   const [{ data: posts, error: postError }, { data: comments, error: commentError }, { data: reports, error: reportError }] = await Promise.all([
-    db.from('community_posts').select('id,title,body,topic,status,created_at,moderation_note,media_url,media_type').in('status', ['pending', 'hidden']).order('created_at', { ascending: false }).limit(100),
-    db.from('community_comments').select('id,post_id,body,status,created_at,moderation_note,post:community_posts(title)').in('status', ['pending', 'hidden']).order('created_at', { ascending: false }).limit(100),
+    db.from('community_posts').select('id,title,body,topic,status,created_at,moderation_note,media_url,media_type,author_id,public_alias').in('status', ['pending', 'hidden']).order('created_at', { ascending: false }).limit(100),
+    db.from('community_comments').select('id,post_id,body,status,created_at,moderation_note,author_id,public_alias,post:community_posts(title)').in('status', ['pending', 'hidden']).order('created_at', { ascending: false }).limit(100),
     db.from('community_reports').select('*').eq('status', 'open').order('created_at', { ascending: false }).limit(100),
   ])
   if (postError || commentError || reportError) return NextResponse.json({ error: postError?.message || commentError?.message || reportError?.message }, { status: 500 })
-  return NextResponse.json({ posts: posts || [], comments: comments || [], reports: reports || [] }, { headers: { 'Cache-Control': 'no-store' } })
+  const authorIds = Array.from(new Set([...(posts || []), ...(comments || [])].map(item => item.author_id).filter(Boolean))) as string[]
+  const identities = Object.fromEntries(await Promise.all(authorIds.map(async id => {
+    const { data } = await db.auth.admin.getUserById(id)
+    return [id, { email: data.user?.email || 'Unavailable', provider: data.user?.app_metadata?.provider || 'unknown' }]
+  })))
+  return NextResponse.json({ posts: posts || [], comments: comments || [], reports: reports || [], identities }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
 export async function PATCH(request: Request) {
@@ -25,6 +30,12 @@ export async function PATCH(request: Request) {
   const status = body.status
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: 'Invalid item.' }, { status: 400 })
   const db = createAdminSupabaseClient()
+  if (type === 'account') {
+    if (!['suspended', 'banned', 'active'].includes(status)) return NextResponse.json({ error: 'Invalid account decision.' }, { status: 400 })
+    const { error } = await db.from('community_profiles').update({ status, updated_at: new Date().toISOString() }).eq('user_id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
   if (type === 'report') {
     if (!['resolved', 'dismissed', 'hide-target'].includes(status)) return NextResponse.json({ error: 'Invalid status.' }, { status: 400 })
     if (status === 'hide-target') {

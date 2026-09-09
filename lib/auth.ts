@@ -25,6 +25,12 @@ export async function getAuthContext() {
   return { user, profile: profile as { role: UserRole; status: string; full_name: string | null } }
 }
 
+export function isGoogleAccount(user: { app_metadata?: Record<string, unknown> }) {
+  const provider = user.app_metadata?.provider
+  const providers = user.app_metadata?.providers
+  return provider === 'google' || (Array.isArray(providers) && providers.includes('google'))
+}
+
 export async function isStaff(roles: UserRole[] = STAFF_ROLES) {
   const auth = await getAuthContext()
   return Boolean(auth && isAdminEmail(auth.user.email) && auth.profile.role === 'owner' && roles.includes(auth.profile.role))

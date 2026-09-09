@@ -164,6 +164,9 @@ export default function Footer() {
             <Link href="/about/editorial-policy" className="hover:text-white transition-colors duration-150">Editorial policy</Link>
             <Link href="/privacy" className="hover:text-white transition-colors duration-150">Privacy</Link>
             <Link href="/terms"   className="hover:text-white transition-colors duration-150">Terms</Link>
+            <Link href="/community/guidelines" className="hover:text-white transition-colors duration-150">Community rules</Link>
+            <Link href="/safety" className="hover:text-white transition-colors duration-150">Safety</Link>
+            <Link href="/copyright" className="hover:text-white transition-colors duration-150">Copyright</Link>
             <Link href="/contact" className="hover:text-white transition-colors duration-150">Contact</Link>
           </div>
         </div>

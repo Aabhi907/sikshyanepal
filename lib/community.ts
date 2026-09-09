@@ -21,6 +21,7 @@ export type CommunityPost = {
   published_at: string | null
   media_url?: string | null
   media_type?: 'image' | 'video' | null
+  public_alias?: string | null
   vote_score?: number
   community_comments?: { count: number }[]
 }
@@ -33,6 +34,7 @@ export type CommunityComment = {
   created_at: string
   published_at: string | null
   vote_score?: number
+  public_alias?: string | null
 }
 
 export function topicLabel(topic: string) {

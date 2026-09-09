@@ -3,6 +3,8 @@ import { createAdminSupabaseClient } from '@/lib/supabase'
 import { COMMUNITY_TOPICS } from '@/lib/community'
 import { cleanCommunityText, containsPersonalContact, requestFingerprint } from '@/lib/community-server'
 import { randomUUID } from 'crypto'
+import { getAuthContext, isGoogleAccount } from '@/lib/auth'
+import { recordCommunitySecurityEvent } from '@/lib/community-server'
 
 const MEDIA_TYPES: Record<string, { kind: 'image' | 'video'; extension: string; max: number }> = {
   'image/jpeg': { kind: 'image', extension: 'jpg', max: 5 * 1024 * 1024 },
@@ -14,6 +16,9 @@ const MEDIA_TYPES: Record<string, { kind: 'image' | 'video'; extension: string; 
 }
 
 export async function POST(request: Request) {
+  const auth = await getAuthContext()
+  if (!auth) return NextResponse.json({ error: 'Sign in with Google before posting.' }, { status: 401 })
+  if (!isGoogleAccount(auth.user)) return NextResponse.json({ error: 'Community posting requires a Google-verified account.' }, { status: 403 })
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return NextResponse.json({ error: 'Community submissions are temporarily unavailable.' }, { status: 503 })
   const body = await request.formData().catch(() => null)
   if (!body) return NextResponse.json({ error: 'Invalid submission.' }, { status: 400 })
@@ -28,6 +33,9 @@ export async function POST(request: Request) {
   if (containsPersonalContact(`${title} ${content}`)) return NextResponse.json({ error: 'For safety, remove phone numbers and email addresses.' }, { status: 400 })
   const fingerprint = requestFingerprint(request)
   const db = createAdminSupabaseClient()
+  const { data: communityProfile } = await db.from('community_profiles').select('public_alias,status').eq('user_id', auth.user.id).maybeSingle()
+  if (!communityProfile?.public_alias) return NextResponse.json({ error: 'Choose your public community name before posting.' }, { status: 409 })
+  if (communityProfile.status !== 'active') return NextResponse.json({ error: 'This community account is restricted.' }, { status: 403 })
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString()
   const { count } = await db.from('community_posts').select('id', { count: 'exact', head: true }).eq('fingerprint_hash', fingerprint).gte('created_at', since)
   if ((count || 0) >= 3) return NextResponse.json({ error: 'You have reached the hourly posting limit. Please try later.' }, { status: 429 })
@@ -44,8 +52,9 @@ export async function POST(request: Request) {
     mediaUrl = db.storage.from('community-media').getPublicUrl(storagePath).data.publicUrl
     mediaType = config.kind
   }
-  const { data, error } = await db.from('community_posts').insert({ title, body: content, topic, fingerprint_hash: fingerprint, media_url: mediaUrl, media_type: mediaType }).select('id').single()
+  const { data, error } = await db.from('community_posts').insert({ title, body: content, topic, fingerprint_hash: fingerprint, media_url: mediaUrl, media_type: mediaType, author_id: auth.user.id, public_alias: communityProfile.public_alias }).select('id').single()
   if (error && storagePath) await db.storage.from('community-media').remove([storagePath])
   if (error) return NextResponse.json({ error: 'Could not save this discussion.' }, { status: 500 })
+  await recordCommunitySecurityEvent(db, { userId: auth.user.id, action: 'post', fingerprint, targetId: data.id })
   return NextResponse.json({ success: true, id: data.id }, { status: 201 })
 }

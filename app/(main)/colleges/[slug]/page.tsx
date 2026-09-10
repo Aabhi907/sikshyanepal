@@ -16,6 +16,7 @@ import {
   GraduationCap,
   ExternalLink,
   BadgeCheck,
+  Clock3,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import ReviewForm from "@/components/colleges/ReviewForm";
@@ -175,6 +176,20 @@ export default async function CollegeProfilePage({
   const verifiedDate = college.last_verified_at
     ? new Date(college.last_verified_at).toLocaleDateString('en-NP', { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
+  const verifiedAt = college.last_verified_at ? new Date(college.last_verified_at) : null;
+  const verificationAgeDays = verifiedAt && !Number.isNaN(verifiedAt.getTime())
+    ? Math.max(0, Math.floor((Date.now() - verifiedAt.getTime()) / 86_400_000))
+    : null;
+  const verificationFreshness = verificationAgeDays == null
+    ? { label: 'Check date unavailable', className: 'border-amber-200 bg-amber-50 text-amber-800' }
+    : verificationAgeDays > 180
+      ? { label: 'Recheck recommended', className: 'border-amber-200 bg-amber-50 text-amber-800' }
+      : { label: 'Recently checked', className: 'border-emerald-200 bg-emerald-50 text-emerald-800' };
+  const enquiryPrograms = Array.from(new Set(programs
+    .map(cp => cp.program?.name)
+    .filter((name): name is string => Boolean(name))
+    .concat(linkedProgramNames.length ? [] : fallbackProgramNames)))
+    .map(name => ({ name }));
   const answerSummary = [
     `${college.name} is a post-SEE college${place ? ` listed in ${place}` : ''}.`,
     displayAffiliation ? `Its profile lists affiliation with ${displayAffiliation}.` : null,
@@ -260,7 +275,7 @@ export default async function CollegeProfilePage({
           {college.is_featured && (
             <div className="absolute top-4 right-4">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-white shadow-sm">
-                ★ Featured College
+                Sponsored placement
               </span>
             </div>
           )}
@@ -361,6 +376,15 @@ export default async function CollegeProfilePage({
         </div>
       </div>
 
+      <section className="mb-6 rounded-2xl border border-blue-200 bg-white p-5 shadow-sm lg:hidden" aria-label="Admission actions">
+        <div className="flex items-start justify-between gap-3">
+          <div><p className="text-xs font-bold uppercase tracking-widest text-blue-700">Planning to apply?</p><p className="mt-1 text-sm leading-6 text-gray-600">Ask about the current intake, eligibility and fees. This sends an enquiry, not an application.</p></div>
+          {admissions.length > 0 && <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{admissions.length} open</span>}
+        </div>
+        <ApplyNowButton collegeName={college.name} collegeId={college.id} isFeatured={college.is_featured} programs={enquiryPrograms} />
+        {college.phone && <a href={`tel:${college.phone}`} className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-gray-300 text-sm font-semibold text-gray-700"><Phone className="h-4 w-4" />Call official number</a>}
+      </section>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
@@ -398,6 +422,10 @@ export default async function CollegeProfilePage({
                 </p>
               </div>
               <VerificationBadge status={college.verification_status} />
+            </div>
+            <div className={`mt-4 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-xs leading-5 ${verificationFreshness.className}`}>
+              <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
+              <span><strong>{verificationFreshness.label}.</strong> {verificationAgeDays == null ? 'Confirm changing information directly with the college.' : verificationAgeDays > 180 ? `The documented check is ${verificationAgeDays} days old. Confirm fees, programmes, affiliation and admission dates before relying on them.` : `The documented source check was ${verificationAgeDays === 0 ? 'today' : `${verificationAgeDays} day${verificationAgeDays === 1 ? '' : 's'} ago`}. Changing admission details still require confirmation.`}</span>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-gray-100 pt-4 text-sm">
               {college.last_verified_at && (
@@ -633,11 +661,7 @@ export default async function CollegeProfilePage({
               collegeName={college.name}
               collegeId={college.id}
               isFeatured={college.is_featured}
-              programs={programs
-                .map(cp => cp.program?.name)
-                .filter((n): n is string => !!n)
-                .concat(linkedProgramNames.length ? [] : fallbackProgramNames)
-                .map(name => ({ name }))}
+              programs={enquiryPrograms}
             />
           </div>
 

@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     const email = clean(body.email, 160)
     const program = clean(body.program, 140)
     const message = clean(body.message, 300)
+    const consent = body.consent === true
 
     // ── Validate required fields ───────────────────────────────────────
     if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 })
     if (!program) return NextResponse.json({ error: 'Program is required' }, { status: 400 })
     if (!collegeId) return NextResponse.json({ error: 'College ID missing' }, { status: 400 })
+    if (!consent) return NextResponse.json({ error: 'Consent is required before sending an enquiry' }, { status: 400 })
 
     const supabase = createAdminSupabaseClient()
 

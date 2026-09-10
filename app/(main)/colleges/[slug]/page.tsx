@@ -451,6 +451,7 @@ export default async function CollegeProfilePage({
               </h2>
             </div>
             {programs.length > 0 ? (
+              <>
               <div className="space-y-3">
                 {[...programs]
                   // +2 programs float to the top
@@ -495,13 +496,15 @@ export default async function CollegeProfilePage({
                             <p className="text-sm font-semibold text-gray-900">
                               NPR {cp.fee.toLocaleString()}
                             </p>
-                            <p className="text-xs text-gray-500">per year</p>
+                            <p className="text-xs text-gray-500">published amount</p>
                           </div>
                         )}
                       </div>
                     )
                   })}
               </div>
+              {programs.some(program => program.fee != null) && <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900"><strong>Confirm the fee period:</strong> a published amount may be annual, semester-based or for the full programme. Ask for the current written fee structure and included charges before paying.</p>}
+              </>
             ) : fallbackProgramNames.length ? (
               <div>
                 <div className="grid gap-2 sm:grid-cols-2">

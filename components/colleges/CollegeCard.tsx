@@ -181,10 +181,10 @@ export default function CollegeCard({ college }: CollegeCardProps) {
 
           {/* Fee */}
           {feeLabel && (
-            <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900 mb-2">
+            <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900 mb-2" title="Published fee amount; confirm whether it is annual, semester-based or total with the college">
               <Banknote className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
               <span>{feeLabel}</span>
-              <span className="text-xs font-normal text-gray-400">/ year</span>
+              <span className="text-xs font-normal text-gray-500">published fee</span>
             </div>
           )}
 

@@ -44,7 +44,7 @@ const ROW_LABELS = [
   { key: 'avg_rating', label: 'Avg Rating', icon: Star },
   { key: 'review_count', label: 'Reviews', icon: null },
   { key: 'scholarship_count', label: 'Scholarships', icon: Award },
-  { key: 'fee_range', label: 'Annual Fee Range', icon: null },
+  { key: 'fee_range', label: 'Published Fee Range', icon: null },
   { key: 'education_levels', label: 'Levels', icon: GraduationCap },
   { key: 'facilities', label: 'Facilities', icon: null },
   { key: 'verification_status', label: 'Verification', icon: Check },
@@ -173,7 +173,8 @@ export default function ComparePage() {
           <GitCompare className="w-6 h-6 text-blue-600" />
           <h1 className="font-display text-3xl font-extrabold text-gray-900">Compare colleges</h1>
         </div>
-        <p className="text-gray-500">Compare up to {MAX} colleges using published fees, programs, scholarships and student reviews.</p>
+        <p className="text-gray-500">Compare up to {MAX} colleges using published fees, programs, scholarships and moderated student reviews.</p>
+        <p className="mt-2 max-w-3xl text-xs leading-5 text-gray-500">Fee periods are not consistently reported. Confirm whether each amount is annual, semester-based or the full programme cost before comparing.</p>
       </div>
 
       {error && <div role="alert" className="mb-5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</div>}

@@ -55,6 +55,24 @@ function buildCollegePageUrl(searchParams: Record<string, string | undefined>, p
   return `/colleges${query ? `?${query}` : ''}`
 }
 
+function normaliseSearch(value: string | null | undefined) {
+  return (value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim()
+}
+
+function collegeSearchScore(college: RichCollege, term: string) {
+  const name = normaliseSearch(college.name)
+  const programNames = (college.programs || []).map(item => normaliseSearch(item.program?.name))
+  if (name === term) return 0
+  if (name.startsWith(term)) return 1
+  if (name.includes(term)) return 2
+  if (programNames.some(program => program.startsWith(term))) return 3
+  if (programNames.some(program => program.includes(term))) return 4
+  if ([college.location, college.district, college.local_level].some(value => normaliseSearch(value).includes(term))) return 5
+  if (normaliseSearch(college.affiliation).includes(term)) return 6
+  if (normaliseSearch(college.programs_offered).includes(term)) return 7
+  return 99
+}
+
 async function getColleges(sp: {
   q?:           string
   location?:    string
@@ -89,7 +107,6 @@ async function getColleges(sp: {
     .order('name')
     .limit(500)
 
-  if (sp.q)           query = query.ilike('name',        `%${sp.q.trim().slice(0, 80)}%`)
   if (sp.location)    query = query.ilike('location',    `%${sp.location}%`)
   if (sp.province)    query = query.eq('province', sp.province)
   if (sp.district)    query = query.ilike('district', `%${sp.district}%`)
@@ -122,6 +139,8 @@ async function getColleges(sp: {
 
   // Faculty/level need nested program data — apply in JS
   let filtered = enriched
+  const searchTerm = normaliseSearch(sp.q?.slice(0, 80))
+  if (searchTerm) filtered = filtered.filter(college => collegeSearchScore(college, searchTerm) < 99)
   if (sp.faculty) {
     const fac = sp.faculty.toLowerCase()
     filtered = filtered.filter((c) =>
@@ -143,6 +162,7 @@ async function getColleges(sp: {
   if (sp.sort === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name))
   if (sp.sort === 'rating') filtered.sort((a, b) => (b.avg_rating ?? -1) - (a.avg_rating ?? -1) || a.name.localeCompare(b.name))
   if (sp.sort === 'fee-low') filtered.sort((a, b) => (a.fee_min ?? Number.MAX_SAFE_INTEGER) - (b.fee_min ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name))
+  if (searchTerm && (!sp.sort || sp.sort === 'recommended')) filtered.sort((a, b) => collegeSearchScore(a, searchTerm) - collegeSearchScore(b, searchTerm) || Number(b.is_featured) - Number(a.is_featured) || a.name.localeCompare(b.name))
 
   return { filtered, loadError: false }
 }
@@ -212,7 +232,7 @@ export default async function CollegesPage({
 
       {/* Search */}
       <div className="mb-5">
-        <SearchBar placeholder="Search college by name…" redirectTo="/colleges" initialValue={searchParams.q} />
+        <SearchBar placeholder="Search by college, program, place or affiliation…" redirectTo="/colleges" initialValue={searchParams.q} />
       </div>
       <div className="mb-5 flex flex-wrap gap-2 text-xs"><span className="font-semibold text-gray-500">Popular:</span>{['Kathmandu','Pokhara','Chitwan','Lalitpur','Bhaktapur'].map(place=><Link key={place} href={`/colleges/in/${place.toLowerCase()}`} className="font-semibold text-blue-700 hover:underline">Colleges in {place}</Link>)}</div>
 

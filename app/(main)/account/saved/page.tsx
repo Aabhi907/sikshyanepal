@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { AlertCircle, Bookmark, GitCompare, Loader2, MapPin, Trash2 } from 'lucide-react'
+import { AlertCircle, ArrowRight, Bookmark, Calculator, CalendarCheck, CheckCircle2, Clock3, GitCompare, Loader2, MapPin, Trash2 } from 'lucide-react'
 import { cleanCollegeText } from '@/lib/college-display'
 
 type Saved = {
@@ -15,10 +15,17 @@ type Saved = {
     affiliation: string | null
     education_levels: string[] | null
     verification_status: string
+    last_verified_at: string | null
   } | null
 }
 
 const levelLabel = (level: string) => level === 'plus_two' ? '+2' : level.charAt(0).toUpperCase() + level.slice(1)
+const sourceState = (value:string|null) => {
+  if (!value) return { label:'Check date missing', tone:'bg-amber-50 text-amber-800', current:false }
+  const checked=new Date(value); if(Number.isNaN(checked.getTime())) return { label:'Check date missing', tone:'bg-amber-50 text-amber-800', current:false }
+  const days=Math.max(0,Math.floor((Date.now()-checked.getTime())/86_400_000))
+  return days<=180?{label:`Checked ${days===0?'today':`${days} days ago`}`,tone:'bg-emerald-50 text-emerald-700',current:true}:{label:'Recheck recommended',tone:'bg-amber-50 text-amber-800',current:false}
+}
 
 export default function SavedPage() {
   const [items, setItems] = useState<Saved[]>([])
@@ -85,6 +92,8 @@ export default function SavedPage() {
 
       {error && <p role="alert" className="mt-6 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</p>}
 
+      {!loading && !needsLogin && items.length > 0 && <section className="mt-7 grid gap-3 sm:grid-cols-3" aria-label="Shortlist progress"><div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Shortlist</p><p className="mt-1 text-2xl font-bold text-ink">{items.length}</p><p className="text-xs text-slate-500">saved college{items.length===1?'':'s'}</p></div><div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Ready to compare</p><p className="mt-1 text-2xl font-bold text-ink">{selected.length}/2</p><p className="text-xs text-slate-500">select at least two</p></div><div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Recently checked</p><p className="mt-1 text-2xl font-bold text-ink">{items.filter(item=>sourceState(item.college?.last_verified_at||null).current).length}</p><p className="text-xs text-slate-500">within 180 days</p></div></section>}
+
       {loading ? (
         <div className="mt-8 flex items-center justify-center gap-2 rounded-2xl border bg-white p-12 text-sm text-gray-500"><Loader2 className="h-5 w-5 animate-spin" />Loading your shortlist…</div>
       ) : needsLogin ? (
@@ -104,6 +113,7 @@ export default function SavedPage() {
                   <div className="mt-3 flex flex-wrap gap-2 text-xs">
                     {cleanCollegeText(item.college.affiliation) && <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-600">{cleanCollegeText(item.college.affiliation)}</span>}
                     {(item.college.education_levels || []).map(level => <span key={level} className="rounded-full bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">{levelLabel(level)}</span>)}
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ${sourceState(item.college.last_verified_at).tone}`}>{sourceState(item.college.last_verified_at).current?<CheckCircle2 className="h-3 w-3"/>:<Clock3 className="h-3 w-3"/>}{sourceState(item.college.last_verified_at).label}</span>
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row">
@@ -111,6 +121,7 @@ export default function SavedPage() {
                   <button type="button" onClick={() => void remove(item)} disabled={removing === item.college_id} aria-label={`Remove ${item.college.name} from saved colleges`} className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
                 </div>
               </div>
+              <div className="mt-4 grid gap-2 border-t border-gray-100 pt-4 sm:grid-cols-3"><button type="button" onClick={()=>toggleSelection(item.college!.slug)} className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 text-sm font-bold text-gray-700 hover:border-blue-300 hover:text-primary"><span className="flex items-center gap-2"><GitCompare className="h-4 w-4"/>{selected.includes(item.college.slug)?'Selected':'Select to compare'}</span><ArrowRight className="h-4 w-4"/></button><Link href="/tools/college-cost-calculator" className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 text-sm font-bold text-gray-700 hover:border-blue-300 hover:text-primary"><span className="flex items-center gap-2"><Calculator className="h-4 w-4"/>Plan real cost</span><ArrowRight className="h-4 w-4"/></Link><Link href="/tools/admission-checklist" className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 text-sm font-bold text-gray-700 hover:border-blue-300 hover:text-primary"><span className="flex items-center gap-2"><CalendarCheck className="h-4 w-4"/>Prepare documents</span><ArrowRight className="h-4 w-4"/></Link></div>
             </article>
           ))}
           {!items.length && <div className="rounded-2xl border bg-white p-10 text-center"><Bookmark className="mx-auto h-10 w-10 text-gray-200" /><h2 className="mt-3 font-display text-xl font-bold text-ink">Your shortlist is empty</h2><p className="mt-2 text-sm text-gray-500">Save colleges from their profile pages to compare realistic options here.</p><Link href="/colleges" className="mt-5 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white">Explore colleges</Link></div>}

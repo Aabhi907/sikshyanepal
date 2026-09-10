@@ -14,6 +14,7 @@ type SavedRow = {
     affiliation: string | null
     education_levels: string[] | null
     verification_status: string
+    last_verified_at: string | null
     status: string | null
   } | null
 }
@@ -24,7 +25,7 @@ export async function GET() {
 
   const { data, error } = await createAdminSupabaseClient()
     .from('saved_colleges')
-    .select('college_id,college:colleges(id,name,slug,location,affiliation,education_levels,verification_status,status)')
+    .select('college_id,college:colleges(id,name,slug,location,affiliation,education_levels,verification_status,last_verified_at,status)')
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: false })
 
@@ -43,6 +44,7 @@ export async function GET() {
         affiliation: item.college.affiliation,
         education_levels: item.college.education_levels,
         verification_status: item.college.verification_status,
+        last_verified_at: item.college.last_verified_at,
       } : null,
     }))
 

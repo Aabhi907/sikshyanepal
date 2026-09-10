@@ -4,7 +4,8 @@ import { Resend } from 'resend'
 
 const resend      = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const FROM        = 'SikshyaNepal <onboarding@resend.dev>'
-const ADMIN_EMAIL = 'devskiller14@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'devskiller14@gmail.com'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sikshyanepal.vercel.app'
 
 const clean = (value: unknown, max: number) => typeof value === 'string' ? value.trim().slice(0, max) : ''
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]!)
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
     const program = clean(body.program, 140)
     const message = clean(body.message, 300)
     const consent = body.consent === true
+
+    // Quietly accept automated submissions that fill the hidden field, without storing them.
+    if (clean(body.website, 200)) return NextResponse.json({ success: true })
 
     // ── Validate required fields ───────────────────────────────────────
     if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -38,6 +42,16 @@ export async function POST(request: Request) {
       .maybeSingle()
     if (!college) return NextResponse.json({ error: 'This college is not available for enquiries.' }, { status: 404 })
     const collegeName = college.name
+
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+    const today = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const [{ count: recentDuplicate, error: duplicateError }, { count: dailyCount, error: dailyError }] = await Promise.all([
+      supabase.from('leads').select('id', { count: 'exact', head: true }).eq('college_id', college.id).eq('student_phone', phone).gte('created_at', fifteenMinutesAgo),
+      supabase.from('leads').select('id', { count: 'exact', head: true }).eq('student_phone', phone).gte('created_at', today),
+    ])
+    if (duplicateError || dailyError) console.warn('[apply] duplicate check failed:', duplicateError?.message || dailyError?.message)
+    if ((recentDuplicate || 0) > 0) return NextResponse.json({ error: 'An enquiry with this phone number was sent to this college recently. Please wait before trying again.' }, { status: 429 })
+    if ((dailyCount || 0) >= 5) return NextResponse.json({ error: 'This phone number has reached today’s enquiry limit. Please try again tomorrow.' }, { status: 429 })
 
     // ── Insert lead ────────────────────────────────────────────────────
     const { data: lead, error } = await supabase
@@ -97,7 +111,7 @@ export async function POST(request: Request) {
               </tr>` : ''}
             </table>
             <div style="margin-top:24px;">
-              <a href="https://sikshyanepal.vercel.app/admin/leads"
+              <a href="${SITE_URL}/admin/leads"
                  style="display:inline-block;padding:10px 20px;background:#1847c4;color:#fff;
                         font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;">
                 Review in Admin Panel

@@ -26,6 +26,7 @@ export default function ApplyNowModal({
     email:   '',
     program: '',
     message: '',
+    website: '',
   })
   const [loading,  setLoading]  = useState(false)
   const [success,  setSuccess]  = useState(false)
@@ -156,6 +157,10 @@ export default function ApplyNowModal({
           ) : (
             /* ── Form ─────────────────────────────────────── */
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              <div className="hidden" aria-hidden="true">
+                <label htmlFor="admission-website">Leave this field empty</label>
+                <input id="admission-website" name="website" type="text" value={form.website} onChange={event => set('website', event.target.value)} tabIndex={-1} autoComplete="off" />
+              </div>
 
               {/* Full Name */}
               <div>

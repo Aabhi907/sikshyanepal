@@ -117,9 +117,9 @@ export default function AdminLeadsPage() {
     <div className="p-6 lg:p-8 text-gray-100 min-h-screen">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Applications</h1>
+          <h1 className="text-2xl font-bold text-white">Admission enquiries</h1>
           <p className="text-gray-400 mt-0.5 text-sm">
-            Student leads from Apply Now forms — {total} total
+            Student requests for college admission information — {total} total
           </p>
         </div>
         <button
@@ -190,7 +190,7 @@ export default function AdminLeadsPage() {
         <div className="text-center py-16 bg-gray-800 rounded-xl border border-gray-700">
           <Building2 className="w-10 h-10 text-gray-600 mx-auto mb-3" />
           <p className="text-gray-400">No leads found</p>
-          <p className="text-sm text-gray-600 mt-1">Applications will appear here when students apply</p>
+          <p className="text-sm text-gray-600 mt-1">Enquiries appear here after students request college information</p>
         </div>
       ) : (
         <div className="space-y-3">

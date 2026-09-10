@@ -48,7 +48,7 @@ const navItems = [
   { label: 'Programs',         href: '/admin/programs',         icon: BookOpen },
   { label: 'Study Resources',  href: '/admin/study-resources',  icon: BookOpen },
   { label: 'Pending Colleges', href: '/admin/colleges/pending', icon: Building2,  pending: true },
-  { label: 'Applications',     href: '/admin/leads',            icon: Send,        revenue: true },
+  { label: 'Admission Enquiries', href: '/admin/leads',         icon: Send,        revenue: true },
   { label: 'News',             href: '/admin/news',             icon: Newspaper },
   { label: 'Notices',          href: '/admin/notices',          icon: Bell },
   { label: 'Scholarships',     href: '/admin/scholarships',     icon: Award },

@@ -47,6 +47,8 @@ export type CollegeSearchParams = {
   scholarship?: string
   verified?: string
   program?: string
+  sort?: string
+  page?: string
 }
 
 function buildUrl(current: CollegeSearchParams, key: string, value: string): string {
@@ -62,30 +64,35 @@ function buildUrl(current: CollegeSearchParams, key: string, value: string): str
   if (current.scholarship) p.set('scholarship', current.scholarship)
   if (current.verified) p.set('verified', current.verified)
   if (current.program) p.set('program', current.program)
+  if (current.sort) p.set('sort', current.sort)
   // toggle: clicking an active filter removes it
   if (p.get(key) === value) p.delete(key)
   else p.set(key, value)
   if (key === 'province') p.delete('district')
+  p.delete('page')
   const str = p.toString()
   return `/colleges${str ? `?${str}` : ''}`
 }
 
 function clearUrl(current: CollegeSearchParams): string {
-  return current.q ? `/colleges?q=${encodeURIComponent(current.q)}` : '/colleges'
+  const params = new URLSearchParams()
+  if (current.q) params.set('q', current.q)
+  if (current.sort) params.set('sort', current.sort)
+  const query = params.toString()
+  return `/colleges${query ? `?${query}` : ''}`
 }
 
 interface Props {
   searchParams:  CollegeSearchParams
-  totalCount:    number
   filteredCount: number
 }
 
-export default function CollegeFilters({ searchParams, totalCount, filteredCount }: Props) {
+export default function CollegeFilters({ searchParams, filteredCount }: Props) {
   const [open, setOpen] = useState(false)
 
   const hasFilters  = !!(searchParams.location || searchParams.province || searchParams.district || searchParams.affiliation || searchParams.faculty || searchParams.level || searchParams.maxFee || searchParams.scholarship || searchParams.verified || searchParams.program)
   const activeCount = [searchParams.location, searchParams.province, searchParams.district, searchParams.affiliation, searchParams.faculty, searchParams.level, searchParams.maxFee, searchParams.scholarship, searchParams.verified, searchParams.program].filter(Boolean).length
-  const activeFilters = Object.entries(searchParams).filter(([key, value]) => key !== 'q' && Boolean(value))
+  const activeFilters = Object.entries(searchParams).filter(([key, value]) => !['q', 'sort', 'page'].includes(key) && Boolean(value))
 
   useEffect(() => {
     if (!open) return
@@ -110,7 +117,7 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
     return (
       <div className="space-y-5">
         <div><p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Province</p><div className="flex flex-wrap gap-2">{PROVINCES.map(value => <Link key={value} href={buildUrl(searchParams, 'province', value)} onClick={() => setOpen(false)} className={pill(searchParams.province === value)}>{value}</Link>)}</div></div>
-        <form action="/colleges" className="grid gap-2 sm:grid-cols-2">{Object.entries(searchParams).filter(([key, value]) => value && key !== 'district' && key !== 'maxFee').map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}<label><span className="sr-only">District</span><select name="district" defaultValue={searchParams.district || ''} disabled={!searchParams.province} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"><option value="">{searchParams.province ? `All districts in ${searchParams.province}` : 'Choose province first'}</option>{districtsForProvince(searchParams.province || '').map(district=><option key={district}>{district}</option>)}</select></label><label><span className="sr-only">Maximum published program fee</span><select name="maxFee" defaultValue={searchParams.maxFee || ''} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"><option value="">Any published fee</option><option value="100000">Under NPR 1 lakh</option><option value="250000">Under NPR 2.5 lakh</option><option value="500000">Under NPR 5 lakh</option><option value="1000000">Under NPR 10 lakh</option></select></label><button className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2">Apply district & fee</button></form>
+        <form action="/colleges" className="grid gap-2 sm:grid-cols-2">{Object.entries(searchParams).filter(([key, value]) => value && !['district', 'maxFee', 'page'].includes(key)).map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}<label><span className="sr-only">District</span><select name="district" defaultValue={searchParams.district || ''} disabled={!searchParams.province} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"><option value="">{searchParams.province ? `All districts in ${searchParams.province}` : 'Choose province first'}</option>{districtsForProvince(searchParams.province || '').map(district=><option key={district}>{district}</option>)}</select></label><label><span className="sr-only">Maximum published program fee</span><select name="maxFee" defaultValue={searchParams.maxFee || ''} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"><option value="">Any published fee</option><option value="100000">Under NPR 1 lakh</option><option value="250000">Under NPR 2.5 lakh</option><option value="500000">Under NPR 5 lakh</option><option value="1000000">Under NPR 10 lakh</option></select></label><button className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2">Apply district & fee</button></form>
         <div><p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Trust & support</p><div className="flex flex-wrap gap-2"><Link href={buildUrl(searchParams,'scholarship','true')} className={pill(searchParams.scholarship==='true')}>Scholarship available</Link><Link href={buildUrl(searchParams,'verified','true')} className={pill(searchParams.verified==='true')}>Verified colleges</Link></div></div>
         {/* Location */}
         <div>
@@ -183,12 +190,7 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
         </div>
       )}
       {/* ── Mobile trigger + result count ── */}
-      <div className="flex items-center justify-between mb-4 lg:hidden">
-        <p className="text-sm text-gray-500">
-          <span className="font-semibold text-gray-900">{filteredCount}</span>
-          {filteredCount !== totalCount && <> of <span className="font-semibold text-gray-900">{totalCount}</span></>}{' '}
-          colleges
-        </p>
+      <div className="mb-4 flex justify-end lg:hidden">
         <button
           onClick={() => setOpen(true)}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-colors ${
@@ -218,17 +220,6 @@ export default function CollegeFilters({ searchParams, totalCount, filteredCount
         </div>
         <FilterContent />
       </div>
-
-      {/* ── Desktop result count ── */}
-      <p className="hidden lg:block text-sm text-gray-500 mb-4">
-        Showing{' '}
-        <span className="font-semibold text-gray-900">{filteredCount}</span>
-        {filteredCount !== totalCount && (
-          <> of <span className="font-semibold text-gray-900">{totalCount}</span></>
-        )}{' '}
-        colleges
-        {searchParams.q && <> for &quot;{searchParams.q}&quot;</>}
-      </p>
 
       {/* ── Mobile bottom drawer ── */}
       {open && (

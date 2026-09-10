@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import CollegeCard from '@/components/colleges/CollegeCard'
 import CollegeFilters from '@/components/colleges/CollegeFilters'
+import CollegeSort from '@/components/colleges/CollegeSort'
 import SearchBar from '@/components/ui/SearchBar'
 import type { College, CollegeProgram, Review } from '@/types'
 import { AlertCircle, Building2 } from 'lucide-react'
@@ -42,6 +43,18 @@ const directoryAnswers = [
   },
 ]
 
+const PAGE_SIZE = 18
+
+function buildCollegePageUrl(searchParams: Record<string, string | undefined>, page: number) {
+  const params = new URLSearchParams()
+  Object.entries(searchParams).forEach(([key, value]) => {
+    if (value && key !== 'page') params.set(key, value)
+  })
+  if (page > 1) params.set('page', String(page))
+  const query = params.toString()
+  return `/colleges${query ? `?${query}` : ''}`
+}
+
 async function getColleges(sp: {
   q?:           string
   location?:    string
@@ -54,7 +67,9 @@ async function getColleges(sp: {
   scholarship?: string
   verified?: string
   program?: string
-}): Promise<{ all: RichCollege[]; filtered: RichCollege[]; loadError: boolean }> {
+  sort?: string
+  page?: string
+}): Promise<{ filtered: RichCollege[]; loadError: boolean }> {
   const supabase = createServerSupabaseClient()
 
   let query = supabase
@@ -84,7 +99,7 @@ async function getColleges(sp: {
   const { data, error } = await query
   if (error) {
     console.error('Unable to load college directory:', error.message)
-    return { all: [], filtered: [], loadError: true }
+    return { filtered: [], loadError: true }
   }
   const raw = (data ?? []) as (College & { programs?: CollegeProgram[]; reviews?: Review[] })[]
 
@@ -104,9 +119,6 @@ async function getColleges(sp: {
       fee_max: fees.length > 0 ? Math.max(...fees) : undefined,
     }
   })
-
-  // "all" = before faculty/level filter (denominator for "X of Y")
-  const all = enriched
 
   // Faculty/level need nested program data — apply in JS
   let filtered = enriched
@@ -128,15 +140,23 @@ async function getColleges(sp: {
   const maxFee = Number(sp.maxFee)
   if (Number.isFinite(maxFee) && maxFee > 0) filtered = filtered.filter(c => (c.programs ?? []).some(cp => cp.fee != null && cp.fee <= maxFee))
 
-  return { all, filtered, loadError: false }
+  if (sp.sort === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name))
+  if (sp.sort === 'rating') filtered.sort((a, b) => (b.avg_rating ?? -1) - (a.avg_rating ?? -1) || a.name.localeCompare(b.name))
+  if (sp.sort === 'fee-low') filtered.sort((a, b) => (a.fee_min ?? Number.MAX_SAFE_INTEGER) - (b.fee_min ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name))
+
+  return { filtered, loadError: false }
 }
 
 export default async function CollegesPage({
   searchParams,
 }: {
-  searchParams: { q?: string; location?: string; affiliation?: string; faculty?: string; level?: string; province?: string; district?: string; maxFee?: string; scholarship?: string; verified?: string; program?: string }
+  searchParams: { q?: string; location?: string; affiliation?: string; faculty?: string; level?: string; province?: string; district?: string; maxFee?: string; scholarship?: string; verified?: string; program?: string; sort?: string; page?: string }
 }) {
-  const { all, filtered, loadError } = await getColleges(searchParams)
+  const { filtered, loadError } = await getColleges(searchParams)
+  const requestedPage = Number.parseInt(searchParams.page || '1', 10)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1
+  const visibleColleges = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const pageUrl = absoluteUrl('/colleges')
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -156,9 +176,9 @@ export default async function CollegesPage({
         '@id': `${pageUrl}#college-list`,
         name: 'College profiles in Nepal',
         numberOfItems: filtered.length,
-        itemListElement: filtered.slice(0, 100).map((college, index) => ({
+        itemListElement: visibleColleges.map((college, index) => ({
           '@type': 'ListItem',
-          position: index + 1,
+          position: (currentPage - 1) * PAGE_SIZE + index + 1,
           url: absoluteUrl(`/colleges/${college.slug}`),
           name: college.name,
         })),
@@ -199,9 +219,10 @@ export default async function CollegesPage({
       {/* Filters — handles mobile drawer + desktop inline panel + result counts */}
       <CollegeFilters
         searchParams={searchParams}
-        totalCount={all.length}
         filteredCount={filtered.length}
       />
+
+      {!loadError && filtered.length > 0 && <CollegeSort searchParams={searchParams} count={filtered.length} />}
 
       {/* Grid */}
       {loadError ? (
@@ -214,23 +235,30 @@ export default async function CollegesPage({
       ) : filtered.length > 0 ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.slice(0, 6).map((college) => (
+            {visibleColleges.slice(0, 6).map((college) => (
               <CollegeCard key={college.id} college={college} />
             ))}
           </div>
-          {filtered.length > 6 && (
+          {visibleColleges.length > 6 && (
             <AdUnit
               slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_COLLEGES ?? ''}
               format="horizontal"
               className="my-5 rounded-xl border border-gray-200 bg-white min-h-[90px]"
             />
           )}
-          {filtered.length > 6 && (
+          {visibleColleges.length > 6 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.slice(6).map((college) => (
+              {visibleColleges.slice(6).map((college) => (
                 <CollegeCard key={college.id} college={college} />
               ))}
             </div>
+          )}
+          {totalPages > 1 && (
+            <nav aria-label="College directory pages" className="mt-8 flex flex-wrap items-center justify-center gap-2">
+              {currentPage > 1 && <Link href={buildCollegePageUrl(searchParams, currentPage - 1)} className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary">Previous</Link>}
+              <span className="px-3 py-2 text-sm text-gray-600">Page <strong className="text-gray-950">{currentPage}</strong> of {totalPages}</span>
+              {currentPage < totalPages && <Link href={buildCollegePageUrl(searchParams, currentPage + 1)} className="rounded-lg border border-primary bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">Next</Link>}
+            </nav>
           )}
         </>
       ) : (

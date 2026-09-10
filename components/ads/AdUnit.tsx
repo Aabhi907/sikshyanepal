@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type AdFormat = 'horizontal' | 'rectangle' | 'auto'
 
@@ -27,20 +27,27 @@ export default function AdUnit({ slot, format = 'auto', className = '' }: AdUnit
   const adRef  = useRef<HTMLModElement>(null)
   const pushed = useRef(false)
   const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
+  const [allowed, setAllowed] = useState(false)
+
+  useEffect(() => {
+    const read = () => { try { setAllowed(Boolean(JSON.parse(localStorage.getItem('sn_cookie_consent_v1') || '{}').marketing)) } catch { setAllowed(false) } }
+    read(); window.addEventListener('sn-consent-changed', read)
+    return () => window.removeEventListener('sn-consent-changed', read)
+  }, [])
 
   useEffect(() => {
     // Don't run without a client ID (dev / pre-approval)
-    if (!clientId || pushed.current) return
+    if (!clientId || !allowed || pushed.current) return
     try {
       pushed.current = true
       ;(window.adsbygoogle = window.adsbygoogle || []).push({})
     } catch {
       // AdSense may throw if the script isn't loaded yet — ignore silently
     }
-  }, [clientId])
+  }, [allowed, clientId])
 
   // Render nothing in dev or when AdSense is not configured
-  if (!clientId) return null
+  if (!clientId || !allowed) return null
 
   return (
     <div

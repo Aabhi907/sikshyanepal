@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Mail, CheckCircle, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 
 type State = 'idle' | 'loading' | 'success' | 'error'
 
@@ -57,6 +58,7 @@ export default function EmailSubscribe() {
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
             type="email"
+            aria-label="Email address for result alerts"
             required
             value={email}
             onChange={(e) => { setEmail(e.target.value); if (state === 'error') setState('idle') }}
@@ -80,7 +82,7 @@ export default function EmailSubscribe() {
         <p className="mt-2 text-xs text-red-300 text-center">{errorMsg}</p>
       )}
       <p className="mt-2 text-xs text-blue-200 text-center">
-        No spam. Unsubscribe any time.
+        No spam. Unsubscribe any time. By subscribing, you accept our <Link href="/privacy" className="font-bold underline">privacy policy</Link>.
       </p>
     </div>
   )

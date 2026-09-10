@@ -123,6 +123,8 @@ export default function PdfViewer({ pdfUrl, title }: PdfViewerProps) {
             key={iframeSrc}            // remount on src change
             src={iframeSrc}
             title={title}
+            loading="lazy"
+            referrerPolicy="no-referrer"
             className="w-full h-full border-0"
             onLoad={handleLoad}
             onError={handleError}

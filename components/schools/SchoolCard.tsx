@@ -33,7 +33,7 @@ export default function SchoolCard({ school }: { school: School }) {
       <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-primary hover:shadow-lg">
         <div className="relative h-28 overflow-hidden bg-gradient-to-br from-primary to-[#0d1b3e]">
           {school.cover_url ? (
-            <Image src={school.cover_url} alt="" fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+            <Image src={school.cover_url} alt={`${school.name} campus or school building`} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
           ) : (
             <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '18px 18px' }} />
           )}

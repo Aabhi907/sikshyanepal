@@ -45,7 +45,7 @@ export default function SiteAnnouncement() {
   const body = (
     <>
       <div className="min-w-0 flex-1">
-        {item.image_url && <img src={item.image_url} alt="" className="mb-3 h-36 w-full rounded-xl object-cover" />}
+        {item.image_url && <img src={item.image_url} alt={`Announcement: ${item.title}`} className="mb-3 h-36 w-full rounded-xl object-cover" />}
         <strong className="block pr-7 font-display text-lg leading-snug">{item.title}</strong>
         <p className="mt-1.5 leading-6 text-amber-900/80">{item.message}</p>
         {item.link_url && (

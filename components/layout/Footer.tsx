@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Mail, MapPin, ArrowUpRight, BookOpenCheck } from 'lucide-react'
+import CookieSettingsButton from '@/components/privacy/CookieSettingsButton'
 
 const exploreLinks = [
   { label: 'All Schools',      href: '/schools' },
@@ -160,13 +161,16 @@ export default function Footer() {
           <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} SikshyaNepal. All rights reserved.
           </p>
-          <div className="flex items-center gap-5 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs text-slate-500 sm:justify-end">
             <Link href="/about/editorial-policy" className="hover:text-white transition-colors duration-150">Editorial policy</Link>
             <Link href="/privacy" className="hover:text-white transition-colors duration-150">Privacy</Link>
             <Link href="/terms"   className="hover:text-white transition-colors duration-150">Terms</Link>
             <Link href="/community/guidelines" className="hover:text-white transition-colors duration-150">Community rules</Link>
             <Link href="/safety" className="hover:text-white transition-colors duration-150">Safety</Link>
             <Link href="/copyright" className="hover:text-white transition-colors duration-150">Copyright</Link>
+            <Link href="/cookies" className="hover:text-white transition-colors duration-150">Cookies</Link>
+            <Link href="/refunds" className="hover:text-white transition-colors duration-150">Refunds</Link>
+            <CookieSettingsButton />
             <Link href="/contact" className="hover:text-white transition-colors duration-150">Contact</Link>
           </div>
         </div>

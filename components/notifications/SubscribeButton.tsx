@@ -16,6 +16,26 @@ interface OneSignalAPI {
   }
 }
 
+function ensureOneSignal() {
+  const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID
+  if (!appId) return Promise.reject(new Error('not-configured'))
+  if (document.querySelector('script[data-sikshyanepal-onesignal]')) return Promise.resolve()
+  window.OneSignalDeferred = window.OneSignalDeferred || []
+  window.OneSignalDeferred.push(async os => {
+    const service = os as OneSignalAPI & { init?: (options: Record<string, unknown>) => Promise<void> }
+    if (service.init) await service.init({ appId, serviceWorkerPath: '/OneSignalSDKWorker.js', notifyButton: { enable: false }, allowLocalhostAsSecureOrigin: true })
+  })
+  return new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'
+    script.defer = true
+    script.dataset.sikshyanepalOnesignal = 'true'
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('load-failed'))
+    document.head.appendChild(script)
+  })
+}
+
 type Variant = 'float' | 'header'
 
 interface Props {
@@ -52,6 +72,7 @@ export default function SubscribeButton({ variant }: Props) {
     }
     setRequesting(true)
     try {
+      await ensureOneSignal()
       await new Promise<void>((resolve, reject) => {
         const timeout = window.setTimeout(() => reject(new Error('timeout')), 10000)
         window.OneSignalDeferred = window.OneSignalDeferred || []

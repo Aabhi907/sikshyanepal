@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { Noto_Serif, DM_Sans, DM_Mono } from 'next/font/google'
-import Script from 'next/script'
 import JsonLd from '@/components/seo/JsonLd'
 import { SITE_URL } from '@/lib/seo'
+import CookieConsent from '@/components/privacy/CookieConsent'
+import ConsentScripts from '@/components/privacy/ConsentScripts'
 import './globals.css'
 
 const notoSerif = Noto_Serif({
@@ -91,50 +92,15 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID
-
   return (
     <html lang="en">
       <body className={`${notoSerif.variable} ${dmSans.variable} ${dmMono.variable} font-sans antialiased`}>
+        <a href="#main-content" className="sr-only z-[300] rounded-lg bg-white px-4 py-3 font-bold text-primary focus:not-sr-only focus:fixed focus:left-3 focus:top-3">Skip to main content</a>
         <JsonLd data={{ '@context': 'https://schema.org', '@graph': [{ '@type': 'WebSite', '@id': `${BASE_URL}/#website`, url: BASE_URL, name: 'SikshyaNepal', description: 'Source-aware education information for students and families in Nepal.', inLanguage: ['en', 'ne'], publisher: { '@id': `${BASE_URL}/#organization` }, potentialAction: { '@type': 'SearchAction', target: `${BASE_URL}/search?q={search_term_string}`, 'query-input': 'required name=search_term_string' } }, { '@type': 'Organization', '@id': `${BASE_URL}/#organization`, name: 'SikshyaNepal', url: BASE_URL, logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png` }, areaServed: { '@type': 'Country', name: 'Nepal' }, knowsAbout: ['Schools in Nepal', 'Colleges in Nepal', 'Nepal education admissions', 'University programs in Nepal', 'Scholarships in Nepal', 'Nepal examination results'] }] }} />
         {children}
 
-        {/* ── Google AdSense ─────────────────────────────── */}
-        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
-
-        {appId && (
-          <>
-            <Script
-              src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-              strategy="afterInteractive"
-              defer
-            />
-            <Script id="onesignal-init" strategy="afterInteractive">
-              {`
-                window.OneSignalDeferred = window.OneSignalDeferred || [];
-                OneSignalDeferred.push(async function(OneSignal) {
-                  try {
-                    await OneSignal.init({
-                      appId: "${appId}",
-                      serviceWorkerPath: "/OneSignalSDKWorker.js",
-                      notifyButton: { enable: false },
-                      allowLocalhostAsSecureOrigin: true,
-                    });
-                  } catch (error) {
-                    console.error("SikshyaNepal notifications could not initialize", error);
-                  }
-                });
-              `}
-            </Script>
-          </>
-        )}
+        <ConsentScripts />
+        <CookieConsent />
       </body>
     </html>
   )

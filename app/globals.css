@@ -16,6 +16,10 @@
 }
 
 @layer base {
+  :focus-visible {
+    outline: 3px solid #f97316;
+    outline-offset: 3px;
+  }
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;

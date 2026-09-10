@@ -33,6 +33,7 @@ import type { Admission } from "@/types";
 import JsonLd from "@/components/seo/JsonLd";
 import { absoluteUrl, breadcrumbSchema, SITE_URL } from "@/lib/seo";
 import { collegeDisplayAffiliation, collegeDisplayLocation, collegeDisplayPrograms, safeCollegeAddress } from "@/lib/college-display";
+import CollegeDecisionCheck from "@/components/colleges/CollegeDecisionCheck";
 
 // Affiliation → gradient config
 const AFFIL_COVER: Record<string, { gradient: string; pattern: string }> = {
@@ -185,6 +186,15 @@ export default async function CollegeProfilePage({
     : verificationAgeDays > 180
       ? { label: 'Recheck recommended', className: 'border-amber-200 bg-amber-50 text-amber-800' }
       : { label: 'Recently checked', className: 'border-emerald-200 bg-emerald-50 text-emerald-800' };
+  const hasPublishedFee = programs.some(program => program.fee != null);
+  const decisionChecks = [
+    { label: 'Study route', detail: programNames.length ? `${programNames.length} programme${programNames.length === 1 ? '' : 's'} listed for review.` : 'No programme list is available yet.', state: programNames.length ? 'available' as const : 'missing' as const },
+    { label: 'Affiliation', detail: displayAffiliation ? `${displayAffiliation} is listed; confirm it for your exact programme.` : 'Affiliation is not documented on this profile.', state: displayAffiliation ? 'confirm' as const : 'missing' as const },
+    { label: 'Published fees', detail: hasPublishedFee ? 'At least one fee amount is listed; ask what period and charges it covers.' : 'No current programme fee is published here.', state: hasPublishedFee ? 'confirm' as const : 'missing' as const },
+    { label: 'Admission window', detail: admissions.length ? `${admissions.length} current admission notice${admissions.length === 1 ? '' : 's'} linked.` : 'No current admission notice is linked.', state: admissions.length ? 'available' as const : 'missing' as const },
+    { label: 'Scholarships', detail: scholarships.length ? `${scholarships.length} active scholarship listing${scholarships.length === 1 ? '' : 's'} found.` : 'No active scholarship is linked to this profile.', state: scholarships.length ? 'available' as const : 'missing' as const },
+    { label: 'Source freshness', detail: verificationAgeDays == null ? 'A source-check date is not available.' : verificationAgeDays > 180 ? `Last documented check was ${verificationAgeDays} days ago.` : `Documented source checked ${verificationAgeDays === 0 ? 'today' : `${verificationAgeDays} days ago`}.`, state: verificationAgeDays != null && verificationAgeDays <= 180 ? 'available' as const : 'confirm' as const },
+  ];
   const enquiryPrograms = Array.from(new Set(programs
     .map(cp => cp.program?.name)
     .filter((name): name is string => Boolean(name))
@@ -399,6 +409,8 @@ export default async function CollegeProfilePage({
             </p>
           </section>
 
+          <CollegeDecisionCheck collegeName={college.name} collegeSlug={college.slug} checks={decisionChecks} sourceUrl={college.source_url} website={college.website} />
+
           {/* Description */}
           {college.description && (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -610,7 +622,7 @@ export default async function CollegeProfilePage({
         {/* Sidebar */}
         <div className="space-y-5">
           {/* Quick Info */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div id="college-contact" className="bg-white rounded-xl border border-gray-200 p-5">
             <h3 className="font-semibold text-gray-900 mb-4">Quick Info</h3>
             <dl className="space-y-3 text-sm">
               {displayAffiliation && (

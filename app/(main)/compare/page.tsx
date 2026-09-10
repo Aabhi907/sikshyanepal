@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { GitCompare, X, Plus, MapPin, Star, Building2, Search, Award, BookOpen, Check, GraduationCap, AlertCircle, Share2 } from 'lucide-react'
+import { GitCompare, X, Plus, MapPin, Star, Building2, Search, Award, BookOpen, Check, GraduationCap, AlertCircle, Share2, Clock3 } from 'lucide-react'
 import { cleanCollegeText } from '@/lib/college-display'
 
 interface College {
@@ -21,6 +21,7 @@ interface College {
   education_levels?: string[]
   facilities?: string[]
   verification_status?: string
+  last_verified_at?: string | null
 }
 
 interface CollegeDetail {
@@ -48,7 +49,17 @@ const ROW_LABELS = [
   { key: 'education_levels', label: 'Levels', icon: GraduationCap },
   { key: 'facilities', label: 'Facilities', icon: null },
   { key: 'verification_status', label: 'Verification', icon: Check },
+  { key: 'last_verified_at', label: 'Last Checked', icon: Clock3 },
 ]
+
+function checkedLabel(value: string | null | undefined) {
+  if (!value) return 'Not documented'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Not documented'
+  const days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000))
+  const label = date.toLocaleDateString('en-NP', { day: 'numeric', month: 'short', year: 'numeric' })
+  return days > 180 ? `${label} · recheck advised` : label
+}
 
 
 export default function ComparePage() {
@@ -68,7 +79,7 @@ export default function ComparePage() {
     setError('')
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?name=ilike.*${encodeURIComponent(q.trim())}*&or=(status.eq.active,status.is.null)&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status&order=name.asc&limit=10`,
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?name=ilike.*${encodeURIComponent(q.trim())}*&or=(status.eq.active,status.is.null)&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status,last_verified_at&order=name.asc&limit=10`,
         { headers: API_HEADERS }
       )
       if (!res.ok) throw new Error('Search failed')
@@ -87,6 +98,18 @@ export default function ComparePage() {
     return () => clearTimeout(t)
   }, [search, searchColleges])
 
+  useEffect(() => {
+    if (!showSearch) return
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setShowSearch(false) }
+    document.addEventListener('keydown', closeOnEscape)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [showSearch])
+
   const loadDetail = useCallback(async (college: College) => {
     if (detailData[college.id]) return
     const [programsRes, reviewsRes, scholarshipsRes] = await Promise.all([
@@ -96,10 +119,14 @@ export default function ComparePage() {
       fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/reviews?college_id=eq.${college.id}&is_approved=eq.true&select=rating`, {
         headers: API_HEADERS,
       }),
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/scholarships?college_id=eq.${college.id}&select=id`, {
+      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/scholarships?college_id=eq.${college.id}&is_active=eq.true&select=id`, {
         headers: API_HEADERS,
       }),
     ])
+    if (!programsRes.ok || !reviewsRes.ok || !scholarshipsRes.ok) {
+      setError(`Some comparison details for ${college.name} could not be loaded. Please retry.`)
+      return
+    }
     const [programs, reviews, scholarships] = await Promise.all([programsRes.json(), reviewsRes.json(), scholarshipsRes.json()])
     setDetailData(prev => ({ ...prev, [college.id]: { programs: Array.isArray(programs) ? programs : [], reviews: Array.isArray(reviews) ? reviews : [], scholarships: Array.isArray(scholarships) ? scholarships.length : 0 } }))
   }, [detailData])
@@ -113,7 +140,7 @@ export default function ComparePage() {
     const loadInitial = async () => {
       try {
         const filter = slugs.map(slug => `slug.eq.${encodeURIComponent(slug)}`).join(',')
-        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?and=(or(${filter}),or(status.eq.active,status.is.null))&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status`, { headers: API_HEADERS })
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?and=(or(${filter}),or(status.eq.active,status.is.null))&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status,last_verified_at`, { headers: API_HEADERS })
         if (!res.ok) throw new Error('Unable to load comparison')
         const data = await res.json() as College[]
         const ordered = slugs.map(slug => data.find(college => college.slug === slug)).filter((college): college is College => Boolean(college))
@@ -153,16 +180,17 @@ export default function ComparePage() {
     switch (key) {
       case 'location': return cleanCollegeText(college.location) || 'Not listed'
       case 'affiliation': return cleanCollegeText(college.affiliation) || 'Not listed'
-      case 'established_year': return college.established_year?.toString() || '—'
+      case 'established_year': return college.established_year?.toString() || 'Not listed'
       case 'program_count': return d ? d.programs.length.toString() : 'Loading…'
-      case 'avg_rating': return d && d.reviews.length > 0 ? (d.reviews.reduce((a, r) => a + r.rating, 0) / d.reviews.length).toFixed(1) : '—'
+      case 'avg_rating': return d && d.reviews.length > 0 ? (d.reviews.reduce((a, r) => a + r.rating, 0) / d.reviews.length).toFixed(1) : d ? 'No reviews yet' : 'Loading…'
       case 'review_count': return d ? d.reviews.length.toString() : 'Loading…'
       case 'scholarship_count': return d ? d.scholarships.toString() : 'Loading…'
-      case 'fee_range': { const fees=d?.programs.map(p=>p.fee).filter((fee):fee is number=>fee!=null)||[]; return fees.length?`NPR ${Math.min(...fees).toLocaleString()} – ${Math.max(...fees).toLocaleString()}`:'—' }
-      case 'education_levels': return college.education_levels?.map(x=>x==='plus_two'?'+2':x.charAt(0).toUpperCase()+x.slice(1)).join(', ')||'—'
-      case 'facilities': return college.facilities?.slice(0,5).join(', ')||'—'
+      case 'fee_range': { const fees=d?.programs.map(p=>p.fee).filter((fee):fee is number=>fee!=null)||[]; return fees.length?`NPR ${Math.min(...fees).toLocaleString()} – ${Math.max(...fees).toLocaleString()}`:d?'Not listed':'Loading…' }
+      case 'education_levels': return college.education_levels?.map(x=>x==='plus_two'?'+2':x.charAt(0).toUpperCase()+x.slice(1)).join(', ')||'Not listed'
+      case 'facilities': return college.facilities?.slice(0,5).join(', ')||'Not listed'
       case 'verification_status': return college.verification_status==='institution_verified'?'Institution verified':college.verification_status==='source_verified'?'Source verified':'Unverified'
-      default: return '—'
+      case 'last_verified_at': return checkedLabel(college.last_verified_at)
+      default: return 'Not listed'
     }
   }
 
@@ -188,6 +216,7 @@ export default function ComparePage() {
               {college ? (
                 <div className="bg-white rounded-xl border-2 border-blue-200 p-4">
                   <button onClick={() => removeCollege(college.id)}
+                    aria-label={`Remove ${college.name} from comparison`}
                     className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
                     <X className="w-4 h-4" />
                   </button>
@@ -277,11 +306,12 @@ export default function ComparePage() {
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-[760px] w-full">
+              <caption className="sr-only">Side-by-side comparison of selected colleges. Missing information is labelled as not listed.</caption>
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="sticky left-0 z-[1] bg-gray-50 text-left px-6 py-4 text-sm font-semibold text-gray-700 w-40">Feature</th>
+                  <th scope="col" className="sticky left-0 z-[1] bg-gray-50 text-left px-6 py-4 text-sm font-semibold text-gray-700 w-40">Feature</th>
                   {selected.map(c => (
-                    <th key={c.id} className="px-6 py-4 text-center">
+                    <th scope="col" key={c.id} className="px-6 py-4 text-center">
                       <div className="font-semibold text-gray-900 text-sm">{c.name}</div>
                       <div className="text-xs text-gray-500 mt-0.5">{c.location}</div>
                     </th>
@@ -291,18 +321,18 @@ export default function ComparePage() {
               <tbody>
                 {ROW_LABELS.map(({ key, label }, idx) => (
                   <tr key={key} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                    <td className={`sticky left-0 z-[1] px-6 py-4 text-sm font-medium text-gray-600 ${idx % 2 === 0 ? 'bg-white' : 'bg-[#fafafa]'}`}>{label}</td>
+                    <th scope="row" className={`sticky left-0 z-[1] px-6 py-4 text-left text-sm font-medium text-gray-600 ${idx % 2 === 0 ? 'bg-white' : 'bg-[#fafafa]'}`}>{label}</th>
                     {selected.map(college => {
                       const val = getVal(college, key)
                       return (
                         <td key={college.id} className="px-6 py-4 text-center text-sm text-gray-800">
-                          {key === 'avg_rating' && val !== '—' && val !== 'Loading…' ? (
+                          {key === 'avg_rating' && /^\d/.test(val) ? (
                             <span className="inline-flex items-center gap-1">
                               <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
                               <span className="font-semibold">{val}</span>
                             </span>
                           ) : (
-                            <span className={val === '—' ? 'text-gray-400' : 'font-medium'}>{val}</span>
+                            <span className={val === 'Not listed' || val === 'Not documented' || val === 'No reviews yet' ? 'text-gray-500' : 'font-medium'}>{val}</span>
                           )}
                         </td>
                       )

@@ -57,14 +57,14 @@ export default function CollegeDecisionCheck({ collegeName, collegeSlug, checks,
       </ul>
 
       <div className="mt-5 border-t border-gray-100 pt-5">
-        <h3 className="text-sm font-semibold text-gray-900">Your next three actions</h3>
-        <ol className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+        <h3 className="text-sm font-semibold text-gray-900">Your next actions</h3>
+        <ol className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <li><Link href={`/compare?college1=${collegeSlug}`} className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700">1. Compare options <ArrowRight className="h-4 w-4" /></Link></li>
           <li><Link href="/tools/college-cost-calculator" className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700">2. Plan total cost <ArrowRight className="h-4 w-4" /></Link></li>
-          <li>{officialLink ? <a href={officialLink} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700">3. Verify officially <ExternalLink className="h-4 w-4" /></a> : <Link href={`/colleges/${collegeSlug}#college-contact`} className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700">3. Contact college <ArrowRight className="h-4 w-4" /></Link>}</li>
+          <li><Link href="/tools/admission-checklist" className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700">3. Prepare documents <ArrowRight className="h-4 w-4" /></Link></li>
+          <li>{officialLink ? <a href={officialLink} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700">4. Verify officially <ExternalLink className="h-4 w-4" /></a> : <Link href={`/colleges/${collegeSlug}#college-contact`} className="flex min-h-11 items-center justify-between rounded-lg border border-gray-200 px-3 font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700">4. Contact college <ArrowRight className="h-4 w-4" /></Link>}</li>
         </ol>
       </div>
     </section>
   )
 }
-

@@ -186,6 +186,12 @@ export default function CollegeCard({ college }: CollegeCardProps) {
             <p className="mb-2 text-xs font-semibold text-blue-700">{college.education_levels.map(level => levelLabels[level]).filter(Boolean).join(' · ')}</p>
           )}
 
+          {college.is_featured && (
+            <p className="mb-2 rounded-lg bg-amber-50 px-2.5 py-2 text-[11px] leading-4 text-amber-900">
+              Paid placement. Sponsorship does not change verification status or student reviews.
+            </p>
+          )}
+
           {/* Fee */}
           {feeLabel && (
             <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900 mb-2" title="Published fee amount; confirm whether it is annual, semester-based or total with the college">

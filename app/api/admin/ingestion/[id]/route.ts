@@ -20,6 +20,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (['approved', 'rejected'].includes(item.status)) return NextResponse.json({ error: 'This item was already reviewed' }, { status: 409 })
 
   let publishedId: string | null = null
+  let evidenceId: string | null = null
+  let evidenceWarning: string | null = null
   if (body.status === 'approved') {
     const allowed = fields[item.target_type]
     const table = tables[item.target_type as keyof typeof tables]
@@ -41,6 +43,31 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       : await db.from(table).insert(record).select('id').single()
     if (error) return NextResponse.json({ error: `Publish failed: ${error.message}` }, { status: 500 })
     publishedId = data.id
+
+    const category = String(item.content_category || '').toLowerCase()
+    const inferredField = category.includes('admission') ? 'admission_deadline' : category.includes('scholarship') ? 'scholarship' : category.includes('result') ? 'result' : category.includes('program') || category.includes('programme') ? 'programs' : category.includes('fee') ? 'fee' : null
+    const proposal = body.evidence_proposal?.enabled
+      ? body.evidence_proposal
+      : inferredField ? { enabled: true, field_key: inferredField, claim_summary: String(record.title || item.title) } : null
+    if (proposal?.enabled && item.college_id && ['affiliation','programs','fee','admission_deadline','scholarship','result','facilities','contact'].includes(proposal.field_key)) {
+      const claim = String(proposal.claim_summary || '').trim()
+      if (claim.length >= 3) {
+        const { data: evidence, error: evidenceError } = await db.from('college_evidence').insert({
+          college_id: item.college_id,
+          field_key: proposal.field_key,
+          claim_summary: claim.slice(0, 500),
+          source_name: String(record.source_name || item.scraper_name).slice(0, 200),
+          source_url: String(record.source_url || item.source_url),
+          source_published_at: record.published_date || null,
+          checked_at: new Date().toISOString(),
+          confidence_score: Math.max(0, Math.min(100, Number(item.confidence_score) || 0)),
+          verification_status: 'pending',
+          extraction_method: 'automated_extraction',
+        }).select('id').single()
+        evidenceId = evidence?.id || null
+        if (evidenceError) evidenceWarning = evidenceError.code === '42P01' ? 'Evidence Ledger migration is not installed.' : evidenceError.code === '23505' ? 'An active evidence proposal already uses this source and field.' : evidenceError.message
+      }
+    }
   }
   const { data, error } = await db.from('content_ingestion_items').update({
     status: body.status, reviewer_notes: String(body.reviewer_notes || '').slice(0, 2000) || null,
@@ -48,6 +75,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     reviewed_at: ['approved', 'rejected'].includes(body.status) ? new Date().toISOString() : null,
     reviewed_by: auth.user.email || auth.user.id, published_record_id: publishedId,
   }).eq('id', params.id).select().single()
-  if (!error) await writeAudit(`ingestion.${body.status}`, 'content_ingestion', params.id, { title: item.title, target_type: item.target_type, published_record_id: publishedId })
-  return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json(data)
+  if (!error) await writeAudit(`ingestion.${body.status}`, 'content_ingestion', params.id, { title: item.title, target_type: item.target_type, published_record_id: publishedId, evidence_id: evidenceId, evidence_warning: evidenceWarning })
+  return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json({ ...data, evidence_id: evidenceId, evidence_warning: evidenceWarning })
 }

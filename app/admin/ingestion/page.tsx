@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ExternalLink, Inbox, PencilLine, ShieldCheck, X } from 'lucide-react'
 
-type Item = { id: string; title: string; target_type: string; scraper_name: string; source_url: string; fetched_at: string; quality_flags: string[]; status: string; payload: Record<string, unknown>; confidence_score?: number; content_hash?: string | null; raw_snapshot?: string | null; reviewer_notes?: string | null; content_category?: string; claim_risk?: 'low' | 'medium' | 'high'; auto_publish_eligible?: boolean }
+type Item = { id: string; title: string; target_type: string; scraper_name: string; source_url: string; fetched_at: string; quality_flags: string[]; status: string; payload: Record<string, unknown>; college_id?: string | null; confidence_score?: number; content_hash?: string | null; raw_snapshot?: string | null; reviewer_notes?: string | null; content_category?: string; claim_risk?: 'low' | 'medium' | 'high'; auto_publish_eligible?: boolean }
 
 const stringify = (payload: Record<string, unknown>) => JSON.stringify(payload || {}, null, 2)
 
@@ -36,6 +36,7 @@ export default function IngestionPage() {
     const data = await response.json()
     if (!response.ok) return setError(data.error || 'Review failed')
     setItems(all => all.filter(current => current.id !== item.id))
+    if (data.evidence_warning) setError(`Content published, but evidence was not proposed: ${data.evidence_warning}`)
   }
 
   return <div className="p-8 text-gray-100">

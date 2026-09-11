@@ -27,6 +27,7 @@ import {
   Database,
   BarChart3,
   Megaphone,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -42,6 +43,7 @@ const navItems = [
   { label: 'Opportunities',    href: '/admin/opportunities',    icon: Send },
   { label: 'Content Queue',    href: '/admin/ingestion',        icon: Inbox, pending: true },
   { label: 'Source Health',    href: '/admin/sources',          icon: Activity },
+  { label: 'Evidence Ledger',  href: '/admin/evidence',         icon: ShieldCheck },
   { label: 'Profile Claims',   href: '/admin/claims',           icon: UserCheck, pending: true },
   { label: 'Audit Log',        href: '/admin/audit',            icon: ScrollText },
   { label: 'Colleges',         href: '/admin/colleges',         icon: Building2 },

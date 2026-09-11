@@ -29,7 +29,8 @@ export async function GET() {
   if (profile.error?.code === '42P01' || tasks.error?.code === '42P01') {
     return setupError('The My Path database setup has not been applied yet.')
   }
-  if (profile.error || tasks.error) return NextResponse.json({ error: 'Could not load your path.' }, { status: 500 })
+  const dataError = profile.error || tasks.error || colleges.error || schools.error || admissions.error || scholarships.error || exams.error || opportunities.error
+  if (dataError) { console.error('[my-path:get]', dataError); return NextResponse.json({ error: 'Your path is temporarily unavailable. Please try again.' }, { status: 500 }) }
 
   const stage = profile.data?.current_stage as Stage | null || null
   const usefulLevels: Record<Stage, string[]> = {
@@ -39,7 +40,7 @@ export async function GET() {
   const recommendations = [
     ...(exams.data || []).filter((item) => levelMatches(item.education_level)).map((item) => ({ id: item.id, type: 'exam', title: item.title, detail: item.education_level || 'Entrance exam', deadline: item.application_deadline, href: item.exam_url || item.source_url || '/entrance-exams' })),
     ...(scholarships.data || []).filter((item) => !item.education_levels?.length || item.education_levels.some(levelMatches)).map((item) => ({ id: item.id, type: 'scholarship', title: item.title, detail: item.amount ? `NPR ${Number(item.amount).toLocaleString()}` : 'Funding opportunity', deadline: item.deadline, href: '/scholarships' })),
-    ...(opportunities.data || []).filter(() => stage !== 'grade_10').map((item) => ({ id: item.id, type: 'opportunity', title: item.title, detail: `${item.opportunity_type} · ${item.organisation}`, deadline: item.deadline, href: item.application_url })),
+    ...(opportunities.data || []).filter(() => stage !== 'grade_10').map((item) => ({ id: item.id, type: 'opportunity', title: item.title, detail: `${item.opportunity_type} · ${item.organisation}`, deadline: item.deadline, href: item.application_url || '/opportunities' })),
   ].sort((a, b) => new Date(a.deadline || '2999-01-01').getTime() - new Date(b.deadline || '2999-01-01').getTime()).slice(0, 6)
 
   return NextResponse.json({
@@ -51,20 +52,21 @@ export async function GET() {
     admissions: (admissions.data || []).filter((item) => levelMatches(item.education_level)),
     scholarships: (scholarships.data || []).filter((item) => !item.education_levels?.length || item.education_levels.some(levelMatches)).slice(0, 4),
     recommendations,
-  })
+  }, { headers: { 'Cache-Control': 'private, no-store' } })
 }
 
 export async function POST(request: Request) {
   const auth = await getAuthContext()
   if (!auth) return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
-  const body = await request.json()
+  let body: { stage?: unknown; task?: { key?: unknown; title?: unknown; completed?: unknown } }
+  try { const parsed: unknown = await request.json(); if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error(); body = parsed as typeof body } catch { return NextResponse.json({ error: 'Invalid request.' }, { status: 400 }) }
   const db = createAdminSupabaseClient()
 
   if (body.stage) {
     if (!stages.includes(body.stage as Stage)) return NextResponse.json({ error: 'Choose a valid stage.' }, { status: 400 })
     const { error } = await db.from('student_path_profiles').upsert({ user_id: auth.user.id, current_stage: body.stage, updated_at: new Date().toISOString() })
     if (error?.code === '42P01') return setupError('The My Path database setup has not been applied yet.')
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) { console.error('[my-path:stage]', error); return NextResponse.json({ error: 'Your stage could not be saved.' }, { status: 500 }) }
   }
 
   if (body.task && typeof body.task.key === 'string' && typeof body.task.title === 'string') {
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,task_key' })
     if (error?.code === '42P01') return setupError('The My Path database setup has not been applied yet.')
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) { console.error('[my-path:task]', error); return NextResponse.json({ error: 'Your task could not be saved.' }, { status: 500 }) }
   }
 
   return NextResponse.json({ ok: true })

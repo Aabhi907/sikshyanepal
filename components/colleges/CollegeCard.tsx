@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Star, ArrowRight, Banknote } from 'lucide-react'
+import { MapPin, Star, ArrowRight, Banknote, Clock3 } from 'lucide-react'
 import type { College } from '@/types'
 import VerificationBadge from '@/components/institutions/VerificationBadge'
 import { collegeDisplayLocation, collegeDisplayPrograms } from '@/lib/college-display'
@@ -51,6 +51,13 @@ export default function CollegeCard({ college }: CollegeCardProps) {
   const displayLocation = collegeDisplayLocation(college)
   const topPrograms = linkedPrograms.length > 0 ? linkedPrograms : researchedPrograms
   const levelLabels: Record<string, string> = { plus_two: '+2', bachelor: 'Bachelor', master: 'Master', mphil: 'MPhil', phd: 'PhD', diploma: 'Diploma', certificate: 'Certificate' }
+  const checkedAt = college.last_verified_at ? new Date(college.last_verified_at) : null
+  const checkedDays = checkedAt && !Number.isNaN(checkedAt.getTime()) ? Math.max(0, Math.floor((Date.now() - checkedAt.getTime()) / 86_400_000)) : null
+  const freshness = checkedDays == null
+    ? { label: 'Check date missing', tone: 'text-amber-700' }
+    : checkedDays > 180
+      ? { label: 'Recheck advised', tone: 'text-amber-700' }
+      : { label: `Checked ${checkedAt!.toLocaleDateString('en-NP', { day: 'numeric', month: 'short', year: 'numeric' })}`, tone: 'text-emerald-700' }
 
   const hasFees  = college.fee_min != null && college.fee_max != null
   const feeLabel = hasFees
@@ -190,9 +197,7 @@ export default function CollegeCard({ college }: CollegeCardProps) {
 
           {/* Bottom row */}
           <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
-            {college.established_year && (
-              <span className="text-xs font-mono text-gray-400">Est. {college.established_year}</span>
-            )}
+            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${freshness.tone}`}><Clock3 className="h-3 w-3" aria-hidden="true" />{freshness.label}</span>
             <span className="text-xs text-[#1847c4] font-semibold flex items-center gap-1 ml-auto group-hover:gap-1.5 transition-all duration-200">
               View <ArrowRight className="w-3 h-3" />
             </span>

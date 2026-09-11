@@ -32,11 +32,6 @@ interface CollegeDetail {
 
 const MAX = 3
 
-const API_HEADERS = {
-  apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
-}
-
 const ROW_LABELS = [
   { key: 'location', label: 'Location', icon: MapPin },
   { key: 'affiliation', label: 'Affiliation', icon: Building2 },
@@ -74,17 +69,14 @@ export default function ComparePage() {
   const [initializing, setInitializing] = useState(true)
 
   const searchColleges = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); return }
+    if (q.trim().length < 2) { setResults([]); return }
     setSearching(true)
     setError('')
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?name=ilike.*${encodeURIComponent(q.trim())}*&or=(status.eq.active,status.is.null)&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status,last_verified_at&order=name.asc&limit=10`,
-        { headers: API_HEADERS }
-      )
+      const res = await fetch(`/api/colleges/compare?q=${encodeURIComponent(q.trim())}`)
       if (!res.ok) throw new Error('Search failed')
       const data = await res.json()
-      setResults(Array.isArray(data) ? data : [])
+      setResults(Array.isArray(data.colleges) ? data.colleges : [])
     } catch {
       setResults([])
       setError('College search is unavailable right now. Please try again.')
@@ -112,23 +104,14 @@ export default function ComparePage() {
 
   const loadDetail = useCallback(async (college: College) => {
     if (detailData[college.id]) return
-    const [programsRes, reviewsRes, scholarshipsRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/college_programs?college_id=eq.${college.id}&select=id,fee`, {
-        headers: API_HEADERS,
-      }),
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/reviews?college_id=eq.${college.id}&is_approved=eq.true&select=rating`, {
-        headers: API_HEADERS,
-      }),
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/scholarships?college_id=eq.${college.id}&is_active=eq.true&select=id`, {
-        headers: API_HEADERS,
-      }),
-    ])
-    if (!programsRes.ok || !reviewsRes.ok || !scholarshipsRes.ok) {
+    try {
+      const response = await fetch(`/api/colleges/compare?slugs=${encodeURIComponent(college.slug)}`)
+      const result = await response.json()
+      if (!response.ok || !result.details?.[college.id]) throw new Error()
+      setDetailData(prev => ({ ...prev, [college.id]: result.details[college.id] }))
+    } catch {
       setError(`Some comparison details for ${college.name} could not be loaded. Please retry.`)
-      return
     }
-    const [programs, reviews, scholarships] = await Promise.all([programsRes.json(), reviewsRes.json(), scholarshipsRes.json()])
-    setDetailData(prev => ({ ...prev, [college.id]: { programs: Array.isArray(programs) ? programs : [], reviews: Array.isArray(reviews) ? reviews : [], scholarships: Array.isArray(scholarships) ? scholarships.length : 0 } }))
   }, [detailData])
 
   useEffect(() => {
@@ -139,13 +122,12 @@ export default function ComparePage() {
     if (!slugs.length) { setInitializing(false); return }
     const loadInitial = async () => {
       try {
-        const filter = slugs.map(slug => `slug.eq.${encodeURIComponent(slug)}`).join(',')
-        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/colleges?and=(or(${filter}),or(status.eq.active,status.is.null))&select=id,name,slug,location,affiliation,established_year,is_featured,education_levels,facilities,verification_status,last_verified_at`, { headers: API_HEADERS })
+        const res = await fetch(`/api/colleges/compare?slugs=${encodeURIComponent(slugs.join(','))}`)
         if (!res.ok) throw new Error('Unable to load comparison')
-        const data = await res.json() as College[]
-        const ordered = slugs.map(slug => data.find(college => college.slug === slug)).filter((college): college is College => Boolean(college))
+        const data = await res.json() as {colleges:College[];details:Record<string,CollegeDetail>}
+        const ordered = slugs.map(slug => data.colleges.find(college => college.slug === slug)).filter((college): college is College => Boolean(college))
         setSelected(ordered)
-        ordered.forEach(loadDetail)
+        setDetailData(data.details || {})
       } catch {
         setError('We could not load the colleges in this comparison link.')
       } finally {
@@ -266,11 +248,11 @@ export default function ComparePage() {
             </div>
             <div className="max-h-72 overflow-y-auto">
               {searching && <div className="text-center py-8 text-gray-400 text-sm">Searching...</div>}
-              {!searching && search && results.length === 0 && !error && (
+              {!searching && search.trim().length >= 2 && results.length === 0 && !error && (
                 <div className="text-center py-8 text-gray-400 text-sm">No colleges found</div>
               )}
-              {!searching && !search && (
-                <div className="text-center py-8 text-gray-400 text-sm">Start typing to search colleges</div>
+              {!searching && search.trim().length < 2 && (
+                <div className="text-center py-8 text-gray-400 text-sm">Type at least two letters to search colleges</div>
               )}
               {results.map(college => {
                 const alreadyAdded = !!selected.find(c => c.id === college.id)

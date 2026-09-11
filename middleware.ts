@@ -5,6 +5,16 @@ import { createServerClient } from '@supabase/ssr'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Vercel already redirects its domains to TLS. Keep this guard for custom
+  // domains and reverse proxies so a production request can never stay on HTTP.
+  const forwardedProtocol = request.headers.get('x-forwarded-proto')
+  const isLocalHost = ['localhost', '127.0.0.1', '[::1]'].includes(request.nextUrl.hostname)
+  if (process.env.NODE_ENV === 'production' && !isLocalHost && forwardedProtocol && forwardedProtocol !== 'https') {
+    const secureUrl = request.nextUrl.clone()
+    secureUrl.protocol = 'https:'
+    return NextResponse.redirect(secureUrl, 308)
+  }
+
   if ((pathname.startsWith('/admin') && pathname !== '/admin/login') || pathname.startsWith('/account/claim')) {
     let response = NextResponse.next({ request })
     const client = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder', { cookies: { getAll: () => request.cookies.getAll(), setAll: values => { values.forEach(({ name, value }) => request.cookies.set(name, value)); response = NextResponse.next({ request }); values.forEach(({ name, value, options }) => response.cookies.set(name, value, options)) } } })
@@ -25,5 +35,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/account/claim'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }

@@ -34,6 +34,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { absoluteUrl, breadcrumbSchema, SITE_URL } from "@/lib/seo";
 import { collegeDisplayAffiliation, collegeDisplayLocation, collegeDisplayPrograms, safeCollegeAddress } from "@/lib/college-display";
 import CollegeDecisionCheck from "@/components/colleges/CollegeDecisionCheck";
+import CollegeEvidenceLedger, { type CollegeEvidence } from "@/components/colleges/CollegeEvidenceLedger";
 
 // Affiliation → gradient config
 const AFFIL_COVER: Record<string, { gradient: string; pattern: string }> = {
@@ -90,7 +91,7 @@ const getCollege = cache(async function getCollege(slug: string) {
 
   if (!college) return null;
 
-  const [programsRes, reviewsRes, scholarshipsRes, admissionsRes, newsRes] = await Promise.all([
+  const [programsRes, reviewsRes, scholarshipsRes, admissionsRes, newsRes, evidenceRes] = await Promise.all([
     supabase
       .from("college_programs")
       .select("*, program:programs(*)")
@@ -112,6 +113,7 @@ const getCollege = cache(async function getCollege(slug: string) {
       .order("application_deadline", { ascending: true })
       .limit(4),
     supabase.from("news").select("id,title,slug,published_date,content_category").eq("college_id", college.id).eq("status", "published").order("published_date", { ascending: false }).limit(5),
+    supabase.from("college_evidence").select("id,field_key,claim_summary,source_name,source_url,checked_at,confidence_score,verification_status").eq("college_id",college.id).in("verification_status",["source_verified","editor_verified"]).is("superseded_at",null).order("checked_at",{ascending:false}).limit(12),
   ]);
 
   return {
@@ -121,6 +123,7 @@ const getCollege = cache(async function getCollege(slug: string) {
     scholarships: scholarshipsRes.data || [],
     admissions: (admissionsRes.data || []) as Admission[],
     news: (newsRes.data || []) as News[],
+    evidence: (evidenceRes.data || []) as CollegeEvidence[],
   };
 })
 
@@ -162,7 +165,7 @@ export default async function CollegeProfilePage({
   const data = await getCollege(params.slug);
   if (!data) notFound();
 
-  const { college, programs, reviews, scholarships, admissions, news } = data;
+  const { college, programs, reviews, scholarships, admissions, news, evidence } = data;
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
@@ -411,6 +414,8 @@ export default async function CollegeProfilePage({
           </section>
 
           <CollegeDecisionCheck collegeName={college.name} collegeSlug={college.slug} checks={decisionChecks} sourceUrl={college.source_url} website={college.website} />
+
+          <CollegeEvidenceLedger items={evidence} />
 
           {/* Description */}
           {college.description && (

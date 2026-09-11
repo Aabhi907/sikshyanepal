@@ -44,6 +44,7 @@ const navItems = [
   { label: 'Content Queue',    href: '/admin/ingestion',        icon: Inbox, pending: true },
   { label: 'Source Health',    href: '/admin/sources',          icon: Activity },
   { label: 'Evidence Ledger',  href: '/admin/evidence',         icon: ShieldCheck },
+  { label: 'Evidence Coverage', href: '/admin/evidence-coverage', icon: BarChart3 },
   { label: 'Profile Claims',   href: '/admin/claims',           icon: UserCheck, pending: true },
   { label: 'Audit Log',        href: '/admin/audit',            icon: ScrollText },
   { label: 'Colleges',         href: '/admin/colleges',         icon: Building2 },

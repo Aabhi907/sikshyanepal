@@ -2,9 +2,13 @@ import { NextResponse } from 'next/server'
 import { createAuthClient } from '@/lib/auth'
 
 export async function POST(request: Request) {
-  const body = await request.json()
-  if (!body.email || !body.password || String(body.password).length < 10 || !body.full_name?.trim()) return NextResponse.json({ error: 'Name, email and a password of at least 10 characters are required.' }, { status: 400 })
-  const { data, error } = await createAuthClient().auth.signUp({ email: body.email, password: body.password, options: { data: { full_name: body.full_name.trim() } } })
+  let body: Record<string, unknown>
+  try { body = await request.json() } catch { return NextResponse.json({ error: 'Invalid request.' }, { status: 400 }) }
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+  const password = typeof body.password === 'string' ? body.password : ''
+  const fullName = typeof body.full_name === 'string' ? body.full_name.trim().replace(/\s+/g, ' ') : ''
+  if (!email || email.length > 254 || password.length < 10 || password.length > 200 || fullName.length < 2 || fullName.length > 80) return NextResponse.json({ error: 'Enter a valid name, email and password of at least 10 characters.' }, { status: 400 })
+  const { data, error } = await createAuthClient().auth.signUp({ email, password, options: { data: { full_name: fullName } } })
   if (error) {
     const seconds = Number(error.message.match(/after\s+(\d+)\s+seconds?/i)?.[1] || 0)
     return NextResponse.json(

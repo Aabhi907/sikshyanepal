@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createAuthClient } from '@/lib/auth'
-
-function safeNext(value: string | null) {
-  return value?.startsWith('/') && !value.startsWith('//') ? value : '/my-path'
-}
+import { safeNextPath } from '@/lib/safe-next'
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
-  const next = safeNext(url.searchParams.get('next'))
+  const next = safeNextPath(url.searchParams.get('next'), '/my-path')
 
   if (!code) {
     return NextResponse.redirect(new URL('/account/login?error=google_callback_failed', url.origin))

@@ -73,6 +73,19 @@ function collegeSearchScore(college: RichCollege, term: string) {
   return 99
 }
 
+function matchReasons(college: RichCollege, sp: { faculty?:string;level?:string;province?:string;district?:string;affiliation?:string;maxFee?:string;scholarship?:string;verified?:string;program?:string }) {
+  const reasons:string[]=[]
+  if(sp.level)reasons.push(`Offers ${sp.level === '+2' ? '+2 / Intermediate' : sp.level.charAt(0).toUpperCase()+sp.level.slice(1)} study`)
+  if(sp.faculty)reasons.push(`Has a ${sp.faculty} programme`)
+  if(sp.program)reasons.push('Offers your selected programme')
+  if(sp.district)reasons.push(`Located in ${sp.district}`);else if(sp.province)reasons.push(`Located in ${sp.province}`)
+  if(sp.affiliation)reasons.push(`Matches ${sp.affiliation} affiliation`)
+  if(sp.scholarship==='true')reasons.push('Lists scholarship availability')
+  if(sp.maxFee&&college.fee_min!=null)reasons.push(`Has a published fee within NPR ${Number(sp.maxFee).toLocaleString('en-NP')}`)
+  if(sp.verified==='true')reasons.push('Has documented source verification')
+  return reasons
+}
+
 async function getColleges(sp: {
   q?:           string
   location?:    string
@@ -256,7 +269,7 @@ export default async function CollegesPage({
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {visibleColleges.slice(0, 6).map((college) => (
-              <CollegeCard key={college.id} college={college} />
+              <CollegeCard key={college.id} college={college} matchReasons={matchReasons(college,searchParams)} />
             ))}
           </div>
           {visibleColleges.length > 6 && (
@@ -269,7 +282,7 @@ export default async function CollegesPage({
           {visibleColleges.length > 6 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {visibleColleges.slice(6).map((college) => (
-                <CollegeCard key={college.id} college={college} />
+                <CollegeCard key={college.id} college={college} matchReasons={matchReasons(college,searchParams)} />
               ))}
             </div>
           )}

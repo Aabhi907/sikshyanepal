@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Star, ArrowRight, Banknote, Clock3 } from 'lucide-react'
+import { MapPin, Star, ArrowRight, Banknote, Clock3, CheckCircle2 } from 'lucide-react'
 import type { College } from '@/types'
 import VerificationBadge from '@/components/institutions/VerificationBadge'
 import { collegeDisplayLocation, collegeDisplayPrograms } from '@/lib/college-display'
@@ -37,9 +37,10 @@ interface CollegeCardProps {
     fee_min?:      number
     fee_max?:      number
   }
+  matchReasons?: string[]
 }
 
-export default function CollegeCard({ college }: CollegeCardProps) {
+export default function CollegeCard({ college, matchReasons = [] }: CollegeCardProps) {
   const affiliShort   = affiliationShort(college.affiliation)
   const coverGradient = AFFIL_GRADIENT[college.affiliation ?? ''] ?? 'from-gray-600 to-gray-800'
 
@@ -184,6 +185,13 @@ export default function CollegeCard({ college }: CollegeCardProps) {
           )}
           {college.education_levels && college.education_levels.length > 0 && (
             <p className="mb-2 text-xs font-semibold text-blue-700">{college.education_levels.map(level => levelLabels[level]).filter(Boolean).join(' · ')}</p>
+          )}
+
+          {matchReasons.length > 0 && (
+            <div className="mb-3 rounded-lg border border-emerald-100 bg-emerald-50 p-2.5" aria-label="Why this college matches">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Why it matches</p>
+              <ul className="mt-1.5 space-y-1">{matchReasons.slice(0,3).map(reason=><li key={reason} className="flex items-start gap-1.5 text-xs leading-4 text-emerald-900"><CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true"/>{reason}</li>)}</ul>
+            </div>
           )}
 
           {college.is_featured && (

@@ -167,6 +167,7 @@ export default async function CollegeProfilePage({
     reviews.length > 0
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
       : null;
+  const verifiedReviewCount = reviews.filter(review => review.verification_status === 'verified').length;
   const linkedProgramNames = programs.map(item => item.program?.name).filter((name): name is string => Boolean(name));
   const fallbackProgramNames = collegeDisplayPrograms(college.programs_offered);
   const programNames = linkedProgramNames.length ? linkedProgramNames : fallbackProgramNames;
@@ -560,9 +561,8 @@ export default async function CollegeProfilePage({
 
           {/* Reviews */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Student Reviews
-            </h2>
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-lg font-semibold text-gray-900">Student Reviews</h2><p className="mt-1 text-xs text-gray-500">Moderated experiences—not an official college ranking.</p></div>{reviews.length > 0 && <div className="flex gap-2 text-xs"><span className="rounded-full bg-gray-100 px-2.5 py-1 font-semibold text-gray-700">{reviews.length} published</span><span className="rounded-full bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">{verifiedReviewCount} verified</span></div>}</div>
+            {reviews.length > 0 && reviews.length < 5 && <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900"><strong>Limited sample:</strong> {reviews.length === 1 ? 'This is one student experience.' : `These are ${reviews.length} student experiences.`} Do not treat the rating as representative of every programme, teacher or intake.</div>}
             {reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review) => (

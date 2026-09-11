@@ -1,3 +1,48 @@
 'use client'
-import { Bookmark } from 'lucide-react'; import { useEffect,useState } from 'react'; import { useRouter } from 'next/navigation'
-export default function SaveSchoolButton({schoolId}:{schoolId:string}){const[saved,setSaved]=useState(false);const[loading,setLoading]=useState(false);const router=useRouter();useEffect(()=>{fetch(`/api/saved-schools/${schoolId}`).then(r=>r.ok?r.json():null).then(d=>d&&setSaved(d.saved))},[schoolId]);async function toggle(){setLoading(true);const r=await fetch(`/api/saved-schools/${schoolId}`,{method:saved?'DELETE':'POST'});if(r.status===401){router.push('/account/login');return}if(r.ok)setSaved(!saved);setLoading(false)}return <button onClick={toggle} disabled={loading} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold ${saved?'border-blue-600 bg-blue-50 text-blue-700':'border-gray-200 bg-white text-gray-700'}`}><Bookmark className={`h-4 w-4 ${saved?'fill-current':''}`}/>{saved?'Saved':'Save school'}</button>}
+
+import { Bookmark } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+
+export default function SaveSchoolButton({ schoolId }: { schoolId: string }) {
+  const [saved, setSaved] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch(`/api/saved-schools/${schoolId}`, { cache: 'no-store', signal: controller.signal })
+      .then(async response => response.ok ? response.json() : null)
+      .then(data => data && setSaved(Boolean(data.saved)))
+      .catch(reason => {
+        if (reason instanceof Error && reason.name !== 'AbortError') setError('Could not check your shortlist.')
+      })
+    return () => controller.abort()
+  }, [schoolId])
+
+  async function toggle() {
+    if (loading) return
+    setLoading(true)
+    setError('')
+    const previous = saved
+    setSaved(!previous)
+    try {
+      const response = await fetch(`/api/saved-schools/${schoolId}`, { method: previous ? 'DELETE' : 'POST' })
+      if (response.status === 401) {
+        setSaved(previous)
+        router.push(`/account/login?next=${encodeURIComponent(pathname)}`)
+        return
+      }
+      if (!response.ok) throw new Error()
+    } catch {
+      setSaved(previous)
+      setError('Could not update your shortlist. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return <div><button type="button" onClick={toggle} disabled={loading} aria-pressed={saved} className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold disabled:opacity-60 ${saved?'border-blue-600 bg-blue-50 text-blue-700':'border-gray-200 bg-white text-gray-700'}`}><Bookmark aria-hidden="true" className={`h-4 w-4 ${saved?'fill-current':''}`}/>{loading?'Updating…':saved?'Saved':'Save school'}</button>{error&&<p role="alert" className="mt-1 max-w-56 text-xs text-red-600">{error}</p>}</div>
+}
